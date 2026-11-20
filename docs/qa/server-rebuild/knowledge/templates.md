@@ -2,12 +2,15 @@
 
 _What the platform does today for templates: the libraries they live in, the six kinds of template, saving a space as a template, applying a template, creating a space from one, default templates, the templates the platform seeds, and the file repair: what it does, why, who may, and what is still to answer. The file follows the three-section layout of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**. Innovation packs are in `innovation-pack.md`, plans and limits in `entitlements.md`, and what a callout template shares with a live callout in `callout.md`._
 
-_Open questions per owner: Product Lead 11 · Technical Lead 5 · Quality Lead 9 · Security Lead 1 · Architecture Lead 1. By state: 21 open · 6 with a suggested answer. Proof of the 35 rules: 19 proven by a test · 16 untested (Appendix A)._
+_Open questions per owner: Product Lead 11 · Technical Lead 5 · Quality Lead 9 · Security Lead 1 · Architecture Lead 1. By state: 19 open · 8 with a suggested answer. Proof of the 35 rules: 19 proven by a test · 16 untested (Appendix A)._
+
+_Whys of the 35 rules: 26 rest on a source · 8 carry a draft for product to decide · 1 have none, and it carries an open question (TPL-04, F1)._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. The whys are the reasons found in the code, the tests and the specs, sorted into the three columns without rewording. Product has not reviewed this file yet and fills in the user stories later.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Code comment (no spec)" means only a comment in the code gives the reason. "Not decided" means the behaviour exists in the code and nobody chose it.
 - A marker in bold at the end of a rule points at section 3: **(open: F1)** means a question on this rule is still open, **(defect: F3)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F4)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -20,12 +23,12 @@ _Open questions per owner: Product Lead 11 · Technical Lead 5 · Quality Lead 9
 |---|---|---|---|---|---|
 | TPL-01 | A template is one of six kinds: post, whiteboard, callout, community guidelines, space or classification. It has a name, description, tags and card image, and exactly one content of its kind. Creating one without that content is refused. | — | — | One table serves every kind, so the payload check is the only thing that stops an empty template (I-9 comment, 024 data model). | Spec 024 data model; code comment I-9 |
 | TPL-02 | Templates live in a library. Every top-level space, every innovation pack and the platform has one. A subspace has none of its own: it uses the library of its top-level space, so every space in one tree offers the same templates. **(open: F2, OQ2)** | Space-scoped templates belong to the top-level space (024 FR-007a: "a subspace … borrows its root Space's library"). | — | — | Spec 024 FR-007a |
-| TPL-03 | A template's name id is unique within its library: a taken one is refused, and one that is left out is made from the display name. **(open: Q-TPL-03)** | — | — | — | Not decided: exists in the code |
+| TPL-03 | A template's name id is unique within its library: a taken one is refused, and one that is left out is made from the display name. **(open: Q-TPL-03)** | — | — | The name id is the last part of the template's web address (`<templates set>/<nameID>`, `url.generator.service.ts:449`), so two templates in one library cannot share it. | Not decided: exists in the code |
 | TPL-04 | A library lists its templates per kind, with a count per kind and one overall count. The overall count leaves classification templates out. **(open: F1)** | — | — | — | Not decided: exists in the code |
-| TPL-05 | Templates in a library are listed in alphabetical order of their display name. **(open: Q-TPL-05, OQ4)** | — | — | — | Not decided: exists in the code |
+| TPL-05 | Templates in a library are listed in alphabetical order of their display name. **(open: Q-TPL-05, OQ4)** | — | As a space admin, I want templates listed by name, so that I can find the one I need. _(draft)_ | — | Not decided: exists in the code |
 | TPL-06 | Updating a template changes its name, description, tags and image and, depending on its kind, its post description, its whiteboard content (only by copying another whiteboard) or its classification values. Content that does not belong to the kind is ignored, except classification data, which is refused. **(open: F11)** | — | — | The template row owns only the profile and the scalar payloads; nested entities have their own editors (service comment). Classification data is the one payload whose absence or presence cannot be told from the row, hence the explicit refusal (I-9). | Code comment (no spec) |
 | TPL-07 | Creating a template is all or nothing: if copying its files or building its images fails, the template is removed again, so there is either a complete template or an error. | — | — | Policies are never removed by database cascade, so a half-built template would leak rows and policies forever (service comment; server#6614). | Server issue #6614 |
-| TPL-08 | Deleting a template deletes everything it carries: its callout, whiteboard, guidelines or whole space content. Deleting one that does not exist is refused. **(defect in part: F4)** | — | — | — | Not decided: exists in the code |
+| TPL-08 | Deleting a template deletes everything it carries: its callout, whiteboard, guidelines or whole space content. Deleting one that does not exist is refused. **(defect in part: F4)** | A template owns what it carries, so deleting it leaves nothing behind. _(draft)_ | — | — | Not decided: exists in the code |
 | TPL-09 | A template that is set as a default cannot be deleted. | Added with the default mechanism so a space or the platform never loses its default (commit `11fc8cd28`). | — | — | Server commit 11fc8cd28 |
 
 ### Post and whiteboard templates
@@ -54,9 +57,9 @@ _Open questions per owner: Product Lead 11 · Technical Lead 5 · Quality Lead 9
 | TPL-19 | Saving a space as a template leaves out what must not travel: contributions, responses and votes, the setting for who sees member information, hand-picked selections, map views, office-document callouts and per-step default templates. A file is copied only if the person saving can read it. **(open: F5)** | Templates must not leak one space's members, privacy choices or responses into another (008 FR-021; 025 FR-017 / US5-AS5; 034; 080 R25; 029 §5). | — | Document framing capture is a shipped limitation (085 R6/§0.3); file copies follow the saver's own rights (#6656). | Specs 008 FR-021, 025 FR-017, 080 R25, 085 R6; server PR #6656 |
 | TPL-20 | Saving a live space as a template needs the right to read that space and to create templates in the target library. The subspaces and callouts under it are not checked one by one, but their files are. | — | — | The saver's READ is checked on the space only, so nested buckets cannot be trusted (input-creator comment, #6656). | Server PR #6656 |
 | TPL-21 | Updating a space template from a space replaces its whole content: callouts and subspaces are deleted and rebuilt, and the flow, about page and settings are replaced. A file that cannot be copied stays referenced as it was, because the old content is already gone. **(defect in part: F4)** | — | — | There is nothing to roll back to once the previous content is replaced (service comment). | Code comment (no spec) |
-| TPL-22 | The space content inside a space template has a fixed licence: multi-user whiteboards, multi-user memos and office documents are on; the plan tiers, save-as-template, virtual contributor access and memo signing are off. **(open: F6, Q-TPL-22)** | — | — | — | Not decided: exists in the code |
-| TPL-23 | The space content inside a template can be read and edited by whoever may read or edit the template. Its about page and settings can be edited in place. **(open: Q-TPL-23)** | — | — | — | Not decided: exists in the code |
-| TPL-24 | A space template created without an innovation flow gets one step, called "Default state", and may have 1 to 8 steps. **(open: Q-TPL-24)** | — | — | — | Not decided: exists in the code |
+| TPL-22 | The space content inside a space template has a fixed licence: multi-user whiteboards, multi-user memos and office documents are on; the plan tiers, save-as-template, virtual contributor access and memo signing are off. **(open: F6, Q-TPL-22)** | A template must be able to hold every kind of content, so its licence turns the content features on and leaves out the plan and the features that only matter in a live space. _(draft)_ | — | — | Not decided: exists in the code |
+| TPL-23 | The space content inside a template can be read and edited by whoever may read or edit the template. Its about page and settings can be edited in place. **(open: Q-TPL-23)** | — | — | The content inside a template is part of the template, so it carries the template's rights. _(draft)_ | Not decided: exists in the code |
+| TPL-24 | A space template created without an innovation flow gets one step, called "Default state", and may have 1 to 8 steps. **(open: Q-TPL-24)** | — | — | Every space needs at least one flow step to hold its callouts. _(draft)_ The 1 to 8 range is the step allowance of every space (server#6418, #6177). | Not decided: exists in the code |
 
 ### Applying a template and creating from one
 
@@ -65,16 +68,16 @@ _Open questions per owner: Product Lead 11 · Technical Lead 5 · Quality Lead 9
 | TPL-25 | Applying a space template to a space or subspace needs the right to edit its collaboration and to read the template. There are four choices: flow only (the default), add the template's callouts, replace all callouts, or delete the callouts only. Callouts left in a step that no longer exists move to the first step. | Three content options when changing a subspace's template (030 FR-001–FR-010). | — | The source-template read guard closes an existence oracle and an exfiltration path (service comment). | Server spec 030 FR-001–FR-010 |
 | TPL-26 | Applying a template to a top-level space replaces its whole flow too. A template with more steps than the space allows (8) is refused before any callout is touched. | — | — | L0 spaces share the subspace allowance 1..8; the fixed-phase mechanism is kept at 0 so it can be re-tightened by a constant (server#6418, #6177). | Server issues #6418, #6177 |
 | TPL-27 | A new space is built from a template: the one the creator picks and can read, or else a default. The template's callouts are added only when asked; polls arrive open with no votes and forms with no responses. A form in the create request itself is refused. **(defect in part: F8)** | Only a template may carry a Form into a new space (080 R25(c), FR-027a). | — | Subspace templates (#4571); a caller-chosen template is copied wholesale, so the creator must be able to read it (service comment). | Server PR #4571; spec 080 R25(c), FR-027a |
-| TPL-28 | Creating a top-level space also adds the callouts of the platform's tutorials template. **(open: Q-TPL-28)** | — | — | — | Not decided: exists in the code |
+| TPL-28 | Creating a top-level space also adds the callouts of the platform's tutorials template. **(open: Q-TPL-28)** | — | As the admin of a new space, I want it to come with tutorial posts, so that I learn how to use it. _(draft)_ | — | Not decided: exists in the code |
 | TPL-29 | A virtual contributor's knowledge base starts from the platform's knowledge template, without its poll and form callouts. | — | — | A knowledge base accepts neither, so a Form in the template would fail every VC creation (080 R25; service comment). | Spec 080 R25 |
 
 ### Default templates and seeds
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| TPL-30 | A default template is a named slot that holds one space template. The platform has four slots and every top-level space has one, for its subspaces. Changing a slot needs the right to edit it, and the new template must be a space template from the slot's own library. **(open: Q-TPL-30)** | — | — | — | Not decided: exists in the code |
+| TPL-30 | A default template is a named slot that holds one space template. The platform has four slots and every top-level space has one, for its subspaces. Changing a slot needs the right to edit it, and the new template must be a space template from the slot's own library. **(open: Q-TPL-30)** | — | As a space admin, I want new subspaces to start from a template I chose, so that they share one structure. _(draft)_ | — | Not decided: exists in the code |
 | TPL-31 | At every start the platform makes sure its four default templates exist (created once, never overwritten) and that the public "Classifications" pack exists with the SDGs classification template (17 values, multi-select). A seeded template that an admin deleted comes back at the next start. | — | — | Defaults are needed before any space or VC can be created; the seed is create-if-absent keyed by name id, deletion tombstones were ruled out (024 FR-005a/d, ruling D5; bootstrap comments). | Spec 024 FR-005a/d, ruling D5 |
-| TPL-32 | A classification template holds 1 to 50 values, each with a unique id. Ids are made from the labels and stay the same when a label is renamed. The choice is single-select or multi-select. | A template must never reach the picker half-built. | — | Stable ids are copied verbatim into every space that adopts it (024 FR-002a/c, FR-010c). | Spec 024 FR-002a/c, FR-010c |
+| TPL-32 | A classification template holds 1 to 50 values, each with a unique id. Ids are made from the labels and stay the same when a label is renamed. The choice is single-select or multi-select. | A template must never reach the picker half-built. _(draft)_ | — | Stable ids are copied verbatim into every space that adopts it (024 FR-002a/c, FR-010c). | Spec 024 FR-002a/c, FR-010c |
 
 ### Reading and administering
 
@@ -158,7 +161,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| OQ4 | Libraries | contract | Is the alphabetical order of templates a contract the new core must keep? The web app's template pages may rely on it. | Architecture Lead; Product Lead confirms | — | open |
+| OQ4 | Libraries | contract | Is the alphabetical order of templates a contract the new core must keep? The web app's template pages may rely on it. | Architecture Lead; Product Lead confirms | Server spec 101 (innovation library pagination, Clarifications) decided that the new paginated fields page newest-first and offer no ordering by display name; that ordering stays only on the existing unpaginated fields. So alphabetical order is a contract of the old fields only. | suggested |
 
 ### Technical Lead
 
@@ -172,7 +175,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F10 | Callout templates | defect | A callout template with a whiteboard framing shows no preview (client-web#10283). Who owns it? | Technical Lead | Route to the client-web owner. | suggested |
 | F11 | Libraries | decision | An update that sends content of the wrong kind is ignored silently, except classification data, which is refused. Refuse every wrong-kind content (one rule), or document that it is ignored? | Technical Lead | — | open |
 | OQ5 | Callout templates | check | Is the missing whiteboard preview of F10 a server or a client fault? The code read could not tell; it needs the client owner or a live capture. | Technical Lead | — | open |
-| Q-TPL-03 | Libraries | decision | Why does this rule exist? No source states the reason. Name ids are unique per library and made from the display name when left out. | Technical Lead | — | open |
+| Q-TPL-03 | Libraries | decision | Why does this rule exist? No source states the reason. Name ids are unique per library and made from the display name when left out. | Technical Lead | The name id is the last part of the template's web address (`url.generator.service.ts:449`). The why is on TPL-03. | suggested |
 
 **Also involved**
 
@@ -235,7 +238,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| OQ4 | Libraries | contract | Is the alphabetical order of templates a contract the new core must keep? The web app's template pages may rely on it. | Architecture Lead; Product Lead confirms | — | open |
+| OQ4 | Libraries | contract | Is the alphabetical order of templates a contract the new core must keep? The web app's template pages may rely on it. | Architecture Lead; Product Lead confirms | Server spec 101 (innovation library pagination, Clarifications) decided that the new paginated fields page newest-first and offer no ordering by display name; that ordering stays only on the existing unpaginated fields. So alphabetical order is a contract of the old fields only. | suggested |
 
 ## Appendix
 
@@ -381,6 +384,8 @@ Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/7
 
 2026-11-19 converted to the three-section layout. The single why of each rule was sorted into business and technical without rewording, each rule got a short plain version (the exact text is in Appendix A), and every finding, open question and gap was routed to an organisation role. Product has not reviewed this file yet.
 
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. The web address of a template answers Q-TPL-03; server spec 101 gives OQ4 a suggested answer. The rules that carry a "why does this rule exist?" question keep it: their drafts are for product to confirm.
+
 #### Sources
 
 Server code (worktree `w1-access-matrix/server` @ `eeecf9ddb`):
@@ -409,3 +414,4 @@ Specs / issues:
 - server `specs/029-default-post-template-flow/spec.md`, `specs/030-template-content-options/spec.md`, `specs/043-callout-collapse/spec.md`, `specs/101-innovation-library-pagination/spec.md`; `specs/060-ut-domain-template`, `specs/062-ut-library` (unit-test scope only)
 - `agents-hq@origin/main:specs/080-form-callout-framing/spec.md` (R25, FR-025–FR-027b), `…/085-document-post-templates/spec.md`, `…/024-classifications/spec.md`, `…/040-sidebar-widget-config/spec.md`; local `agents-hq/specs/008-contributor-collection-callout`, `025-callout-manual-selection`, `034-contributors-map-view`, `021-flow-state-post-layout`, `013-spaces-collection-callout`
 - alkem-io/server#6435, #6614, #6418, #6177, #6399, #6648, #6596 (+ PR #6656); alkem-io/client-web#8804, #10283
+- server `specs/101-innovation-library-pagination/spec.md` (Clarifications: ordering of the paginated fields, for OQ4); `src/services/infrastructure/url-generator/url.generator.service.ts:449` (template web address, for TPL-03)
