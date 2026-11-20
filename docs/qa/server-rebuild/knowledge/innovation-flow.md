@@ -2,16 +2,16 @@
 
 _What the platform does today for a space's innovation flow: its states (the phases, shown as the space's tabs), how they are added, renamed, deleted, ordered and made current, the settings of each state (visibility, post presentation, sidebar), how callouts are filed under a state, the default post template per state, and how a flow travels through templates and conversions. It says what the server does, why, who may, and what is still to answer. The file has three sections, **1. Rules**, **2. Rights** and **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 2 · Technical Lead 9 · Quality Lead 6 · Incident Lead 1. By state: 12 open · 6 with a suggested answer. Proof of the 27 rules: 16 proven by a test · 11 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 9 · Quality Lead 6 · Incident Lead 1. By state: 10 open · 6 with a suggested answer · 2 decided. Proof of the 27 rules: 16 proven by a test · 11 untested (Appendix A)._
 
-_Whys of the 27 rules: 22 rest on a source · 1 carry a draft for product to decide · 4 have none, and each already carries an open question or defect marker (FLW-04, FLW-07, FLW-16, FLW-27)._
+_Whys of the 27 rules: 23 rest on a source or a product decision · none carries a draft · 4 have none, and each already carries an open question or defect marker (FLW-04, FLW-07, FLW-16, FLW-27)._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
 - **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
 - A why that names a spec, issue, pull request, code comment or code line rests on that source. A why, or the part of a why, ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A user story always ends in its "so that"; where no source gives one, QA wrote it. A rule with no why at all carries an open question in section 3.
-- **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Not decided" means the behaviour exists in the code and nobody chose it. Product has not reviewed this file yet.
+- **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Not decided" means the behaviour exists in the code and nobody chose it. Product reviewed section 3 on 2026-11-20.
 - A marker in bold at the end of a rule points at section 3: **(open: F5)** means a question on this rule is still open, **(defect: …)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: …)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
 
@@ -56,7 +56,7 @@ _Whys of the 27 rules: 22 rest on a source · 1 carry a draft for product to dec
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | FLW-15 | Every callout sits in exactly one state of its space's flow. It keeps its state while that name exists; otherwise it lands on the first state, whether after a full replacement, a transfer or a move to another space. | A callout whose state matches no phase is filtered out of every tab and "appears to have vanished" (#6021, #4970; utils comment); 083 FR-018; 030 FR-004 / US3-AS2. | — | — | Spec 083 FR-018; spec 030 FR-004, US3-AS2; server #6021, #4970 |
-| FLW-16 | A callout created without a state goes to a default state: the first state as it was at creation, or the state that was current at the last rename or replacement. That is not always the state that is current now. **(open: F5)** | — | — | — | Not decided: exists in the code |
+| FLW-16 | A callout created without a state goes to a default state: the first state as it was at creation, or the state that was current at the last rename or replacement. That is not always the state that is current now. | — | — | — | Product, 2026-11-20 (F5): stays as today; landing in the current state is a wish on the product issues list |
 | FLW-17 | A search can be limited to one state of one space. | Knowledge-base search per phase (workspace 007). | — | — | Spec 007 |
 | FLW-18 | A state can have one callout template as its default post template. A space admin sets, changes or clears it from the tab's menu; deleting the template clears it; a space template never carries it. | A consistent starting structure per phase, instance-specific (029 §4–6; 021 US3-AS3/AS4). | — | — | Spec 029 §4–6; spec 021 US3-AS3/AS4 |
 
@@ -64,7 +64,7 @@ _Whys of the 27 rules: 22 rest on a source · 1 carry a draft for product to dec
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| FLW-19 | A flow has its own name, description and image, which a space admin can edit. Its address sits under the space and follows the space when it is promoted, demoted or moved. | — | As a space admin, I want to name, describe and illustrate my space's flow, so that members understand how the space is organised. _(draft)_ | — | Not decided: exists in the code |
+| FLW-19 | A flow has its own name, description and image, which a space admin can edit. Its address sits under the space and follows the space when it is promoted, demoted or moved. | — | As a space admin, I want to name, describe and illustrate my space's flow, so that members understand how the space is organised. | — | Product, 2026-11-20 |
 | FLW-20 | Saving a space as a template captures its flow: state names, descriptions, order and every setting, but never the default post template. Applying a space template replaces the whole flow at every level; a template that would give more than 8 states is refused before anything changes. **(open: OQ5)** | — | — | Operator ruling 3 of 040 (FR-015); L0 fixed phases removed (server#6418, R-22); 104 FR-009 atomic refusal; 030 FR-004. | Spec 040 FR-015 (operator ruling 3); spec 104 FR-009; spec 030 FR-004; server#6418 |
 | FLW-21 | Promoting or demoting a space keeps its flow exactly: names, descriptions, order, the current state and every sidebar. After a move to another space, each callout is matched again against the states of its own space. | Custom phases must survive promotion (server#6418, 086 U-2); 083 FR-018. | — | — | Server#6418; spec 086 U-2; spec 083 FR-018 |
 
@@ -117,18 +117,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F5 | Callouts | decision | Which state should a new post land in when none is chosen: the first state, or the current state? Today it depends on when the flow was last renamed or replaced. | Product Lead, then Technical Lead | — | open |
-| CONST | All | decision | 18 of the 24 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
+Nothing to answer: every Product Lead question is decided (see Decided).
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 9 to answer, 4 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 9 to answer, 2 also involved
 
 **To answer**
 
@@ -150,8 +145,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F1 | States | defect | Adding or deleting a state does not update the list of state names that callouts are checked against. On acceptance 1,100 callouts carry a state outside that list, and the cause is still live (server#6729). Is that an incident or a backlog defect? | Incident Lead, then Technical Lead | Keep server#6729. In the new core, map callouts to the flow's own states, never to the stale list. | suggested |
 | F2 | States | check | When a tab that holds posts is renamed, do the posts vanish from it? The server does not save the move of the posts to the new name; spec 021 assumes both server and client do it. If they vanish, it is a defect and explains part of the 14 callouts on a vanished state on acceptance. | Quality Lead (makes the live check), then Technical Lead | Verify live: as an admin, rename a tab that holds a post through the API, then list the tab. If the client moves the posts, record the server rule as "the client does it". | suggested |
-| F5 | Callouts | decision | Which state should a new post land in when none is chosen: the first state, or the current state? Today it depends on when the flow was last renamed or replaced. | Product Lead, then Technical Lead | — | open |
-| CONST | All | decision | 18 of the 24 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
 
 ### Quality Lead
 
@@ -170,13 +163,9 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Security Lead
 
-[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 1 also involved
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin)
 
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| CONST | All | decision | 18 of the 24 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | — | open |
+Nothing to answer.
 
 ### Incident Lead
 
@@ -187,6 +176,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F1 | States | defect | Adding or deleting a state does not update the list of state names that callouts are checked against. On acceptance 1,100 callouts carry a state outside that list, and the cause is still live (server#6729). Is that an incident or a backlog defect? | Incident Lead, then Technical Lead | Keep server#6729. In the new core, map callouts to the flow's own states, never to the stale list. | suggested |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| F5 | Stays as today: a callout created without a state goes to the vocabulary's default state, which depends on when the flow was last renamed or replaced. That it should land in the current state is a wish on the product issues list. | Product, 2026-11-20 | FLW-16; PRODUCT-ISSUES F5 |
+| CONST | Product rules on the state-count bounds, the default flows, the state name and description limits, the settings defaults, the description display modes, the sidebar vocabulary, the default sidebars and the search placement, ticked "yes" in Appendix E. Storage, ordering, rights, error texts and the GraphQL surface go to the Technical Lead or the Security Lead. | Product, 2026-11-20 | Appendix E |
 
 ## Appendix
 
@@ -244,7 +240,7 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 - **F2 — A renamed state's callouts are never re-tagged on the server (FLW-05).** Code: `updateTagsetsSelectedValue` sets the renamed tag in memory and `continue`s before any save; neither the template nor the flow cascades to tagsets, and the only save after it is the flow's. Test: the unit test asserts the in-memory value; `transfer-callout-changed-flow` renames a state in set-up and asserts nothing about existing callouts; no client walk renames a tab with posts in it. Spec 021 Assumptions: "Renaming a phase already re-tags its posts (both platform-side and in the admin UI flow)". Ruling: verify live (rename a tab holding a post as an admin through the API, then list the tab) — if the post vanishes it is a defect of the same family as #6021/#4970 and explains part of register L2 (14 callouts on a vanished state); if the client re-tags, record the server rule as "the client does it".
 - **F3 — Deleting the current state leaves a dangling pointer (FLW-07).** Code: the delete never touches `currentStateID`; the field resolver answers null when states are eager-loaded and throws otherwise. Test: the first-phase delete cases delete the current state of a fresh flow but never read `currentState` afterwards. Spec: none (104 edge case "the current-state pointer must remain valid" after add/remove is the only statement, and it is on the opposite side). Ruling: defect — select the first remaining state on delete, as the wholesale replace already does.
 - **F4 — A sidebar-only save racing a rename is lost (FLW-12).** Code: read-modify-write without a lock. Test: US2-AS6 pinned red and skipped by decision (2026-10-01). Spec 040 FR-014 / 021 FR-013. Ruling: already filed as server#6571 — keep the skip until it ships.
-- **F5 — New callouts default to a state that is not the current state (FLW-16).** Code: the vocabulary's default is set at creation (first state) and only rewritten on rename/replace (to the then-current state); selecting a current state leaves it. Test: none (every transfer case computes "default" as the first state name, which is correct only because nothing re-selected the current state). Spec: none says which state a new callout should land in. Ruling: define "default state for new posts" — first, or current — and make the one write path honour it.
+- **F5 — New callouts default to a state that is not the current state (FLW-16).** Code: the vocabulary's default is set at creation (first state) and only rewritten on rename/replace (to the then-current state); selecting a current state leaves it. Test: none (every transfer case computes "default" as the first state name, which is correct only because nothing re-selected the current state). Spec: none says which state a new callout should land in. Ruling: define "default state for new posts" — first, or current — and make the one write path honour it. **Product, 2026-11-20:** stays as today; the current state as the one default is a wish on the product issues list.
 - **F6 — Spec 104 contradicts the code on the L0 floor (FLW-01).** Spec 104 FR-002/006/008: minimum 4, fixed first four phases preserved on template apply. Code: min 1, fixed 0, wholesale replace (server#6418 for client-web#9528, product-approved per the test headers). Test: `apply-template-l0-wholesale-replace` (R-22) proves the code. Ruling: amend 104 (or mark it superseded) so the W1 why column does not cite a dead requirement.
 - **F7 — A deprecated field is past its removal date (FLW-26).** Code: `calloutDescriptionDisplayMode` on the space settings carries `REMOVE_AFTER=2026-10-31` and is still served on 2026-11-06. Spec 021 FR-008 asked for "a scheduled removal note"; server spec 010 enforces the workflow. Ruling: remove or re-date.
 - **F8 — `update-innovation-flow` is granted and never checked (FLW-27).** Code: privilege rule CREATE → UPDATE_INNOVATION_FLOW exists; no resolver or service reads it; every flow mutation gates on CREATE/DELETE/UPDATE. Test/spec: none. Ruling: drop it (and its policy rule type) or make the state mutations use it.
@@ -282,34 +278,34 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column is unchanged: the reviewer ticks the rows product must rule on. An entry such as F-3 in that column is finding F3._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| State-count bounds | min 1 / max 8 at every level; fixed leading L0 phases 0 | `innovation.flow.constants.ts:16-37`; migration `1787788800000` | F-6 | Product Lead |
-| Default top-level flow | Home, Community, Subspaces, Knowledge (4) | `bootstrap.template.space.content.space.l0.ts:25-70` | | Product Lead |
-| Default subspace flow | Explore, Define, Brainstorm, Validate, Evaluate (5) | `bootstrap.template.space.content.subspace.ts:25-85` | | Product Lead |
-| State name | ≤ 128 chars; no comma; unique per flow ignoring case and surrounding spaces; no non-empty check | `innovation.flow.state.dto.create.ts:11-16`; `innovation.flow.service.ts:867-910` | F-9 | Product Lead |
-| State description | ≤ 2,048 chars (`LONG_TEXT_LENGTH`), markdown | `innovation.flow.state.dto.create.ts:18-23`; `entity.field.length.constants.ts:6` | | Product Lead |
-| Sort positions | create: 5, 10, 15 …; add: max+1 (or 1); reorder: lowest+10 in steps of 10; template copy: (i+1)·5 | `innovation.flow.service.ts:101-112, 642-647, 1114-1130`; `input.creator.service.ts:466-475` | | Technical Lead |
-| Ordering rule | `(sortOrder ASC, id ASC)`, plain lowercase id compare, over all states incl. hidden | `utils/sortBySortOrder.ts:16-26`; 086 FR-002 | | Technical Lead |
-| Settings defaults | `allowNewCallouts` true, `visible` true, `descriptionDisplayMode` `expanded`, `showPublishDetails` true, `sidebar` generic list | `innovation.flow.state.service.ts:43-63`; `normalize.state.settings.ts:58-75` | | Product Lead |
-| Description display modes | `collapsed`, `expanded` | `src/common/enums/callout.description.display.mode.ts` | | Product Lead |
-| Sidebar vocabulary (16) | `intent`, `about`, `createPost`, `applicationButton`, `createSubspace`, `subspaceLinks`, `events`, `updates`, `contactLeads`, `addUser`, `virtualContributors`, `guidelines`, `index`, `search`, `community`, `activity` | `src/common/enums/sidebar.widget.ts:5-23` | | Product Lead |
-| Sidebar list limits | ≤ 20 entries, no duplicates, enum-typed, empty allowed | `innovation.flow.state.settings.dto.update.ts:42-52` | | Technical Lead |
-| Default sidebars | L0 tab 1 `[intent, about, createPost, search, applicationButton, subspaceLinks, events, updates]`; tab 2 `[intent, createPost, search, applicationButton, contactLeads, addUser, virtualContributors, guidelines]`; tab 3 `[intent, createSubspace, createPost, search, applicationButton]`; generic `[intent, createPost, applicationButton, search, index]`; subspace position 1 `[intent, about, createPost, community, events, activity, index, subspaceLinks, virtualContributors, updates]` (no `search`), 2 → L0 tab 2, 3 → L0 tab 3, 4+ → generic | `innovation.flow.state.sidebar.defaults.ts:55-143` | | Product Lead |
-| `search` placement rule | before the first `index`, else after the last `createSubspace`/`createPost`, else appended; idempotent | `innovation.flow.state.sidebar.defaults.ts:27-53` | | Product Lead |
-| Flow-state classification | tagset `flow-state`, type `select-one`, exactly one tag; `allowedValues` = state names in order; `defaultSelectedValue` = current state's name at creation / last rename or replacement | `collaboration.service.ts:209-230`; `tagset.reserved.name.ts:5`; `tagset.service.ts:90-112` | F-1, F-5 | Technical Lead |
-| Privileges and gates | create (add), delete (delete), update on flow (current, reorder, profile), update on state (rename, settings, default template); `update-innovation-flow` granted from create, unread | `innovation.flow.resolver.mutations.ts`; `innovation.flow.service.authorization.ts:56-62`; `authorization.privilege.ts:30` | F-8 | Security Lead |
-| Policy types | `innovation-flow`, `innovation-flow-state`; profile type `innovation-flow` | `authorization.policy.type.ts:12-13`; `profile.type.ts:5` | | Technical Lead |
-| Error text — bounds | `Require at least one state to create an InnovationFlow: …` · `At least one state must be defined: …` · `Innovation Flow can have a maximum of <max> states; provided: <n>` · `Innovation Flow must have a minimum of <min> states; current: <n>` (delete) / `… provided: …` (create) · `State names must be unique: …` · `Template content space innovation flow states must satisfy the required minimum` · `Innovation flow must have at least <n> states.` (space creation, TPL-27) | `innovation.flow.service.ts:79-84, 635-640, 668-673, 815-853`; `space.service.ts:1585-1595` | | Technical Lead |
-| Error text — names | `Invalid characters found on flow state: …` · `A state with this display name already exists in the Innovation Flow` | `innovation.flow.service.ts:867-910` | | Technical Lead |
-| Error text — current / order | `Selected state '<name>' is not part of the current flow states: …` · `No state IDs provided for sort order update.` · `The number of states provided for sorting does not match the number of states of the Innovation Flow.` · `One or more states with requested IDs not located in the specified InnovationFlow` | `innovation.flow.service.ts:936-941, 1095-1101`; `innovation.flow.resolver.mutations.ts:216-229` | | Technical Lead |
-| Error text — delete / template | `Unable to find state with ID <id> in innovation flow <id>` · `Failed to move all posts, try again or move them manually. <error>` · `Unable to find InnovationFlowState to inherit the sidebar` · `Applying this template would exceed the maximum number of states for this Space` · `Template must be of type CALLOUT` · `Template not found` | `innovation.flow.service.ts:679-682, 808-813, 439-448`; `innovation.flow.state.service.ts:181-184, 292-311` | | Technical Lead |
-| Error text — vocabulary | `Provided tags (<tags>) has values that are not in allowedValues: <values>` · `TagsetTemplate newDefaultValue(<v>) is not in allowedValues!` | `tagset.service.ts:105-110, 215-219` | F-1 | Technical Lead |
-| Deprecated field | `SpaceSettingsCollaboration.calloutDescriptionDisplayMode` — `REMOVE_AFTER=2026-10-31` | `schema.graphql:7297` | F-7 | Technical Lead |
-| Search scope | `SearchInput.searchInFlowStateFilter: UUID` | `schema.graphql:10263` | | Technical Lead |
-| GraphQL surface | `Collaboration.innovationFlow`, `InnovationFlow{profile, settings{minimumNumberOfStates, maximumNumberOfStates}, states, currentState}`, `InnovationFlowState{displayName, description, sortOrder, settings{allowNewCallouts, visible, descriptionDisplayMode, showPublishDetails, sidebar}, defaultCalloutTemplate}`, `lookup.innovationFlow`, `lookupMyPrivileges.innovationFlow`, `inputCreator.innovationFlow`; mutations `createStateOnInnovationFlow`, `deleteStateOnInnovationFlow`, `updateInnovationFlow`, `updateInnovationFlowCurrentState`, `updateInnovationFlowState`, `updateInnovationFlowStatesSortOrder`, `setDefaultCalloutTemplateOnInnovationFlowState`, `removeDefaultCalloutTemplateOnInnovationFlowState` | `schema.graphql:2623-2624, 3257-3280, 3860-3918, 4003, 4376, 4453, 5021-5022, 5101-5102, 5215-5216, 5295-5296, 5389-5398, 9137-9160, 9416-9424, 9684-9687, 10091-10093, 10285-10288, 10777-10832` | | Technical Lead |
+| State-count bounds | min 1 / max 8 at every level; fixed leading L0 phases 0 | `innovation.flow.constants.ts:16-37`; migration `1787788800000` | yes (F-6) | Product Lead |
+| Default top-level flow | Home, Community, Subspaces, Knowledge (4) | `bootstrap.template.space.content.space.l0.ts:25-70` | yes | Product Lead |
+| Default subspace flow | Explore, Define, Brainstorm, Validate, Evaluate (5) | `bootstrap.template.space.content.subspace.ts:25-85` | yes | Product Lead |
+| State name | ≤ 128 chars; no comma; unique per flow ignoring case and surrounding spaces; no non-empty check | `innovation.flow.state.dto.create.ts:11-16`; `innovation.flow.service.ts:867-910` | yes (F-9) | Product Lead |
+| State description | ≤ 2,048 chars (`LONG_TEXT_LENGTH`), markdown | `innovation.flow.state.dto.create.ts:18-23`; `entity.field.length.constants.ts:6` | yes | Product Lead |
+| Sort positions | create: 5, 10, 15 …; add: max+1 (or 1); reorder: lowest+10 in steps of 10; template copy: (i+1)·5 | `innovation.flow.service.ts:101-112, 642-647, 1114-1130`; `input.creator.service.ts:466-475` | no | Technical Lead |
+| Ordering rule | `(sortOrder ASC, id ASC)`, plain lowercase id compare, over all states incl. hidden | `utils/sortBySortOrder.ts:16-26`; 086 FR-002 | no | Technical Lead |
+| Settings defaults | `allowNewCallouts` true, `visible` true, `descriptionDisplayMode` `expanded`, `showPublishDetails` true, `sidebar` generic list | `innovation.flow.state.service.ts:43-63`; `normalize.state.settings.ts:58-75` | yes | Product Lead |
+| Description display modes | `collapsed`, `expanded` | `src/common/enums/callout.description.display.mode.ts` | yes | Product Lead |
+| Sidebar vocabulary (16) | `intent`, `about`, `createPost`, `applicationButton`, `createSubspace`, `subspaceLinks`, `events`, `updates`, `contactLeads`, `addUser`, `virtualContributors`, `guidelines`, `index`, `search`, `community`, `activity` | `src/common/enums/sidebar.widget.ts:5-23` | yes | Product Lead |
+| Sidebar list limits | ≤ 20 entries, no duplicates, enum-typed, empty allowed | `innovation.flow.state.settings.dto.update.ts:42-52` | no | Technical Lead |
+| Default sidebars | L0 tab 1 `[intent, about, createPost, search, applicationButton, subspaceLinks, events, updates]`; tab 2 `[intent, createPost, search, applicationButton, contactLeads, addUser, virtualContributors, guidelines]`; tab 3 `[intent, createSubspace, createPost, search, applicationButton]`; generic `[intent, createPost, applicationButton, search, index]`; subspace position 1 `[intent, about, createPost, community, events, activity, index, subspaceLinks, virtualContributors, updates]` (no `search`), 2 → L0 tab 2, 3 → L0 tab 3, 4+ → generic | `innovation.flow.state.sidebar.defaults.ts:55-143` | yes | Product Lead |
+| `search` placement rule | before the first `index`, else after the last `createSubspace`/`createPost`, else appended; idempotent | `innovation.flow.state.sidebar.defaults.ts:27-53` | yes | Product Lead |
+| Flow-state classification | tagset `flow-state`, type `select-one`, exactly one tag; `allowedValues` = state names in order; `defaultSelectedValue` = current state's name at creation / last rename or replacement | `collaboration.service.ts:209-230`; `tagset.reserved.name.ts:5`; `tagset.service.ts:90-112` | no (F-1, F-5) | Technical Lead |
+| Privileges and gates | create (add), delete (delete), update on flow (current, reorder, profile), update on state (rename, settings, default template); `update-innovation-flow` granted from create, unread | `innovation.flow.resolver.mutations.ts`; `innovation.flow.service.authorization.ts:56-62`; `authorization.privilege.ts:30` | no (F-8) | Security Lead |
+| Policy types | `innovation-flow`, `innovation-flow-state`; profile type `innovation-flow` | `authorization.policy.type.ts:12-13`; `profile.type.ts:5` | no | Technical Lead |
+| Error text — bounds | `Require at least one state to create an InnovationFlow: …` · `At least one state must be defined: …` · `Innovation Flow can have a maximum of <max> states; provided: <n>` · `Innovation Flow must have a minimum of <min> states; current: <n>` (delete) / `… provided: …` (create) · `State names must be unique: …` · `Template content space innovation flow states must satisfy the required minimum` · `Innovation flow must have at least <n> states.` (space creation, TPL-27) | `innovation.flow.service.ts:79-84, 635-640, 668-673, 815-853`; `space.service.ts:1585-1595` | no | Technical Lead |
+| Error text — names | `Invalid characters found on flow state: …` · `A state with this display name already exists in the Innovation Flow` | `innovation.flow.service.ts:867-910` | no | Technical Lead |
+| Error text — current / order | `Selected state '<name>' is not part of the current flow states: …` · `No state IDs provided for sort order update.` · `The number of states provided for sorting does not match the number of states of the Innovation Flow.` · `One or more states with requested IDs not located in the specified InnovationFlow` | `innovation.flow.service.ts:936-941, 1095-1101`; `innovation.flow.resolver.mutations.ts:216-229` | no | Technical Lead |
+| Error text — delete / template | `Unable to find state with ID <id> in innovation flow <id>` · `Failed to move all posts, try again or move them manually. <error>` · `Unable to find InnovationFlowState to inherit the sidebar` · `Applying this template would exceed the maximum number of states for this Space` · `Template must be of type CALLOUT` · `Template not found` | `innovation.flow.service.ts:679-682, 808-813, 439-448`; `innovation.flow.state.service.ts:181-184, 292-311` | no | Technical Lead |
+| Error text — vocabulary | `Provided tags (<tags>) has values that are not in allowedValues: <values>` · `TagsetTemplate newDefaultValue(<v>) is not in allowedValues!` | `tagset.service.ts:105-110, 215-219` | no (F-1) | Technical Lead |
+| Deprecated field | `SpaceSettingsCollaboration.calloutDescriptionDisplayMode` — `REMOVE_AFTER=2026-10-31` | `schema.graphql:7297` | no (F-7) | Technical Lead |
+| Search scope | `SearchInput.searchInFlowStateFilter: UUID` | `schema.graphql:10263` | no | Technical Lead |
+| GraphQL surface | `Collaboration.innovationFlow`, `InnovationFlow{profile, settings{minimumNumberOfStates, maximumNumberOfStates}, states, currentState}`, `InnovationFlowState{displayName, description, sortOrder, settings{allowNewCallouts, visible, descriptionDisplayMode, showPublishDetails, sidebar}, defaultCalloutTemplate}`, `lookup.innovationFlow`, `lookupMyPrivileges.innovationFlow`, `inputCreator.innovationFlow`; mutations `createStateOnInnovationFlow`, `deleteStateOnInnovationFlow`, `updateInnovationFlow`, `updateInnovationFlowCurrentState`, `updateInnovationFlowState`, `updateInnovationFlowStatesSortOrder`, `setDefaultCalloutTemplateOnInnovationFlowState`, `removeDefaultCalloutTemplateOnInnovationFlowState` | `schema.graphql:2623-2624, 3257-3280, 3860-3918, 4003, 4376, 4453, 5021-5022, 5101-5102, 5215-5216, 5295-5296, 5389-5398, 9137-9160, 9416-9424, 9684-9687, 10091-10093, 10285-10288, 10777-10832` | no | Technical Lead |
 
 ### F. Where this lands in the new core
 
