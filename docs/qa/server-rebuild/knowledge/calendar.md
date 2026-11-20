@@ -2,7 +2,7 @@
 
 _What the platform does today for the calendar every space carries and its events: creating, reading, updating and deleting them, whole-day and timed dates, the Google, Outlook and ICS exports, subspace events showing on the parent calendar, and the notifications and activity an event produces. It says what the server does, why, who may, and what is still to answer. The file has three sections, **1. Rules**, **2. Rights** and **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 3 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 6 open · 2 change decided · 5 with a suggested answer · 5 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
+_Open questions per owner: Product Lead 1 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 6 open · 5 with a suggested answer · 7 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
 
 _Whys of the 25 rules: 21 rest on a source or a product decision · 4 carry a technical draft for the Technical Lead (EVT-01, EVT-02, EVT-09, EVT-16) · 0 have none (—)._
 
@@ -27,7 +27,7 @@ _Whys of the 25 rules: 21 rest on a source or a product decision · 4 carry a te
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| EVT-02 | Only space admins create events on a space's calendar. Members and leads can comment on events but cannot create them; outsiders are refused. **(defect: CH-EVT-02)** | Today: events are curated by the space's admins; taking part is a comment, not an event. Product, 2026-11-20: members should be able to create events too (change decided, CH-EVT-02; alkem-io/alkemio#2205). | — | The collaboration's contributor rule grants contribute only, not create. _(draft)_ | Product, 2026-11-20 (CH-EVT-02, change decided): members should also create events |
+| EVT-02 | Only space admins create events on a space's calendar. Members and leads can comment on events but cannot create them; outsiders are refused. | Events are curated by the space's admins; taking part is a comment, not an event (Product, 2026-11-20). Members creating events is wanted and tracked in alkem-io/alkemio#2205. | — | The collaboration's contributor rule grants contribute only, not create. _(draft)_ | Product, 2026-11-20 (was CH-EVT-02): behaviour stays, tracked |
 | EVT-03 | An event has a title, an optional description, location and tags, one of six types (event, deadline, meeting, milestone, training, other), a start, a whole-day flag, a multi-day flag, a duration, and a flag that says whether it shows on the parent calendar. **(open: F6)** | — | As a space admin, I want to say what kind of event it is, where, and when (one day, several days or a time slot), so that members can plan for it. For the parent-calendar flag: as a subspace admin, I want to promote some events on the space level as well (client-web#6876), so that the whole community sees the events that matter beyond my subspace. | — the event vocabulary is the calendar's own; no spec states why these six. | Product, 2026-11-20 |
 | EVT-04 | An event's name identifier is unique within its calendar. One that is already taken is refused; when none is given, one is made from the title. **(open: Q-EVT-04)** | — | — | The name id is the last part of the event's web address (`<space>/calendar/<nameID>`, `url.generator.service.ts:1357`), so two events in one calendar cannot share it. | Not decided: exists in the code |
 | EVT-05 | Every event has its own comments room. If the event cannot be saved the room is removed again, and deleting the event deletes the room. | — | — | The Matrix room is created outside the database transaction, so an orphan must be removed explicitly (code comment). | Not decided: exists in the code |
@@ -74,7 +74,7 @@ _Whys of the 25 rules: 21 rest on a source or a product decision · 4 carry a te
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | EVT-23 | Events stay with their space when it is converted or moved. | Content travels with the space (journey area, 083/084). | — | — | Specs 083, 084 |
-| EVT-24 | A creator who has left the community can still update and delete the events they created. **(defect: F7)** | Product, 2026-11-20: a creator's rights on an event end when they leave the community; space admins keep theirs. | — | The creator rule is keyed on the user, not on membership. | Product, 2026-11-20 (F7, change decided): today's behaviour is not the rule |
+| EVT-24 | A creator who has left the community can still update and delete the events they created. | Kept as it is for now: no capacity to change it (Product, 2026-11-20). Wanted, tracked: a creator's rights end when they leave the community (F7). | — | The creator rule is keyed on the user, not on membership. | Product, 2026-11-20 (was F7): behaviour stays, tracked |
 | EVT-25 | When the creator's account no longer exists, the event still shows, without a creator, and nobody inherits the creator's rights. **(open: F8)** | An event is content of the space, not of its creator, so it outlives the account; space admins keep managing it. Product, 2026-11-20. | — | — | Product, 2026-11-20 (was Q-EVT-25) |
 
 Numbering note: ids are contiguous; none folded.
@@ -114,14 +114,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 3 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 1 to answer
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F7 | Lifecycle | decision | A creator who has left the community can still update and delete the events they created. Is that intended? | Product Lead | Product, 2026-11-20: rights end on leaving. A former member can no longer update or delete the events they created; space admins keep theirs. Issue: to file. | change decided |
-| CH-EVT-02 | Creating | decision | Only space admins create events today; members and leads can only comment. Should members be able to create events? | Product Lead | Product, 2026-11-20: yes, members should be able to create events too. Issue: alkem-io/alkemio#2205 ("Should let members create calendar events"). | change decided |
 | CONST | All | decision | 22 of the 27 constants are still blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their name) | Product, 2026-11-20: of the seven Product Lead rows, event types and notification events must be ruled on; the two description cuts carry over; roll-up, ICS redirects and creator rights follow F3, F1 and F7. The Technical and Security Lead rows are theirs to tick. | suggested |
 
 ### Technical Lead
@@ -189,6 +187,8 @@ Nothing left: OQ3, where this role was involved, was decided on 2026-11-20 (see 
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| CH-EVT-02 | Behaviour stays: only space admins create events. Wanted, tracked in alkem-io/alkemio#2205: members create events too. | Product, 2026-11-20 | EVT-02 |
+| F7 | Behaviour stays: a creator keeps their rights after leaving the community. Wanted, tracked: rights end on leaving. | Product, 2026-11-20 | EVT-24 |
 | Q-EVT-25 | The event stays when its creator's account is gone, and nobody inherits the creator's rights; space admins keep managing it. | Product, 2026-11-20 | EVT-25 |
 | OQ3 | Europe/Amsterdam is the intended ICS time-zone hint for every customer. | Product, 2026-11-20 | EVT-18 |
 | F1 | Downloading the ICS file keeps requiring sign-in; client-web spec 004 US3 scenario 4 (download from the email without signing in) is not adopted. | Product, 2026-11-20 | EVT-22 |
@@ -305,7 +305,7 @@ _"Rules on it" is pre-filled with the role whose domain covers the value: Produc
 | ICS redirects | no actor → `302 /login?returnUrl=<request url>`; no READ → `302 /restricted?returnUrl=<event page path>` | `calendar-event-ics.controller.ts:34-38`; `calendar-event-ics.redirect.filter.ts:29-43` | decided (F1) (Product, 2026-11-20) | Product Lead |
 | Location format | `addressLine1, addressLine2, city, stateOrProvince, postalCode, country` (blank parts dropped) | `calendar.event.calendar-links.ts:338-353` | | Technical Lead |
 | Comments room | type `calendar-event`, name `calendarEvent-comments-<nameID>` (renamed on title change) | `event.service.ts:64-67, 187-191` | | Technical Lead |
-| Creator rule | `credentialRule-calendarEventCreatedBy`: CREATE, READ, UPDATE, DELETE for `user-self-management:<createdBy>` on the event only | `event.service.authorization.ts:100-115`; `credential.rule.constants.ts:84-85` | change decided (F7) (Product, 2026-11-20) | Product Lead |
+| Creator rule | `credentialRule-calendarEventCreatedBy`: CREATE, READ, UPDATE, DELETE for `user-self-management:<createdBy>` on the event only | `event.service.authorization.ts:100-115`; `credential.rule.constants.ts:84-85` | decided (F7), tracked (Product, 2026-11-20) | Product Lead |
 | Notification events | `SPACE_COMMUNITY_CALENDAR_EVENT_CREATED` (space audience with RECEIVE_NOTIFICATIONS, creator excluded; in-app category SPACE_MEMBER), `SPACE_COMMUNITY_CALENDAR_EVENT_COMMENT` (creator only); both under setting `space.communityCalendarEvents` | `notification.space.adapter.ts:365-440, 458-520`; `notification.recipients.service.ts:542-544, 718-731` | yes (Product, 2026-11-20) | Product Lead |
 | Activity | `CALENDAR_EVENT_CREATED`, description `[<title>] - <description chars 1..100>`, parent = calendar | `activity.adapter.ts:195-215` | | Technical Lead |
 | Error text — nameID taken | `Unable to create CalendarEvent: the provided nameID is already taken: <nameID>` | `calendar.service.ts:145-147` | | Technical Lead |
@@ -325,7 +325,7 @@ Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/7
 
 2026-11-19 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains. The two client-web issues behind PRs #4687 and #5860 (client-web#6876, #9330) and the client-web spec they link were added as sources; they answer OQ1, Q-EVT-04 and Q-EVT-11 and suggest an answer for F3.
 
-2026-11-20 product review by the Product Owner, on behalf of the Product Lead: F1, F3, OQ3, Q-EVT-11 and Q-EVT-25 decided; F7 and CH-EVT-02 change decided (see `PRODUCT-ISSUES.md`); the product and business drafts confirmed; Appendix E ticked for the seven Product Lead constants. The four technical drafts are left for the Technical Lead.
+2026-11-20 product review by the Product Owner, on behalf of the Product Lead: F1, F3, OQ3, Q-EVT-11 and Q-EVT-25 decided; F7 and CH-EVT-02 decided as "behaviour stays", the wanted change tracked in `PRODUCT-ISSUES.md`; the product and business drafts confirmed; Appendix E ticked for the seven Product Lead constants. The four technical drafts are left for the Technical Lead.
 
 #### Sources
 
