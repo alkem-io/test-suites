@@ -2,9 +2,9 @@
 
 _What the platform does today for the Tasks board, a kind of posts callout: its columns, tasks and their columns, moving and reordering tasks, managing columns, counts, templates, deletion and analytics. The ordinary callout rules are in `callout.md` and are only referred to. The file follows the three-section layout: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 4 · Technical Lead 2 · Quality Lead 5 · Architecture Lead 1. By state: 11 open · 1 with a suggested answer. Proof of the 21 rules: 3 proven by a test · 18 untested (Appendix A)._
+_Open questions per owner: Product Lead 1 · Technical Lead 1 · Quality Lead 5 · Architecture Lead 1. By state: 6 open · 1 change decided · 1 with a suggested answer · 4 decided. Proof of the 21 rules: 3 proven by a test · 18 untested (Appendix A)._
 
-_Whys of the 21 rules: 20 rest on a source · 1 carries a draft for product to decide (TSK-17) · 0 have none._
+_Whys of the 21 rules: all 21 rest on a source or a product decision · none carries a draft._
 
 **How to read it**
 
@@ -28,7 +28,7 @@ _Whys of the 21 rules: 20 rest on a source · 1 carries a draft for product to d
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| TSK-03 | A board can only be created as a callout that accepts posts and nothing else. Whether a callout is a board is decided when it is created, also from a template, and never changes afterwards. | Tasks are posts; converting an existing callout to or from a board is out of scope (042 FR-006/007). | — | — | Spec 042 FR-006/007 |
+| TSK-03 | A board can only be created as a callout that accepts posts and nothing else. Whether a callout is a board is decided when it is created, also from a template, and never changes afterwards. A board can also be created in a virtual contributor's knowledge base. **(defect in part: OQ3)** | Tasks are posts; converting an existing callout to or from a board is out of scope (042 FR-006/007). Product, 2026-11-20: a knowledge base holds the reference material a virtual contributor answers from; task lists there would pollute its answers, so no board in a knowledge base (change decided, OQ3). | — | — | Spec 042 FR-006/007; Product, 2026-11-20 (OQ3, change decided): no board in a knowledge base |
 | TSK-04 | A board created without columns starts with To Do, In Progress and Done, in that order. A board always has at least one column. | The leanest useful set — `Backlog` was dropped because most teams renamed or deleted it at once (042 FR-005 as refined 2026-08-24, refinements §1). | — | — | Spec 042 FR-005; refinements §1 |
 | TSK-05 | A board can only be made through the board option at creation. A board marker slipped in any other way is removed and makes no board. **(open: F2, OQ1)** | — | — | One entry point to board mode so a template round-trip or a hand-crafted create cannot produce a half-configured board (042 FR-024, D-08). | Spec 042 FR-024, D-08 |
 | TSK-06 | Every task gets exactly one column when it is created: the column asked for, or else the first column. Asking for a column the board does not have is refused and nothing is created. | — | — | An invalid column must not orphan a post (042 FR-009/010; service comment). | Spec 042 FR-009/010 |
@@ -40,13 +40,13 @@ _Whys of the 21 rules: 20 rest on a source · 1 carries a draft for product to d
 | TSK-07 | Moving a task changes only its column. Moving it to the column it is already in changes nothing. A move to a column the board does not have, or of something that is not a task on a board, is refused. | — | — | A dedicated operation, not the cross-callout move: it must never widen that move's right nor downgrade the classification right (042 FR-011/014). | Spec 042 FR-011, FR-014 |
 | TSK-08 | A move and a column change made at the same moment never mix: a task always ends up in exactly one existing column. When two people move the same task, the last move wins. | — | — | A task validated against a stale column list must never land in a deleted column (042 FR-015, US2-AS7/AS8, US4-AS8). | Spec 042 FR-015 |
 | TSK-09 | Anyone who may contribute to a board may move any task on it, also tasks created by others. This right only moves tasks: it does not allow editing another member's task or moving a post to another callout. **(open: F3)** | Member-executable move is "the single load-bearing new capability"; on today's platform every reuse path for this write is admin-only (042 US2, why this priority). | — | Every reuse path was admin-only (042 US2, FR-012/013, D-02 operator ruling; dissent DIS-3 recorded). | Spec 042 US2, FR-012/013, D-02 |
-| TSK-10 | Reordering the tasks on a board needs the same right as moving a task, so any board member may reorder. On a callout that is not a board, reordering stays an admin edit. **(open: OQ4)** | — | — | Within-column drag ordering was delivered in iteration; members got a denial on in-column reorder while cross-column moves silently dropped the position write (042 refinements §2, superseding D-09). | Spec 042 refinements §2 (supersedes D-09) |
+| TSK-10 | Reordering the tasks on a board needs the same right as moving a task, so any board member may reorder. On a callout that is not a board, reordering stays an admin edit. | — | As a board member, I want tasks to stay in the order we put them, with a new task at the top of its column, so that the board shows our priorities. | Within-column drag ordering was delivered in iteration; members got a denial on in-column reorder while cross-column moves silently dropped the position write (042 refinements §2, superseding D-09). | Spec 042 refinements §2 (supersedes D-09); Product, 2026-11-20 (OQ4): the order within a column is kept, a new task comes first |
 
 ### Column administration
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| TSK-11 | A column name is not empty, is at most 128 characters, has no comma, and is unique on the board whatever the capitals. A board has at most 20 columns. **(open: F1)** | — | — | The column list is stored comma-delimited (a comma would corrupt it); case-insensitive uniqueness mirrors the flow-state rule because classification filters match case-insensitively (042 FR-017, D-04); the cap bounds the per-board counts returned on every query (constants comment). | Spec 042 FR-017, D-04. The cap of 20 is not decided: exists in the code |
+| TSK-11 | A column name is not empty, is at most 128 characters, has no comma, and is unique on the board whatever the capitals. A board has at most 20 columns. | 20 columns covers every workflow we know of; an unbounded column count was recorded as a security risk (PR #6391). | — | The column list is stored comma-delimited (a comma would corrupt it); case-insensitive uniqueness mirrors the flow-state rule because classification filters match case-insensitively (042 FR-017, D-04); the cap bounds the per-board counts returned on every query (constants comment). | Spec 042 FR-017, D-04; Product, 2026-11-20 (F1): 20 columns, spec 042 D-10 is amended |
 | TSK-12 | A new column is added after the last one. Renaming a column keeps every task in it. Reordering columns must name every column exactly once and moves no task. | — | — | One discrete operation per action so a rename is never mistaken for delete + add, which would trigger the destructive reflow (042 FR-016/018/020, D-07). | Spec 042 FR-016/018/020, D-07 |
 | TSK-13 | Deleting a column moves its tasks to the first column in the same step, so a task is never without a column. The first column cannot be deleted. | — | — | The feature's only destructive bulk write; the flow-state analogue is non-transactional at the wrong grain, so this one reimplements it in one transaction with a first-column guard (042 FR-019, D-03 council non-negotiable). | Spec 042 FR-019, D-03 |
 | TSK-14 | Only people who may edit the callout add, rename, delete or reorder columns: Space admins and Platform Content Full Access. A member is refused and nothing changes. | Configuring the board's columns is an admin capability, distinct from the member-held move (042 FR-016; resolver comment). | — | — | Spec 042 FR-016 |
@@ -62,7 +62,7 @@ _Whys of the 21 rules: 20 rest on a source · 1 carries a draft for product to d
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| TSK-17 | A post moved into a board becomes a task in its first column. A task moved to an ordinary callout loses its column. A task moved to another board lands in that board's first column. **(open: Q-TSK-17)** | A moved post must still be a valid task on its new board, so it takes the default first column (TSK-06); off a board a column means nothing. _(draft)_ | — | — (service comment only: "only POST contributions can be tasks") | Not decided: exists in the code |
+| TSK-17 | A post moved into a board becomes a task in its first column. A task moved to an ordinary callout loses its column. A task moved to another board lands in that board's first column. | A moved post must still be a valid task on its new board, so it takes the default first column (TSK-06); off a board a column means nothing. | — | — (service comment only: "only POST contributions can be tasks") | Product, 2026-11-20 (Q-TSK-17) |
 | TSK-18 | Deleting a board deletes its tasks, as for any posts callout, and leaves nothing behind. | — | — | Deleting a board used to fail on a foreign-key violation from the marker tagset; the column definition is a standalone row owned by the board alone (042 FR-033, refinements §7; server#6614). | Spec 042 FR-033; server#6614 |
 | TSK-19 | A board saved as a callout template keeps that it is a board and its columns in order. A callout created from that template is a board with those columns and no tasks. | Parity with posts-response callout templates (042 FR-023, D-08). | — | — | Spec 042 FR-023, D-08 |
 
@@ -97,39 +97,23 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 4 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 1 to answer
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F1 | Columns | decision | The spec says a board has no maximum number of columns; the code stops at 20. Is 20 the product number? If so, spec 042 D-10 is amended. | Product Lead (Technical Lead amends the spec) | — | open |
-| OQ3 | Creating | decision | Does a board belong in a virtual contributor's knowledge base? Nothing stops it today and no product statement exists. | Product Lead | — | open |
-| OQ4 | Moving | decision | Is the order of tasks inside a column a promise? Nothing says whether a new task appears first or last in its column. | Product Lead | — | open |
-| Q-TSK-17 | Templates | decision | Why does this rule exist? No source says why a post moved into a board lands in the first column and a task moved out loses its column. | Product Lead | — | open |
-
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| CONST | All | decision | 18 constants are still blank in "product must rule?" (Appendix E): storage shapes, rights and the GraphQL surface for the Technical Lead; default columns, name limits and error texts for the Product Lead. | Technical Lead, Product Lead | — | open |
+| OQ3 | Creating | decision | Does a board belong in a virtual contributor's knowledge base? Nothing stops it today and no product statement exists. | Product Lead | Product, 2026-11-20: no. A knowledge base holds reference material a virtual contributor answers from; a board there is refused, as a Form is (callout.md CAL-04). Issue: to file. | change decided |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 2 to answer, 1 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 1 to answer
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F2 | Creating | check | Can a later edit remove or rewrite the board marker? The spec says no path may; the code was not followed to the end. Trace it and pin it with a case, or record that the marker goes only with the callout. | Technical Lead (Quality Lead adds the case) | — | open |
-| CONST | All | decision | 18 constants are still blank in "product must rule?" (Appendix E): storage shapes, rights and the GraphQL surface for the Technical Lead; default columns, name limits and error texts for the Product Lead. | Technical Lead, Product Lead | — | open |
-
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F1 | Columns | decision | The spec says a board has no maximum number of columns; the code stops at 20. Is 20 the product number? If so, spec 042 D-10 is amended. | Product Lead (Technical Lead amends the spec) | — | open |
 
 ### Quality Lead
 
@@ -160,6 +144,15 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F4 | Analytics | contract | A task shows as "post created" in the activity feed and as "task created" in analytics, on purpose (spec 062). Does the new core keep both as they are? | Architecture Lead | Accepted as it is. Recorded so that the new core's single event registry does not change one side without a decision. | suggested |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| F1 | A board has at most 20 columns; the Technical Lead amends spec 042 D-10. | Product, 2026-11-20 | TSK-11 |
+| OQ4 | The order of tasks within a column is a promise: it is kept, and a new task comes first in its column. | Product, 2026-11-20 | TSK-10 |
+| Q-TSK-17 | The draft why stands: a moved post must still be a valid task, so it takes the first column; off a board a column means nothing. | Product, 2026-11-20 | TSK-17 |
+| CONST | Product rules on the default columns, the column cap and the column-name limits, ticked "yes" in Appendix E. Error texts, storage, rights and the GraphQL surface go to the Technical Lead. | Product, 2026-11-20 | Appendix E |
 
 ## Appendix
 
@@ -207,7 +200,7 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 
 #### Findings
 
-- **F1 — Column cap: spec says none, code says 20 (TSK-11).** Code: `MAX_TASK_BOARD_COLUMNS = 20` and `@ArrayMaxSize(20)` on the create input (`task.board.constants.ts:17-22`, `task.board.dto.create.ts:21`). Test: none. Spec 042 D-10: "no hard maximum column count for MVP … recorded as accepted residual risk"; PR #6391 lists the unbounded count as residual sec-server-1, so the cap landed afterwards and the spec was not amended. Ruling: confirm 20 as the product number and amend D-10.
+- **F1 — Column cap: spec says none, code says 20 (TSK-11).** Code: `MAX_TASK_BOARD_COLUMNS = 20` and `@ArrayMaxSize(20)` on the create input (`task.board.constants.ts:17-22`, `task.board.dto.create.ts:21`). Test: none. Spec 042 D-10: "no hard maximum column count for MVP … recorded as accepted residual risk"; PR #6391 lists the unbounded count as residual sec-server-1, so the cap landed afterwards and the spec was not amended. Ruling: confirm 20 as the product number and amend D-10. **Product, 2026-11-20:** 20 is the product number; amend spec 042 D-10.
 - **F2 — The board marker's immutability is asserted, not enforced (TSK-05).** Code: no server path removes the `task` tagset, but the generic classification update on a callout (`classification.resolver.mutations.ts:19-37`, UPDATE on the classification; `classification.service.ts:166-183` through the callout update) can rewrite the callout-level `task` tagset's value and its tagset list; whether it can drop the marker was not traced to the end. Test: none. Spec 042 FR-034: "no later mutation path — including a generic classification update or a classification delete — may add or remove the `task` marker". Ruling: trace and pin with a negative case, or document the marker as removable only with the callout.
 - **F3 — Zero legacy proof for the feature's primary actor.** Code grants any board member the move (TSK-09). Test: the only green case (CD-2) deletes a board; no case moves a task as a member, denies a non-member, or reflows a column. Spec 042 US2 "Independent Test" asks for exactly those three actors. Ruling: W2 journey candidate (catalogue: "cheap UI case") — the server's own `task.board.*.spec.ts` are unit-level and do not count.
 - **F4 — A task's activity-feed entry and its analytics event disagree on purpose (TSK-20).** Code: the activity log records `calloutPostCreated` for a task while the reporter records `TASK_CREATED`. Spec 062: "no activity-feed change" by decision. Test: none. Ruling: accepted; recorded so the new core's single event registry does not "fix" it one way without a decision.
@@ -218,8 +211,8 @@ Read-only extraction against the code, the tests and the specs; nothing below co
 
 - **OQ1 — Can the generic classification update drop or rename the board marker?** (finding 2) `tagsetService.updateTagsets` was not read to the end; a live probe with `updateCallout` carrying a classification without the `task` tagset would settle it.
 - **OQ2 — Which error a non-member gets on a move.** By analogy with the sidebar case it is `FORBIDDEN_POLICY`; not observed.
-- **OQ3 — Does a board belong in a knowledge base?** No guard and no product statement either way.
-- **OQ4 — Is the within-column order a contract?** Code renumbers contribution sort orders; the board persists drag order through the generic reorder (TSK-10); nothing says whether a new task must appear first or last in its column.
+- **OQ3 — Does a board belong in a knowledge base?** No guard and no product statement either way. **Product, 2026-11-20:** no board in a knowledge base (change decided).
+- **OQ4 — Is the within-column order a contract?** Code renumbers contribution sort orders; the board persists drag order through the generic reorder (TSK-10); nothing says whether a new task must appear first or last in its column. **Product, 2026-11-20:** yes: the order is kept and a new task comes first in its column.
 - **OQ5 — Spec availability.** `agents-hq/specs/042-kanban-task-board/` and `062-task-board-analytics/` exist only on `origin/main` (fetched 2026-11-06); the local clone of agents-hq is behind and does not carry them.
 
 ### D. Test gaps
@@ -240,29 +233,29 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, defaults and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for access and audit values. The "product must rule?" column is as extracted: the reviewer ticks the rows product must rule on._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, defaults and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for access and audit values. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Board marker tagset name | `task` (`TagsetReservedName.TASK`; distinct from `flow-state`) | `src/common/enums/tagset.reserved.name.ts:9`; `task.board.constants.ts:15` | | Technical Lead |
-| Default columns | `To Do`, `In Progress`, `Done` (first = default and reflow target) | `task.board.constants.ts:5-9`; 042 refinements §1 | | Product Lead |
-| Maximum columns | 20 | `task.board.constants.ts:17-22`; `task.board.dto.create.ts:21` | F-1 | Product Lead |
-| Column name length | ≤ 128 (`SMALL_TEXT_LENGTH`), trimmed, non-empty, no comma | `task.board.service.ts:93-131`; `entity.field.length.constants.ts:4` | | Product Lead |
-| Column matching | case-insensitive, stored in the board's canonical spelling | `task.board.service.ts:70-80`; `tagset.template.utils.ts:78-99` | | Technical Lead |
-| Column definition storage | one standalone `TagsetTemplate` per board, type `select-one`, no template set; `allowedValues` comma-joined, `defaultSelectedValue` re-pinned to the first column on every edit | `callout.service.ts:362-370`; `task.board.column.service.ts:216-231` | | Technical Lead |
-| Task column storage | nullable unique `callout_contribution.classificationId` → `classification` (ON DELETE SET NULL), one `task` tagset with exactly one tag | migration `1787315924637`; `callout.contribution.service.ts:292-294` | | Technical Lead |
-| Allowed contribution types on a board | exactly `[POST]` | `callout.service.ts:345-347` | | Technical Lead |
-| Privilege | `move-task` (`MOVE_TASK`), granted by privilege rules `policyRule-calloutTaskMove` (from contribute) and `policyRule-calloutTaskMoveAdmin` (from update), boards only | `authorization.privilege.ts:46`; `policy.rule.constants.ts:17-21` | | Technical Lead |
-| Column-admin privilege | `update` on the callout | `callout.resolver.mutations.ts:416-420` | | Technical Lead |
-| Reorder privilege | `move-task` on a board, `update` elsewhere | `callout.resolver.mutations.ts:1077-1079` | | Technical Lead |
-| Concurrency guarantee | `pessimistic_write` lock on the board's template row for every move and column edit | `task.board.move.service.ts:88-91`; `task.board.column.service.ts:184-187` | | Technical Lead |
-| Error text — board create | `A Tasks board callout must allow only POST contributions` | `callout.service.ts:350` | | Product Lead |
-| Error text — column names | `A task board column name cannot be empty` · `A task board column name is too long` · `A task board column name cannot contain a comma` · `A task board column with this name already exists` · `A task board cannot exceed the maximum number of columns` · `A task board must keep at least one column` | `task.board.service.ts:97-153`; `task.board.column.service.ts:44-48, 221-227` | | Product Lead |
-| Error text — column edits | `This callout is not a Tasks board` · `The Tasks board has no column template` · `The Tasks board column template no longer exists` · `That task board column does not exist` · `The first task board column is the default and cannot be deleted` · `A task board reorder must list every column exactly once` · `A task board reorder cannot list a column twice` | `task.board.column.service.ts:98-101, 120-138, 165-194, 268-273` | | Product Lead |
-| Error text — tasks and moves | `The requested task column does not exist on this Tasks board` · `A task column can only be set on a Tasks board callout` · `This contribution is not a task on a Tasks board` · `The task has no column marker to move` · `The task has no parent Callout` | `callout.contribution.service.ts:270, 285`; `task.board.move.service.ts:57-83`; `task.board.resolver.mutations.ts:43-47` | | Product Lead |
-| Analytics event types | `TASK_BOARD_CREATED`, `TASK_CREATED`, `TASK_COMMENT_CREATED` | `src/services/external/elasticsearch/types/contribution.type.ts:31` + reporter `:537-580` | | Technical Lead |
-| Counts contract | one entry per column, board order, zero-filled, `null` for a non-board; one grouped query per batch | `callout.task.column.counts.loader.creator.ts:175-226` | | Technical Lead |
-| GraphQL surface | `Callout.taskColumnCounts: [TaskColumnCount!]`, `CalloutContribution.classification`, `TaskColumnCount{column, count}`, `CreateCalloutInput.taskBoard{columns}`, `CreateCalloutContributionInput.taskColumn`, mutations `moveTaskToColumn`, `createTaskColumnOnCallout`, `updateTaskColumnOnCallout`, `deleteTaskColumnOnCallout`, `updateTaskColumnsSortOrderOnCallout` (+ `updateContributionsSortOrder` on boards) | `schema.graphql:2129, 2138-2140, 5028, 5106, 5196, 5446, 5448, 7539-7544, 9453-9458, 9693-9700, 9948-9954, 11170-11185` | | Technical Lead |
+| Board marker tagset name | `task` (`TagsetReservedName.TASK`; distinct from `flow-state`) | `src/common/enums/tagset.reserved.name.ts:9`; `task.board.constants.ts:15` | no | Technical Lead |
+| Default columns | `To Do`, `In Progress`, `Done` (first = default and reflow target) | `task.board.constants.ts:5-9`; 042 refinements §1 | yes | Product Lead |
+| Maximum columns | 20 | `task.board.constants.ts:17-22`; `task.board.dto.create.ts:21` | yes (F-1) | Product Lead |
+| Column name length | ≤ 128 (`SMALL_TEXT_LENGTH`), trimmed, non-empty, no comma | `task.board.service.ts:93-131`; `entity.field.length.constants.ts:4` | yes | Product Lead |
+| Column matching | case-insensitive, stored in the board's canonical spelling | `task.board.service.ts:70-80`; `tagset.template.utils.ts:78-99` | no | Technical Lead |
+| Column definition storage | one standalone `TagsetTemplate` per board, type `select-one`, no template set; `allowedValues` comma-joined, `defaultSelectedValue` re-pinned to the first column on every edit | `callout.service.ts:362-370`; `task.board.column.service.ts:216-231` | no | Technical Lead |
+| Task column storage | nullable unique `callout_contribution.classificationId` → `classification` (ON DELETE SET NULL), one `task` tagset with exactly one tag | migration `1787315924637`; `callout.contribution.service.ts:292-294` | no | Technical Lead |
+| Allowed contribution types on a board | exactly `[POST]` | `callout.service.ts:345-347` | no | Technical Lead |
+| Privilege | `move-task` (`MOVE_TASK`), granted by privilege rules `policyRule-calloutTaskMove` (from contribute) and `policyRule-calloutTaskMoveAdmin` (from update), boards only | `authorization.privilege.ts:46`; `policy.rule.constants.ts:17-21` | no | Technical Lead |
+| Column-admin privilege | `update` on the callout | `callout.resolver.mutations.ts:416-420` | no | Technical Lead |
+| Reorder privilege | `move-task` on a board, `update` elsewhere | `callout.resolver.mutations.ts:1077-1079` | no | Technical Lead |
+| Concurrency guarantee | `pessimistic_write` lock on the board's template row for every move and column edit | `task.board.move.service.ts:88-91`; `task.board.column.service.ts:184-187` | no | Technical Lead |
+| Error text — board create | `A Tasks board callout must allow only POST contributions` | `callout.service.ts:350` | no | Technical Lead |
+| Error text — column names | `A task board column name cannot be empty` · `A task board column name is too long` · `A task board column name cannot contain a comma` · `A task board column with this name already exists` · `A task board cannot exceed the maximum number of columns` · `A task board must keep at least one column` | `task.board.service.ts:97-153`; `task.board.column.service.ts:44-48, 221-227` | no | Technical Lead |
+| Error text — column edits | `This callout is not a Tasks board` · `The Tasks board has no column template` · `The Tasks board column template no longer exists` · `That task board column does not exist` · `The first task board column is the default and cannot be deleted` · `A task board reorder must list every column exactly once` · `A task board reorder cannot list a column twice` | `task.board.column.service.ts:98-101, 120-138, 165-194, 268-273` | no | Technical Lead |
+| Error text — tasks and moves | `The requested task column does not exist on this Tasks board` · `A task column can only be set on a Tasks board callout` · `This contribution is not a task on a Tasks board` · `The task has no column marker to move` · `The task has no parent Callout` | `callout.contribution.service.ts:270, 285`; `task.board.move.service.ts:57-83`; `task.board.resolver.mutations.ts:43-47` | no | Technical Lead |
+| Analytics event types | `TASK_BOARD_CREATED`, `TASK_CREATED`, `TASK_COMMENT_CREATED` | `src/services/external/elasticsearch/types/contribution.type.ts:31` + reporter `:537-580` | no | Technical Lead |
+| Counts contract | one entry per column, board order, zero-filled, `null` for a non-board; one grouped query per batch | `callout.task.column.counts.loader.creator.ts:175-226` | no | Technical Lead |
+| GraphQL surface | `Callout.taskColumnCounts: [TaskColumnCount!]`, `CalloutContribution.classification`, `TaskColumnCount{column, count}`, `CreateCalloutInput.taskBoard{columns}`, `CreateCalloutContributionInput.taskColumn`, mutations `moveTaskToColumn`, `createTaskColumnOnCallout`, `updateTaskColumnOnCallout`, `deleteTaskColumnOnCallout`, `updateTaskColumnsSortOrderOnCallout` (+ `updateContributionsSortOrder` on boards) | `schema.graphql:2129, 2138-2140, 5028, 5106, 5196, 5446, 5448, 7539-7544, 9453-9458, 9693-9700, 9948-9954, 11170-11185` | no | Technical Lead |
 
 ### F. Where this lands in the new core
 
