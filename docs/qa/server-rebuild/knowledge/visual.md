@@ -4,10 +4,13 @@ _What the platform does today for images on profiles: the image slots every prof
 
 _Open questions per owner: Product Lead 2 · Technical Lead 6 · Quality Lead 6 · Security Lead 2 · Service Operations Lead 1. By state: 12 open · 5 with a suggested answer. Proof of the 18 rules: 8 proven by a test · 10 untested (Appendix A)._
 
+_Whys of the 18 rules: 13 rest on a source · 4 carry a draft for product to decide · 1 has none, and it already carries an open question (VIS-17)._
+
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. Product has not reviewed this file yet and fills the user stories later.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a doc. "Not decided" means the behaviour exists in the code and nobody chose it.
 - A marker in bold at the end of a rule points at section 3: **(open: F7)** means a question on this rule is still open, **(defect: …)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: …)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -18,7 +21,7 @@ _Open questions per owner: Product Lead 2 · Technical Lead 6 · Quality Lead 6 
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| VIS-01 | There are seven kinds of image slot, and every profile is created with a fixed set of empty slots: a space gets avatar, banner and card; a user, an organisation and a virtual contributor get an avatar. Slots are never added or removed later, except in a media gallery. **(open: Q-VIS-01)** | — | — | — (each surface renders a fixed set of image slots; no spec states the set) | Not decided: exists in the code |
+| VIS-01 | There are seven kinds of image slot, and every profile is created with a fixed set of empty slots: a space gets avatar, banner and card; a user, an organisation and a virtual contributor get an avatar. Slots are never added or removed later, except in a media gallery. **(open: Q-VIS-01)** | — | As a space admin, I want my space to have an avatar, a banner and a card image, so that it is recognisable wherever it shows. _(draft)_ | — (each surface renders a fixed set of image slots; no spec states the set) | Not decided: exists in the code |
 | VIS-02 | Each slot keeps its own copy of the size limits from the day it was created, so a changed size limit reaches old slots only through a data migration. The allowed shape range and the accepted formats are always the current platform ones. | — | — | Bounds are denormalised for speed; the three banner migrations exist precisely because the upload validator reads the row (migration comments); formats and ratio were deliberately made row-independent so HEIC and the 6–10 range applied without a migration (code comments). | Not decided: exists in the code (migration and code comments) |
 | VIS-03 | The platform publishes default limits per kind: avatar 190–410 px square, banner 1200–3840 × 120–640 px, card 307–410 × 192–256 px. Only the banner's shape can be adjusted (ratio 6 to 10, default 10); every other kind has one fixed shape. **(open: F1)** | Banners must be stored large enough for wide and HiDPI screens (server#6269). | — | The client's crop dialog clamps against these numbers and mirrors 6/10 locally (client plan TC-03, client-web#10178). | client-web#10178; server#6269 |
 
@@ -26,7 +29,7 @@ _Open questions per owner: Product Lead 2 · Technical Lead 6 · Quality Lead 6 
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| VIS-04 | An image is uploaded or replaced by whoever manages the profile: a space's admins for its images, a user for their own avatar, an organisation's admins for its avatar, a callout's or post's managers for theirs. The space's rule on who may upload files applies too. | An image belongs to whoever manages the profile. | — | The bucket check is what lets members upload only where the space allows member content (server spec 102). | Server spec 102 |
+| VIS-04 | An image is uploaded or replaced by whoever manages the profile: a space's admins for its images, a user for their own avatar, an organisation's admins for its avatar, a callout's or post's managers for theirs. The space's rule on who may upload files applies too. | — | — | The bucket check is what lets members upload only where the space allows member content (server spec 102). | Server spec 102 |
 | VIS-05 | An upload is accepted only as one of nine image formats: png, jpeg, jpg, svg, webp, gif, avif, heic, heif. The server checks the type the client declares; the file service then checks the real content against a wider list. **(defect in part: F3)** **(open: F2, F8)** | iPhone photos arrive as HEIC/HEIF and must be accepted (001 FR-001/002). | — | Old slots created before HEIC existed still accept it without a migration (code comment). | Server spec 001 FR-001/002 |
 | VIS-06 | The stored image's width and height must both fit the slot's limits, the limits included. Otherwise the upload is refused and the stored file is deleted again. A 1200 × 120 banner passes; 1199 × 120 fails. **(open: F6)** | Images must fit the slot they render in; the measurement is taken after rotation so a sideways phone photo is judged by what will be shown (#6053); the banner floor was lowered to 1200 so admins can crop images that used to be refused (client-web#10178). | — | — | Server PR #6053; client-web#10178 |
 | VIS-07 | Every uploaded image is re-encoded before it is stored: iPhone formats (HEIC, HEIF) become JPEG, JPEG and WebP are recompressed, sides over 4096 px are scaled down, and camera and location data are removed. SVG and GIF pass through untouched. A file over 15 MB is refused. **(open: OQ1)** | iPhone users could not upload at all; smaller files load faster; stripping GPS/camera metadata minimises GDPR exposure (001 FR-003..FR-018, Clarifications). | — | — | Server spec 001 FR-003..FR-018 |
@@ -46,16 +49,16 @@ _Open questions per owner: Product Lead 2 · Technical Lead 6 · Quality Lead 6 
 |---|---|---|---|---|---|
 | VIS-12 | Every new user, organisation and virtual contributor gets an avatar: the one supplied, else the sign-in provider's picture, else a generated one with their initials. It is copied into Alkemio's storage; if that fails, the contributor is still created and keeps the outside link. **(open: F5)** | Every contributor needs a picture; serving it from Alkemio avoids hot-linking a third party; an avatar problem must never block sign-up (code comments; #6396 — LinkedIn's CDN rejected the default user agent). | — | — | Server PR #6396; code comments |
 | VIS-13 | At creation, an image address is copied into the profile's storage only when it already points at an Alkemio file. Any other address is ignored, except an avatar from one of six trusted hosts, which is accepted and copied in. | — | — | Narrowing the external hosts limits SSRF exposure through user-controlled profile input (code comment, PR #5976); "needs to be a url inside Alkemio already uploaded to a StorageBucket" (schema). | Server PR #5976 |
-| VIS-14 | A space created from a template takes the template's avatar, card and banner images, unless the creator supplies their own for that slot. | Templates carry a look; the creator's own choice wins (code). | — | — | Not decided: exists in the code |
+| VIS-14 | A space created from a template takes the template's avatar, card and banner images, unless the creator supplies their own for that slot. | A template carries a look, and the creator's own choice wins. _(draft)_ | — | — | Not decided: exists in the code |
 
 ### Reading, galleries and lifecycle
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| VIS-15 | Anyone who may read a profile may read its slots: address, shape, limits, formats and alternative text. Who may fetch the image file itself is a storage rule. | — | — | A profile's images are part of the profile (code); the bytes' exposure is a storage ruling. | Not decided: exists in the code |
+| VIS-15 | Anyone who may read a profile may read its slots: address, shape, limits, formats and alternative text. Who may fetch the image file itself is a storage rule. | An image is part of the profile it illustrates, so it is as readable as the profile. _(draft)_ | — | — | Not decided: exists in the code |
 | VIS-16 | A media gallery's images and videos are slots too, added or removed by whoever may update the gallery. An image may be any size from 1 to 8000 px; a video must be mp4, webm, ogg or quicktime. **(defect in part: F4)** | — | — | Media galleries are the one surface with a variable number of visuals (server spec 039 — CAL-40). | Server spec 039 |
 | VIS-17 | A slot cannot be deleted on its own; it goes with its profile, or when it is removed from a media gallery. Its image address is at most 2048 characters and its alternative text at most 120. **(open: Q-VIS-17)** | — | — | — | Not decided: exists in the code |
-| VIS-18 | A Platform Operations Admin may force a contributor's avatar to be stored on Alkemio. The action is audited. | — | — | Operational repair of avatars that were never re-hosted (admin tool). | Not decided: exists in the code |
+| VIS-18 | A Platform Operations Admin may force a contributor's avatar to be stored on Alkemio. The action is audited. | — | — | Operational repair of avatars that were never re-hosted (admin tool). _(draft)_ | Not decided: exists in the code |
 
 ## 2. Rights
 
@@ -309,6 +312,8 @@ Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/7
 
 2026-11-19 converted to the three-section layout. The single why was split over three columns without rewording, the who-may table was rebuilt as section 2, and every finding, open question and rule without a stated reason became a row in section 3 with an owner.
 
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains. No new source was found; Q-VIS-01 and Q-VIS-17 stay open.
+
 #### Sources
 
 Server code (worktree `w1-access-matrix/server` @ `eeecf9ddb`):
@@ -332,3 +337,4 @@ Specs / issues:
 - server `specs/001-heic-jpeg-conversion/spec.md` (FR-001..FR-018, SC-001..SC-009, Clarifications), `specs/102-space-member-file-upload/spec.md` (FR-001..FR-009, storage cross-reference), `specs/039-media-gallery-contributions` (via CAL-40)
 - alkem-io/client-web#10178 (default banner behaviour; PRs client-web#10222, server#6439, server#6452); alkem-io/server#6269 (higher-resolution banners; PR #6346); server PRs #5834, #5976, #6053, #6396; issue #4459 (file-type detection TODO)
 - no workspace spec for the banner work (client plan statement); `agents-hq/specs/033-chat-avatars` is presentational and out of scope
+- 2026-11-20 whys pass: no new sources; `src/platform-admin/services/avatars/admin.avatarresolver.mutations.ts` (mutation description) read for VIS-18
