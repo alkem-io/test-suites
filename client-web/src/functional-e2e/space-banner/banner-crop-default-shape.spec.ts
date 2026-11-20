@@ -141,7 +141,10 @@ test.describe('First page-banner crop opens at the 10:1 default (10178)', () => 
       name: `Space banner for ${spaceName}`,
     });
     await expect(banner).toBeVisible({ timeout: 30_000 });
-    expect(await banner.evaluate(el => el.tagName)).toBe('IMG');
+    // The banner's place is a plain box until the saved image has loaded.
+    await expect
+      .poll(() => banner.evaluate(el => el.tagName), { timeout: 30_000 })
+      .toBe('IMG');
 
     const width = Number(await banner.getAttribute('width'));
     const height = Number(await banner.getAttribute('height'));

@@ -192,7 +192,7 @@ memberFixture.test.describe.serial('Callout Deletion - Member', () => {
           name: baseScenario!.space.collaboration.calloutPostDisplayName,
           exact: true,
         })
-      ).toBeVisible({ timeout: 5000 });
+      ).toBeVisible();
       await collaborationPage.clickCallout(
         baseScenario!.space.collaboration.calloutPostDisplayName
       );

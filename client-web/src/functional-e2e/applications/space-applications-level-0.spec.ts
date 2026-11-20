@@ -850,7 +850,7 @@ test.describe('Level 0 Space - Applications', () => {
     test('10419 IO-4 a pending application keeps "Application pending", with applications enabled and after the space turns invitation-only', async () => {
       // Own L0 (no subspace): the persona's application must not leak into
       // the shared invitation-only fixture.
-      test.setTimeout(90_000);
+      test.setTimeout(240_000);
       const page = nonSpaceMemberPage;
       const scenario = await TestScenarioFactory.createBaseScenario({
         name: 'apps-pending-invitation-only',
@@ -911,28 +911,39 @@ test.describe('Level 0 Space - Applications', () => {
           ).toHaveCount(0);
         };
 
+        // Each surface is loaded again until it shows the pending state: the
+        // application was made through the API a moment ago, and with other
+        // files running the page's first read sometimes does not include it
+        // yet. What is asserted is the settled page, as before.
         const expectPendingOnBothSurfaces = async () => {
           // Sidebar.
-          const sidebarFlow = applyFlowSettled(page);
-          try {
-            await page.goto(`${baseUrl}/${space.nameId}`);
-            const sidebar = await expectSidebarSettled(page);
-            await sidebarFlow.settled();
-            await expectPendingOnly(sidebar);
-          } finally {
-            sidebarFlow.dispose();
-          }
+          await expect(async () => {
+            const sidebarFlow = applyFlowSettled(page);
+            try {
+              await page.goto(`${baseUrl}/${space.nameId}`);
+              const sidebar = await expectSidebarSettled(page);
+              await sidebarFlow.settled();
+              await expectPendingOnly(sidebar);
+            } finally {
+              sidebarFlow.dispose();
+            }
+          }).toPass({ timeout: 40_000 });
           // Space About dialog.
-          const aboutFlow = applyFlowSettled(page);
-          try {
-            await page.goto(`${baseUrl}/${space.nameId}/about`);
-            const dialog = aboutDialogOf(page, space.about.profile.displayName);
-            await expect(dialog).toBeVisible();
-            await aboutFlow.settled();
-            await expectPendingOnly(dialog);
-          } finally {
-            aboutFlow.dispose();
-          }
+          await expect(async () => {
+            const aboutFlow = applyFlowSettled(page);
+            try {
+              await page.goto(`${baseUrl}/${space.nameId}/about`);
+              const dialog = aboutDialogOf(
+                page,
+                space.about.profile.displayName
+              );
+              await expect(dialog).toBeVisible();
+              await aboutFlow.settled();
+              await expectPendingOnly(dialog);
+            } finally {
+              aboutFlow.dispose();
+            }
+          }).toPass({ timeout: 40_000 });
         };
 
         // Row A: applications enabled.

@@ -101,7 +101,14 @@ const injectRoleSetAuthorizationFault = (
       visit(body?.data);
       await route.fulfill(touched ? { response, json: body } : { response });
     } catch (error) {
-      if (!String(error).includes('already handled')) throw error;
+      // A request still in flight when the test ends finds its page closed.
+      const message = String(error);
+      if (
+        !message.includes('already handled') &&
+        !message.includes('has been closed')
+      ) {
+        throw error;
+      }
     }
   });
 
