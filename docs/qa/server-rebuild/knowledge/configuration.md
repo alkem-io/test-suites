@@ -4,10 +4,13 @@ _What the platform does today for the public configuration document that the web
 
 _Open questions per owner: Product Lead 1 · Technical Lead 4 · Quality Lead 7 · Service Operations Lead 1 · Architecture Lead 1. By state: 7 open · 7 with a suggested answer. Proof of the 13 rules: 6 proven by a test · 7 untested (Appendix A)._
 
+_Whys of the 13 rules: 10 rest on a source · 1 carries a draft for product to decide (CFG-02) · 2 have none, and each already carries an open question (CFG-04: Q-CFG-04; CFG-10: F7)._
+
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. Product has not reviewed this file yet, so most user stories are still to be written.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit, a pull request or an issue. "Not decided: exists in the code" means the behaviour is in the code and nobody chose it in a source we could find.
 - A marker in bold at the end of a rule points at section 3: **(open: F3)** means a question on this rule is still open, **(defect: F2)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F5)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -21,12 +24,12 @@ _Open questions per owner: Product Lead 1 · Technical Lead 4 · Quality Lead 7 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | CFG-01 | Anyone can read the platform configuration, signed in or not, and everyone gets the same complete document. **(open: F3)** | — | — | "Provides configuration to external services in the Alkemio ecosystem" (schema description): the client and other services need it before anyone is signed in. | Not decided: exists in the code |
-| CFG-02 | The document is put together on every request from the server's deployment settings. It is not stored and nothing in the API can change it; only a change of the settings and a restart does. **(open: F3)** | — | — | Deployment-owned settings published to clients; the same keys drive the server itself. | Not decided: exists in the code |
+| CFG-02 | The document is put together on every request from the server's deployment settings. It is not stored and nothing in the API can change it; only a change of the settings and a restart does. **(open: F3)** | — | — | Deployment-owned settings published to clients; the same keys drive the server itself. _(draft)_ | Not decided: exists in the code |
 | CFG-03 | The document lists exactly eight feature switches, always in the same order. On a standard installation all are on except the landing page. **(open: F3, F6)** | — | — | Client-side feature switches driven by the deployment (the flag list was introduced with the licence/feature-flag module, #3351). | Server PR #3351 |
 | CFG-04 | The published switches are advice for the web client: the server never reads the list back, and each switch may or may not also change what the server itself does. **(open: Q-CFG-04, F3)** | — | — | — | Not decided: exists in the code |
 | CFG-05 | The document carries 24 locations: the domain, the environment name, the documentation address and 21 outside links such as terms, privacy, support and help. None of them is ever empty. **(open: F3)** | Legal, help and marketing links the client renders are owned by the deployment, not the client build (`alkemio.yml:705` "legal / usability aspects of the platform"). | — | — | Not decided: exists in the code |
 | CFG-06 | The document tells the web client whether error and performance monitoring are on and where to send the data. Where no address is set, the field reads "0". **(defect in part: F5)** **(open: F3)** | — | — | Client monitoring is switched on per deployment (`alkemio.yml:316-334`); the `"0"` is a loader artefact — an unset string setting becomes the number 0 (F-5). | Not decided: exists in the code |
-| CFG-07 | The document says whether finding a location from an IP address is switched on, and which address the client calls for it. **(open: F3)** | — | — | — (integration switch, `alkemio.yml:477-481`). | Not decided: exists in the code |
+| CFG-07 | The document says whether finding a location from an IP address is switched on, and which address the client calls for it. **(open: F3)** | — | — | The web client labels its performance monitoring with the user's rough location (client-web `src/core/analytics/apm/useApmInit.ts:111`, `src/core/analytics/geo/useUserGeo.ts`); the switch lets a deployment without the lookup service leave it out (`alkemio.yml:477-481`). | Not decided: exists in the code |
 | CFG-08 | The document publishes the largest file the server accepts: 15 MB by default. The same figure guards uploads and is the starting limit of every storage area. **(open: F1, F3)** | — | — | One limit, three places: the published value lets the client refuse before uploading; the middleware guard and the bucket default must stay equal or a larger file is buffered and then refused (`alkemio.yml:354-358`; lowered from 20 MB in #6196). | Server #6196 |
 | CFG-09 | The document publishes the languages the platform offers to people by itself and the default language, which falls back to English when the configured default is not supported. **(open: F3)** | — | — | 029 detect-signup-language: every other language rule derives from this set (`language.request.params.ts:139`). | Spec 029 |
 | CFG-10 | The document lists exactly one sign-in provider, Ory Kratos, with its public address. **(open: F7, F3)** | — | — | — (the block predates the OIDC/BFF sign-in; whether the client still reads it is F-7). | Not decided: exists in the code |
@@ -243,6 +246,8 @@ Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/7
 
 History: 2026-11-19 converted to the three-section layout: the single why was split in three, the who-may table became section 2, and every finding, open question and unexplained rule became a question row routed to an organisation role. Nothing in this file has been reviewed by product yet.
 
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. CFG-07 takes its why from the web client code that reads the location (performance monitoring). CFG-04 and CFG-10 keep no why; their open questions ask for one.
+
 #### Sources
 
 Server code (worktree `w1-access-matrix/server` @ `eeecf9ddb`):
@@ -263,3 +268,4 @@ Tests (worktree `w1-access-matrix/test-suites`):
 Specs / issues:
 - client-web#10178, client-web#10222, server#6439, server#6452 (banner constraints); server#6196 / workspace 009 (upload ceiling); server PR #3351 (feature flags); agents-hq `specs/029-detect-signup-language/spec.md` (language block)
 - No spec describes the configuration document itself (grep over `agents-hq/specs/*/spec.md` and server `specs/*/spec.md`)
+- client-web `src/core/analytics/apm/useApmInit.ts:111`, `src/core/analytics/geo/useUserGeo.ts` (what the location switch is used for, CFG-07)
