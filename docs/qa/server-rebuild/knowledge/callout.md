@@ -2,9 +2,9 @@
 
 _What the platform does today for callouts: creating and framing them, their settings, publishing and closing, contributions, posts and comments, Forms, polls, reactions, the Contributors and Subspaces collections, transfer, deletion and reading: what it does, why, who may, and what is still to answer. The layout is the three-section one of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 2 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 10 open · 2 change decided · 11 with a suggested answer · 9 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
+_Open questions per owner: Product Lead 3 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 10 open · 3 change decided · 11 with a suggested answer · 9 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
 
-_Whys of the 77 rules: 71 rest on a source or a product decision · 6 carry a draft for product to decide (CAL-02, CAL-03, CAL-18, CAL-28, CAL-35, CAL-76) · none has no why._
+_Whys of the 77 rules: all 77 rest on a source or a product decision · 1 technical why is still a QA draft, for the Technical Lead (CAL-03, see Q-CAL-03)._
 
 **How to read it**
 
@@ -24,8 +24,8 @@ _Whys of the 77 rules: 71 rest on a source or a product decision · 6 carry a dr
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | CAL-01 | A callout has one framing out of ten kinds (none, whiteboard, link, memo, media gallery, poll, office document, Contributors, Subspaces, Form) and may accept up to five types of contribution: post, whiteboard, link, memo and office document. | — | — | The framing is the callout's own content; contributions are what others add to it (callouts refresh, PR #5202). | Server PR #5202 |
-| CAL-02 | Space admins can always create a callout. Members can only while the Space setting "members may create callouts" is on (off by default on a top-level Space, on by default in a Subspace). Non-members never can. **(open: F12)** | Member-created callouts are a per-space choice; subspaces are opened up by default (bootstrap space templates). _(draft)_ | — | — | Not decided: exists in the code |
-| CAL-03 | The content given for a framing must match its kind: a whiteboard, poll, Form, link, memo or office-document framing is refused without its content, or with content of another kind. **(open: Q-CAL-03)** | — | — | A framing without the content of its kind would show an empty or broken callout. _(draft)_ | Not decided: exists in the code |
+| CAL-02 | Space admins can always create a callout. Members can only while the Space setting "members may create callouts" is on (off by default on a top-level Space, on by default in a Subspace). Non-members never can. **(open: F12)** | Each Space chooses how open it is: the top-level Space stays curated by its admins, and Subspaces, where the work happens, are open to members by default (bootstrap space templates). | As a space admin, I want to decide whether members may create callouts in my Space, so that I keep the top-level Space curated while Subspaces, where the work happens, stay open. | — | Product, 2026-11-20 |
+| CAL-03 | The content given for a framing must match its kind: a whiteboard, poll, Form, link, memo or office-document framing is refused without its content, or with content of another kind. **(open: Q-CAL-03)** | Alkemio must never show a callout that is empty or broken, because that undermines trust in the platform. | As a space member, I want every callout to show the content its kind promises, so that I never open an empty or broken callout. | A framing without the content of its kind would show an empty or broken callout. _(draft)_ | Product, 2026-11-20 (business and product why); the technical why waits for Q-CAL-03 |
 | CAL-04 | Contributors, Subspaces and Form callouts are for admins only, and only in a Space's collaboration area, not in a knowledge base. A member cannot create one or turn an own callout into one, even where members may create callouts. | Collection and intake framings are self-populating admin widgets, never member content (008, 013; see CAL-68). | — | One shared guard so the restriction cannot be bypassed by converting (008 FR-004a/f, 013 FR-004a/d, 080 FR-001a, SEC-084-01). | Specs 008 FR-004a/f, 013 FR-004a/d, 080 FR-001a; SEC-084-01 |
 | CAL-05 | A Form can be created only through the admin-guarded create-callout action, or carried inside a template. A Form inside a request to create a Space, a Subspace or a knowledge base is refused. | — | — | Deny-by-default at the factory covers every carrier without enumerating them (080 FR-001a, ruling D-7, R25). | Spec 080 FR-001a, ruling D-7 |
 | CAL-06 | A callout's short name is unique among the callouts of its Space; when none is given, one is made from the title. A new callout, like a new contribution, is placed first in its list. **(open: Q-CAL-06)** | — | — | The short name is the last part of the callout's web address (`url.generator.service.ts:729`), so two callouts in one Space cannot share it. | Not decided: exists in the code |
@@ -45,7 +45,7 @@ _Whys of the 77 rules: 71 rest on a source or a product decision · 6 carry a dr
 | CAL-15 | A collection callout selects automatically by default. A custom list holds at most 500 entries, duplicates are dropped, and switching back to automatic keeps the list. | Automatic is the self-updating default; the stored list survives a toggle so an admin can switch back without re-curating (025 FR-002/004/018/019). | — | — | Spec 025 FR-002/004/018/019 |
 | CAL-16 | A Subspaces callout shows compact cards unless it is set to expanded. Only the Space's admins can change this; members can see which one is set. | — | — | A named choice so further variants can be added; compact is the pre-feature look (076 FR-001/002/009). | Spec 076 FR-001/002/009 |
 | CAL-17 | Changing a callout's framing kind removes the settings that do not belong to the new kind. | — | — | Without the strip a stale block would make every later edit of the callout fail (service comment). | Not decided: exists in the code |
-| CAL-18 | Callouts in a Space, and contributions in a callout, are put in order by sending the list in the wanted order. An item that does not belong there is refused. **(open: Q-CAL-18)** | — | As a space admin, I want to put callouts and contributions in the order I choose, so that the most important come first. _(draft)_ | — | Not decided: exists in the code |
+| CAL-18 | Callouts in a Space, and contributions in a callout, are put in order by sending the list in the wanted order. An item that does not belong there is refused. **(open: Q-CAL-18)** | A Space's admins decide what members see first, so that a Space reads as a guided story and not as a pile. | As a space admin, I want to put callouts and contributions in the order I choose, so that the most important come first. | — | Product, 2026-11-20 (business and product why); the technical why waits for Q-CAL-18 |
 
 ### Visibility, publishing and lock
 
@@ -65,7 +65,7 @@ _Whys of the 77 rules: 71 rest on a source or a product decision · 6 carry a dr
 |---|---|---|---|---|---|
 | CAL-26 | A contribution is accepted only if its type is one the callout allows, and only with the content that belongs to that type. | — | — | Only allowed contribution types can be created in a collection (016 FR-007). | Server spec 016 FR-007 |
 | CAL-27 | Every type of contribution needs the same single right to contribute. The separate rights shown per type are never checked, and memo has none. **(open: F1)** | — | As a space member, I want one clear rule for whether I may contribute to a callout, so that I am never allowed one type and refused another without a reason. | — (016 FR-010 asks for memo authorization "consistent with post/whiteboard"; crosscheck F10) | Not decided: exists in the code |
-| CAL-28 | The members of a callout's own Space can contribute. So can members of the parent Space when the Subspace inherits membership rights, and Platform Support only where the Space allows it. Non-members and visitors never can. | Contributions are member content; inheritance is a subspace setting (collaboration contributor rule). _(draft)_ | — | — | Not decided: exists in the code |
+| CAL-28 | The members of a callout's own Space can contribute. So can members of the parent Space when the Subspace inherits membership rights, and Platform Support only where the Space allows it. Non-members and visitors never can. | Contributions are member content, so what a community builds stays with that community; whether a parent Space's members may join in is the Subspace's own choice (collaboration contributor rule). | As a member of a Space, I want to contribute to its callouts, also from a parent Space where the Subspace allows it, so that the work stays with the community that does it. | — | Product, 2026-11-20 |
 | CAL-29 | Whoever adds a contribution owns it and can read, change and delete it. The Space's admins can do the same and can also move it. Platform Resource Admin can move any contribution. | Members curate their own input; admins moderate (contribution/post/link creator rules; 027 A9 for the move family). | — | — | Spec 027 A9 (moving); the owner rules exist in the code only |
 | CAL-30 | On a published callout in a Space, every new contribution adds an activity entry and sends one notification, unless the contributor switched the notification off. On a draft or knowledge-base callout nothing is written or sent. **(open: F16)** | Members are told about input they can see; a silent switch is an author's choice that never overrides a recipient's opt-in, and the activity entry is written first so a notification failure cannot lose it (070 FR-003/007/013). | — | — | Spec 070 FR-003/007/013 |
 | CAL-31 | A whiteboard contribution created empty starts from the callout's default whiteboard. Copying from another whiteboard needs the right to read that one. | Contribution defaults give members a starting template; cloning must not leak unreadable boards (resolver comment). | — | — | Not decided: exists in the code |
@@ -77,7 +77,7 @@ _Whys of the 77 rules: 71 rest on a source or a product decision · 6 carry a dr
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | CAL-34 | Every post has its own comment thread: members and admins of the Space comment, reply and react; non-members cannot. A comment is removed only by its sender or an admin; the post's author cannot remove other people's comments. | — | — | The room inherits the post's policy before the author rule is added so the author gets no moderation over others' comments (code comment). | Not decided: exists in the code |
-| CAL-35 | A post is changed or deleted by its author or an admin. Other members and non-members are refused. The links on a post are managed by admins only. | Members curate their own posts; admins moderate. _(draft)_ | — | — | Not decided: exists in the code |
+| CAL-35 | A post is changed or deleted by its author or an admin. Other members and non-members are refused. The links on a post are managed by admins only. **(defect in part: F19)** | Members curate their own posts; admins moderate. Product, 2026-11-20: the author also manages the links on their own post (change decided, F19). | As the author of a post, I want to change or delete it and manage its links myself, and as a space admin to remove any post, so that members own their contributions and admins can moderate. | — | Product, 2026-11-20 (F19, change decided): the author manages the links on their own post |
 | CAL-36 | A flow phase can have a default post template: a member's new post in that phase starts with the template's text. Deleting the template never blocks anything and only clears the link. | Consistent structure for members' posts without blocking template deletion (server spec 029). | — | — | Server spec 029 |
 
 ### Whiteboards and memos
@@ -163,7 +163,7 @@ _Whys of the 77 rules: 71 rest on a source or a product decision · 6 carry a dr
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | CAL-75 | A list of callouts holds only those the viewer may read. It can be filtered by contribution type, tags or flow phase, and ordered by activity, at random or by the stored order. | Only tags and callouts the requester may read ever appear (017 FR-007). | — | — | Server spec 017 FR-007 |
-| CAL-76 | A callout's contributions come back in their stored order and are counted per type. Reading them needs the right to read the callout. | — | As a space member, I want a callout's contributions in the order its admins set, with a count per type, so that I see at a glance what it holds. _(draft)_ | — | Not decided: exists in the code |
+| CAL-76 | A callout's contributions come back in their stored order and are counted per type. Reading them needs the right to read the callout. | Members see a callout the way its admins arranged it, and the count per type shows at a glance how active it is. | As a space member, I want a callout's contributions in the order its admins set, with a count per type, so that I see at a glance what it holds. | — | Product, 2026-11-20 |
 | CAL-77 | A published callout can be read by everyone on a public Space, by members only on a private Space, and by nobody on an archived Space. The callouts of a private Subspace are hidden from people who are not its members. | — | — | Callouts inherit the space's read rule through collaboration → callouts set → callout (server `docs/authorization-forest.md`). | Server docs/authorization-forest.md |
 
 ## 2. Rights
@@ -237,7 +237,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 2 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 3 to answer
 
 **To answer**
 
@@ -245,10 +245,11 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F2 | Publishing | decision | Turning comments off on a callout only hides the input in the web client; the server still accepts messages. Should it refuse them? And the 866 collection callouts on acceptance that have comments on but no comment thread: should they get one, or should the switch be turned off? | Product Lead, then Technical Lead | Product, 2026-11-20: yes, the server refuses new comments while comments are off. The 866 collection callouts get comments switched off, not a thread: they are passive displays (CAL-20). Technical Lead carries it out. Issue: to file. | change decided |
 | F15 | Settings | decision | A callout created without settings is published by the server, while the web client always starts in draft. Anything other than the web client therefore creates published callouts. Which default is right? | Product Lead | Product, 2026-11-20: draft, as in the web client. Technical Lead checks which producers create callouts without settings (templates, migrations) before the default changes. Issue: to file. | change decided |
+| F19 | Posts | decision | The links (references) on a post are managed by admins only, also on the author's own post. Is that intended? | Product Lead, then Technical Lead | Product, 2026-11-20: no, the author manages the links on their own post; admins keep managing every post's links. Issue: to file. | change decided |
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 8 to answer, 1 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 8 to answer, 2 also involved
 
 **To answer**
 
@@ -267,7 +268,8 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F2 | Publishing | decision | Turning comments off on a callout only hides the input in the web client; the server still accepts messages. Should it refuse them? And the 866 collection callouts on acceptance that have comments on but no comment thread: should they get one, or should the switch be turned off? | Product Lead, then Technical Lead | Product, 2026-11-20: yes, refuse; switch the 866 flags off (see Product Lead). | change decided |
+| F2 | Publishing | decision | Turning comments off on a callout only hides the input in the web client; the server still accepts messages. Should it refuse them? And the 866 collection callouts on acceptance that have comments on but no comment thread: should they get one, or should the switch be turned off? | Product Lead, then Technical Lead | Product, 2026-11-20: yes, refuse; switch the 866 flags off (see Product Lead). |
+| F19 | Posts | decision | The links (references) on a post are managed by admins only, also on the author's own post. Is that intended? | Product Lead, then Technical Lead | Product, 2026-11-20: no, the author manages the links on their own post. | change decided | change decided |
 
 ### Quality Lead
 
@@ -450,6 +452,7 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 - **F16 — Three `sendNotification` semantics (CAL-20/30).** Required boolean on publish; explicit-false-only on contributions (070 D-OP2: non-client producers must keep notifying); truthy on create-callout. Ruling: one convention in the new core.
 - **F17 — Reaction negatives pin no reason (CAL-55).** Non-member, draft and template refusals assert only "some error"; a draft callout is also unreadable to a member, so the published guard is never isolated; the cap of 100 is asserted as `3 <= 100`. Ruling: rebaseline with codes when the texts move.
 - **F18 — AUTO subspaces list has no per-viewer filter (CAL-63).** Recorded risk R-F in `space.collection.service.ts`: a viewer denied READ_ABOUT on a direct subspace would void the whole non-null list for everyone. Not reproduced. Ruling: follow-up ticket, or accept.
+- **F19 — Post links are admin-only, also for the author (CAL-35).** Code: references on a post's profile are managed by admins only (`post.service.authorization.ts:91-102`); the author can update and delete the post but not its links. Test: `post/post-on-callout` › Posts - References (×4) pins today's behaviour. Ruling: is that intended? **Product, 2026-11-20:** no, the author manages the links on their own post (change decided). The References cases must be rebaselined when the change ships.
 
 #### Open questions
 
