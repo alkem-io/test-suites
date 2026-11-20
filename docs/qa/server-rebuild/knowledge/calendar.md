@@ -2,7 +2,7 @@
 
 _What the platform does today for the calendar every space carries and its events: creating, reading, updating and deleting them, whole-day and timed dates, the Google, Outlook and ICS exports, subspace events showing on the parent calendar, and the notifications and activity an event produces. It says what the server does, why, who may, and what is still to answer. The file has three sections, **1. Rules**, **2. Rights** and **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 5 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 11 open · 4 with a suggested answer · 2 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
+_Open questions per owner: Product Lead 4 · Technical Lead 5 · Quality Lead 4 · Architecture Lead 1. By state: 10 open · 4 with a suggested answer · 3 decided. Proof of the 25 rules: 12 proven by a test · 13 untested (Appendix A)._
 
 _Whys of the 25 rules: 12 rest on a source · 11 carry a draft for product to decide · 2 have none, and each already carries an open question (EVT-24, EVT-25)._
 
@@ -67,7 +67,7 @@ _Whys of the 25 rules: 12 rest on a source · 11 carry a draft for product to de
 |---|---|---|---|---|---|
 | EVT-20 | Every event offers a Google Calendar link and an Outlook link with its title, its description as plain text (cut at 1,000 characters) and its location. | — | As a platform user, I want to export a calendar event to my personal calendar application (Teams, Outlook, Google Calendar), so that I can manage all my events in one place without manually recreating them (client-web spec 004 US1; client-web#9330). | — | client-web#9330; client-web spec 004 FR-001–FR-003; server PR #5860 |
 | EVT-21 | The ICS download is a standard calendar file named after the event, with its title, plain-text description (cut at 8,000 characters), location and a link to the event page. **(open: F2, OQ1)** | — | — | RFC 5545 compliance (client-web spec 004 FR-005); the link back to the event is FR-006. | client-web spec 004 FR-005, FR-006 (branch `4-add-to-calendar`) |
-| EVT-22 | Downloading the ICS file needs a signed-in user who can read the event. A visitor is sent to the login page; a signed-in user without access is sent to a "restricted" page. **(open: F1, F2, OQ1)** | — | — | Export is an authenticated read of the event (code). Client-web spec 004 US3 scenario 4 wants the ICS opened from the notification email without signing in. | Not decided: the code and client-web spec 004 US3 disagree (F1) |
+| EVT-22 | Downloading the ICS file needs a signed-in user who can read the event. A visitor is sent to the login page; a signed-in user without access is sent to a "restricted" page. **(open: F2, OQ1)** | — | — | Export is an authenticated read of the event (code). Client-web spec 004 US3 scenario 4 wants the ICS opened from the notification email without signing in. | Product, 2026-11-20 (was F1): sign-in stays required; client-web spec 004 US3 scenario 4 is not adopted |
 
 ### Lifecycle with the space
 
@@ -114,13 +114,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 5 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 4 to answer
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F1 | Exporting | decision | Should anyone be able to download the ICS file of an event in a public space without signing in? Today a visitor is sent to the login page, while two parked test cases cite a spec that wants download without an account. (The spec has to be found first, OQ1.) | Product Lead | The spec is client-web `specs/004-add-to-calendar/spec.md` (branch `4-add-to-calendar`). Its US3 scenario 4: "I do not need to be logged into the platform to download the .ics file or open the calendar link" from the notification email; its edge cases still ask "can guests export events?". The spec is a draft, so the decision stays open. | open |
 | F7 | Lifecycle | decision | A creator who has left the community can still update and delete the events they created. Is that intended? | Product Lead | — | open |
 | OQ3 | Dates | decision | Is Europe/Amsterdam the intended time-zone hint in the ICS file for every customer? It is fixed in the code and no spec states it. | Product Lead (Service Operations Lead for the per-environment side) | — | open |
 | Q-EVT-25 | Lifecycle | decision | Why does this rule exist? When the creator's account is gone the event still shows and nobody inherits the creator's rights; no source states the reason. (F8 asks what to do with the left-over id.) | Product Lead | — | open |
@@ -195,6 +194,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| F1 | Downloading the ICS file keeps requiring sign-in; client-web spec 004 US3 scenario 4 (download from the email without signing in) is not adopted. | Product, 2026-11-20 | EVT-22 |
 | Q-EVT-11 | An event shown on a parent calendar names its subspace, as asked in client-web#6876. | Product, 2026-11-20 | EVT-11 |
 | F3 | A top-level space's calendar shows the events of its direct subspaces only; one level up is the product rule (as chosen in client-web#6876). | Product, 2026-11-20 | EVT-10 |
 
