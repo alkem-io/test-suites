@@ -2,12 +2,15 @@
 
 _What the platform does today for activity: which actions write an activity entry and what it carries, the log of one space, the two platform feeds (paginated and grouped), "my spaces" and the membership ordering driven by the same entries, and what happens to entries on transfers, moves and deletions: what it does, why, who may, and what is still to answer. The file follows the three-section layout of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 9 · Technical Lead 6 · Quality Lead 6 · Service Operations Lead 1 · Architecture Lead 2. By state: 19 open · 5 with a suggested answer. Proof of the 49 rules: 21 proven by a test · 28 untested (Appendix A)._
+_Open questions per owner: Product Lead 9 · Technical Lead 6 · Quality Lead 6 · Service Operations Lead 1 · Architecture Lead 2. By state: 18 open · 6 with a suggested answer. Proof of the 49 rules: 21 proven by a test · 28 untested (Appendix A)._
+
+_Whys of the 49 rules: 26 rest on a source · 17 carry a draft for product to decide · 6 have none, and each carries an open question (ACT-04, ACT-13, ACT-15, ACT-58, ACT-62, ACT-72)._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. Product has not reviewed this file yet and fills the user stories later.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a doc. "Not decided" means the behaviour exists in the code and nobody chose it.
 - A marker in bold at the end of a rule points at section 3: **(open: F8)** means a question on this rule is still open, **(defect: …)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: …)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -18,38 +21,38 @@ _Open questions per owner: Product Lead 9 · Technical Lead 6 · Quality Lead 6 
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| ACT-01 | Publishing a callout on a space writes a "callout published" entry with the callout's name and description. This happens every time the callout turns published, with or without a notification. | The log is the space's timeline of what became visible; publication, not creation, is the visible moment (callout table CAL-20). | — | — | Not decided: exists in the code (see CAL-20) |
-| ACT-02 | A callout created as a draft writes nothing to the log. | Drafts are not visible to the community, so they are not activity (CAL-20). | — | — | Not decided: exists in the code (see CAL-20) |
+| ACT-01 | Publishing a callout on a space writes a "callout published" entry with the callout's name and description. This happens every time the callout turns published, with or without a notification. | The log is the space's timeline of what became visible; publication, not creation, is the visible moment (CAL-20, spec 008 FR-004e). | — | — | Not decided: exists in the code (see CAL-20) |
+| ACT-02 | A callout created as a draft writes nothing to the log. | Drafts are not visible to the community, so they are not activity (follows CAL-20, spec 008 FR-004e). | — | — | Not decided: exists in the code (see CAL-20) |
 | ACT-03 | Every post, link, whiteboard or memo added to a published space callout writes its own entry naming it, even when the contributor switched the notification off. | Contributions are the core activity of a space; the notification switch is about mail, not history (callout table CAL-30; `callout.resolver.mutations.ts:770-773` "a notification failure can never drop the activity entry"). | — | — | Not decided: exists in the code (a code comment; see CAL-30) |
 | ACT-04 | An office document (Collabora) added to a published callout writes no activity entry. **(open: F1)** | — | — | — | Not decided: exists in the code |
 | ACT-05 | Contributions to a draft callout, contributions on a virtual contributor's knowledge base, and Form responses write nothing. | Drafts are invisible; the knowledge base is not a space ("toDo - rework activities also for KNOWLEDGE_BASE"); a Form response is never a contribution (callout table CAL-49). | — | — | Not decided: exists in the code (see CAL-49) |
-| ACT-06 | A comment on a post writes a "post comment" entry with the comment text, once the chat server has confirmed the message. **(open: F8)** | Comments are activity. | — | The Matrix echo is the source of truth for messages (communications table COM-11). | Not decided: exists in the code |
-| ACT-07 | A comment in a callout's own discussion writes a "discussion comment" entry only while the callout is published and belongs to a space. **(open: F8)** | Same visibility rule as publication: discussion on a draft is not community activity. | — | — | Not decided: exists in the code |
-| ACT-08 | A message in the space's updates channel writes an "update sent" entry with the message text. | Updates are the lead's broadcast and belong on the timeline. | — | — | Not decided: exists in the code |
-| ACT-09 | Creating a calendar event writes a "calendar event created" entry with the event's name and the start of its description. **(defect in part: F2)** | Events are space activity (calendar area). | — | — | Not decided: exists in the code |
-| ACT-10 | Every grant of the member role on a space (joining, added by an admin, accepted invitation, approved application) writes a "member joined" entry naming the joiner and who acted. Lead and admin grants, and organisation memberships, write nothing. **(open: F9)** | The community's growth is activity; who acted is kept for attribution. | — | — | Not decided: exists in the code |
+| ACT-06 | A comment on a post writes a "post comment" entry with the comment text, once the chat server has confirmed the message. **(open: F8)** | — | — | The Matrix echo is the source of truth for messages (communications table COM-11). | Not decided: exists in the code |
+| ACT-07 | A comment in a callout's own discussion writes a "discussion comment" entry only while the callout is published and belongs to a space. **(open: F8)** | Same visibility rule as publication: discussion on a draft is not community activity. _(draft)_ | — | — | Not decided: exists in the code |
+| ACT-08 | A message in the space's updates channel writes an "update sent" entry with the message text. | Updates are the lead's broadcast and belong on the timeline. _(draft)_ | — | — | Not decided: exists in the code |
+| ACT-09 | Creating a calendar event writes a "calendar event created" entry with the event's name and the start of its description. **(defect in part: F2)** | Events are space activity (calendar area). _(draft)_ | — | — | Not decided: exists in the code |
+| ACT-10 | Every grant of the member role on a space (joining, added by an admin, accepted invitation, approved application) writes a "member joined" entry naming the joiner and who acted. Lead and admin grants, and organisation memberships, write nothing. **(open: F9)** | The community's growth is activity; who acted is kept for attribution. _(draft)_ | — | — | Not decided: exists in the code |
 | ACT-11 | Creating a subspace writes a "subspace created" entry on the parent's log, naming the new subspace. | — | — | Clients refresh lists live and the parent's timeline shows growth (journey table JRN-12; 082). | Spec 082 (through JRN-12) |
 | ACT-12 | The "whiteboard content modified" entry type still exists in the API, but nothing on the server writes it any more. **(open: F3)** | — | — | The producer went with the Excalidraw backend removal (`1650462ec`, #4973); the type stayed. | Server PR #4973 (commit 1650462ec) removed the producer; keeping the type was not decided |
 | ACT-13 | Deleting a comment hides the entry that was written for it. No "comment removed" entry is written and nothing is pushed to live subscribers. **(open: Q-ACT-13)** | — | — | — ("todo" comments in the code) | Not decided: exists in the code |
 | ACT-14 | Only people write activity: a comment, reply or update by a virtual contributor or an organisation writes no entry. **(open: F9)** | — | — | The activity row and the feed types require a user as actor; non-user actors arrive with an empty actor id, so the producers skip rather than fail (file-level FIXME). | Not decided: exists in the code (a FIXME) |
 | ACT-15 | An entry's text is cut to 128 characters, ending in "…". **(open: Q-ACT-15)** | — | — | — | Not decided: exists in the code |
-| ACT-16 | Entries are written in the background after the action succeeds. The action never fails because of the entry, and the entry shows shortly after. | — | — | Activity is a side effect, never a precondition of the user's action. | Server PR #5692 (commit 63b6b3ed6) |
+| ACT-16 | Entries are written in the background after the action succeeds. The action never fails because of the entry, and the entry shows shortly after. | — | — | Activity is a side effect, never a precondition of the user's action. _(draft)_ | Not decided: arrived with server PR #5692 (the Postgres migration), which states no reason |
 | ACT-17 | Entries are never deleted when the thing they describe is deleted; the reader just never sees them. An entry by a deleted author stays, attributed to "Former member". **(open: F10)** | — | — | Append-only history; the author tombstone is a recorded v1 limitation (054 FR-022). | Spec 054 FR-022 for the author; the rest is not decided |
 
 ### Reading a space's log
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| ACT-20 | A signed-in user who may read a space's content may read its log: members and admins on any space, every signed-in user on a public space. | The log shows the names and texts of what happened, so it follows the collaboration's own read rule. | — | — | Not decided: exists in the code |
-| ACT-21 | A signed-in user who is not a member of a private space is refused its log, and the refusal reveals nothing of it. | Private means private for history too. | — | — | Not decided: exists in the code |
-| ACT-22 | A public subspace of a private space stays private to outsiders: the parent's members and admins read its log, a non-member is refused. | Privacy is inherited down the hierarchy (journey area). | — | — | Not decided: exists in the code |
-| ACT-23 | The log returns at most the number of entries asked for, or all of them when no number is given. It can be narrowed to chosen types. Hidden entries are never returned. | — | — | The client paginates the timeline by count. | Not decided: exists in the code |
-| ACT-24 | Entries come newest first. **(open: Q-ACT-24)** | A timeline. | — | — | Not decided: exists in the code |
+| ACT-20 | A signed-in user who may read a space's content may read its log: members and admins on any space, every signed-in user on a public space. | The log shows the names and texts of what happened, so it follows the collaboration's own read rule. _(draft)_ | — | — | Not decided: exists in the code |
+| ACT-21 | A signed-in user who is not a member of a private space is refused its log, and the refusal reveals nothing of it. | Private means private for history too. _(draft)_ | — | — | Not decided: exists in the code |
+| ACT-22 | A public subspace of a private space stays private to outsiders: the parent's members and admins read its log, a non-member is refused. | Privacy is inherited down the hierarchy (journey area). _(draft)_ | — | — | Not decided: exists in the code |
+| ACT-23 | The log returns at most the number of entries asked for, or all of them when no number is given. It can be narrowed to chosen types. Hidden entries are never returned. | — | — | The client paginates the timeline by count. _(draft)_ | Not decided: exists in the code |
+| ACT-24 | Entries come newest first. **(open: Q-ACT-24)** | A timeline. _(draft)_ | — | — | Not decided: exists in the code |
 | ACT-25 | Asking for child activity adds the entries of every subspace below that the reader may read, each flagged as a child entry. Subspaces the reader may not read are left out silently. **(defect in part: F4)** | The top-level dashboard shows the whole hierarchy's activity without leaking private subspaces (`f7d315d70` #2741). | — | — | Server PR #2741 (commit f7d315d70) |
 | ACT-26 | An entry whose subject no longer exists is left out of the result instead of failing the query. **(open: F10)** | A deleted resource must not break the timeline (client-web#7947). | — | — | client-web#7947 |
 | ACT-27 | An entry whose author's account was deleted is shown as written by "Former member". **(open: OQ4)** | Account deletion must not erase or break others' history (054 FR-022, `656bec3df`). | — | — | Spec 054 FR-022; commit 656bec3df |
-| ACT-28 | Every entry carries its type, time, text, actor and the space it happened in. Typed entries add their subject: the callout, post, whiteboard, memo, link, subspace, joiner, update or event. | — | — | The client renders each entry kind from its payload. | Not decided: exists in the code |
-| ACT-29 | A freshly created space's log holds one "member joined" entry per seeded member, the creator included, and nothing else. **(open: OQ1)** | Space creation itself is not activity; memberships are. | — | — | Not decided: exists in the code |
+| ACT-28 | Every entry carries its type, time, text, actor and the space it happened in. Typed entries add their subject: the callout, post, whiteboard, memo, link, subspace, joiner, update or event. | — | — | The client renders each entry kind from its payload. _(draft)_ | Not decided: exists in the code |
+| ACT-29 | A freshly created space's log holds one "member joined" entry per seeded member, the creator included, and nothing else. **(open: OQ1)** | Space creation itself is not activity; memberships are. _(draft)_ | — | — | Not decided: exists in the code |
 
 ### Transfers, moves and deletions
 
@@ -65,28 +68,28 @@ _Open questions per owner: Product Lead 9 · Technical Lead 6 · Quality Lead 6 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | ACT-50 | The two feeds show only activity from spaces where the caller holds a membership role, and from their readable subspaces. A caller who can read no space gets an empty feed. | A registered user with no memberships was receiving private-space names, texts and actors platform-wide (server#6640, fix #6643). | — | — | server#6640; server PR #6643 |
-| ACT-51 | A space filter narrows the feed to the named spaces the caller belongs to. Other or unknown spaces give nothing, without an error. | — | — | The dashboard filters by my spaces; unknown ids are a stale client, not an attack. | Not decided: exists in the code |
-| ACT-52 | Without filters the paginated feed is everything the caller may see, their own entries and everyone else's, newest first. | "Latest activity in my spaces" (client-web dashboard). | — | — | Not decided: exists in the code |
+| ACT-51 | A space filter narrows the feed to the named spaces the caller belongs to. Other or unknown spaces give nothing, without an error. | — | — | The dashboard filters by my spaces; unknown ids are a stale client, not an attack. _(draft)_ | Not decided: exists in the code |
+| ACT-52 | Without filters the paginated feed is everything the caller may see, their own entries and everyone else's, newest first. | "Latest activity in my spaces" (client-web dashboard). _(draft)_ | — | — | Not decided: exists in the code |
 | ACT-53 | "Exclude my activity" removes the caller's own entries: every page stays full, the total counts only others, and paging returns each of the others' entries once and in order. | A space admin wanted the dashboard's "latest activity in my spaces" without their own posts. | — | An in-memory filter would give short pages (server#6561, #6639; client-web#10403). | server#6561; server PR #6639; client-web#10403 |
 | ACT-54 | The paginated feed pages forward or backward with cursors, never both at once. Without a page size it returns 25 entries. It reports the total and whether more pages exist. | — | — | Pagination contract (`docs/Pagination.md`). | docs/Pagination.md |
 | ACT-55 | "My activity" returns exactly the caller's own entries, and the total counts only those. | The dashboard's "My activity" view (server#6561 "myActivity unchanged"). | — | — | server#6561 |
 | ACT-56 | "My activity" together with "exclude my activity" is accepted and gives an empty page, not an error. | — | — | Documented composition rule (`activity.feed.query.args.ts:24`). | Not decided: exists in the code (documented in the query arguments) |
 | ACT-57 | The grouped feed shows one entry per person, subject and type (the latest of each), newest first, 10 by default, with the same "my activity" and "exclude my activity" switches. **(open: OQ6)** | The dashboard's compact "latest contributions" block must not show the same person's ten comments on one post as ten rows (`9f17a5e54` #3718; `5f5687454` #3720). | — | — | Server PRs #3718, #3720 |
 | ACT-58 | The grouped feed accepts a list of types to exclude but does not apply it. **(defect: F5)** | — | — | — | Not decided: a defect |
-| ACT-59 | A role filter keeps only the spaces where the caller is a member, an admin or a lead, as chosen. | Dashboard filter by my role. | — | — | Not decided: exists in the code |
+| ACT-59 | A role filter keeps only the spaces where the caller is a member, an admin or a lead, as chosen. | Dashboard filter by my role. _(draft)_ | — | — | Not decided: exists in the code |
 | ACT-60 | A list of types to include and a list to exclude narrow the paginated feed. A type in both is excluded. | The dashboard hides whiteboard-content-modified entries (024 clarification `:37`). | — | — | Spec 024 clarification |
 | ACT-61 | A page of the paginated feed may hold fewer entries than asked, with a misleading total, when some entries cannot be shown because their subject was deleted. **(open: Q-ACT-61, F10)** | — | — | Known limitation ("todo solve issue below" — `activity.feed.service.ts:197-200`). | Not decided: exists in the code (a todo) |
 | ACT-62 | Neither feed limits the size asked for: any grouped limit or page size is run as asked. **(open: F6)** | — | — | — (named in #6640/#6643 as a pre-existing, unticketed issue) | Not decided: exists in the code |
-| ACT-63 | Both feeds are for signed-in users only; a visitor is refused. | The feed is "related to the current user". | — | — | Not decided: exists in the code |
+| ACT-63 | Both feeds are for signed-in users only; a visitor is refused. | The feed is "related to the current user" (schema description of the feed queries). | — | — | Not decided: exists in the code |
 
 ### My spaces and membership ordering
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | ACT-70 | "My spaces" lists, newest first, the spaces where the caller is a direct member and has acted themselves, each with their latest entry there; 20 by default. Spaces reached only through a virtual contributor are left out. | "Recent Spaces" on the dashboard = the member's own activity (024 clarification `:26`). | — | VC memberships must not appear in the user's own list (`me.service.ts:386-388`). | Spec 024 clarification |
-| ACT-71 | The caller's space memberships are ordered by activity in the top-level space: first where the caller acted most recently, then where others did, then the rest. **(open: Q-ACT-71)** | The membership list doubles as a recency list. | — | — | Not decided: exists in the code |
+| ACT-71 | The caller's space memberships are ordered by activity in the top-level space: first where the caller acted most recently, then where others did, then the rest. **(open: Q-ACT-71)** | The membership list doubles as a recency list. _(draft)_ | — | — | Not decided: exists in the code |
 | ACT-72 | Hidden entries (deleted comments) still count for "my spaces" and for the membership ordering, although the log and the feeds no longer show them. **(defect: F7)** | — | — | — | Not decided: a defect |
-| ACT-73 | The MCP "community activity summary" tool reads the same entries for the caller's member spaces and readable subspaces: visible entries only, at most 100 (default 20), from the last 1 to 365 days (default 30). | Assistant-side view of the member's communities. | — | — | Not decided: exists in the code |
+| ACT-73 | The MCP "community activity summary" tool reads the same entries for the caller's member spaces and readable subspaces: visible entries only, at most 100 (default 20), from the last 1 to 365 days (default 30). | Assistant-side view of the member's communities. _(draft)_ | — | — | Not decided: exists in the code |
 
 Numbering note: ACT-30…39, 44…49, 64…69 are intentionally unused.
 
@@ -176,7 +179,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | OQ1 | Reading | check | What are the four entries in a fresh space's log? Two cases pin the count without saying which members they are. Check the scenario factory on the test stack before the count is used as a rule. | Quality Lead | — | open |
 | OQ2 | Writing | check | Is the "added by an admin" path ever exercised on a top-level space, or does the helper make the person join as themself? Confirm per level on the test stack. | Quality Lead | — | open |
 | OQ3 | All | test | Two legacy files have set-up slips: a space id passed where a role-set id is expected, and an assertion that is always true. Repair or retire them when the area moves to the new net? | Quality Lead | — | open |
-| OQ4 | Reading | spec | Spec 054 (account deletion, "Former member") is cited by the code but was not found locally. Locate it to confirm the why of ACT-27. | Quality Lead | — | open |
+| OQ4 | Reading | spec | Spec 054 (account deletion, "Former member") is cited by the code but was not found locally. Locate it to confirm the why of ACT-27. | Quality Lead | Found: `agents-hq/specs/054-delete-own-account/spec.md` FR-022: activity feeds that reference a deleted user "MUST resolve to a static neutral “former member” attribution without per-entry lookups" (v1 limitation: the string is not localised). It confirms the why of ACT-27. | suggested |
 | OQ5 | Reading | check | Findings F4 and F7 are readings of the code. Nobody has watched either on a running stack. Confirm both live. | Quality Lead | — | open |
 | GAPS | All | test | 28 rules have no test, and Appendix D lists more untested clauses and behaviours that were never pinned down. Which get a case before the acceptance checklist is drawn from this file? | Quality Lead | — | open |
 
@@ -375,6 +378,9 @@ Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/7
 
 2026-11-19 converted to the three-section layout. The single why was split over three columns without rewording, the who-may table was rebuilt as section 2, and every finding, open question and rule without a stated reason became a row in section 3 with an owner.
 
+
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. A restating why with no source was dropped where a sourced one remains (ACT-06). ACT-01 and ACT-02 now name the spec behind CAL-20. ACT-16 no longer counts server PR #5692 as its decision: that PR is the Postgres migration and states no reason. Spec 054 was found in agents-hq and answers OQ4.
+
 #### Sources
 
 Server code (worktree `w1-access-matrix/server` @ `eeecf9ddb`):
@@ -404,3 +410,4 @@ Specs / issues:
 - `agents-hq/specs/030-move-subspace-parent/spec.md` (`:27`, `:194`); server `specs/083-cross-space-moves/spec.md:216`
 - server issues #6640 → PR #6643; #6561 → PR #6639; client-web#10403; server#6023, #4971, client-web#7947; server#3626 (magic number); #6292; #6416 (054)
 - `server/docs/how-to-add-activity.md`; `server/specs/049-ut-domain-activity-feed/spec.md` (unit-test scope only)
+- `agents-hq/specs/054-delete-own-account/spec.md` FR-022 (found in the whys pass, 2026-11-20); server PR #5692 (read: the Postgres migration, no stated reason for background writes)
