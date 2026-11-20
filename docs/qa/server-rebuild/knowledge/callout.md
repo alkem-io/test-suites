@@ -2,7 +2,7 @@
 
 _What the platform does today for callouts: creating and framing them, their settings, publishing and closing, contributions, posts and comments, Forms, polls, reactions, the Contributors and Subspaces collections, transfer, deletion and reading: what it does, why, who may, and what is still to answer. The layout is the three-section one of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 5 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 16 open · 10 with a suggested answer · 5 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
+_Open questions per owner: Product Lead 4 · Technical Lead 8 · Quality Lead 8 · Security Lead 1 · Architecture Lead 4. By state: 15 open · 10 with a suggested answer · 6 decided. Proof of the 77 rules: 45 proven by a test · 32 untested (Appendix A)._
 
 _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to decide · 3 have none, and each already carries an open question (CAL-11, CAL-27, CAL-39)._
 
@@ -38,7 +38,7 @@ _Whys of the 77 rules: 66 rest on a source · 8 carry a draft for product to dec
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| CAL-11 | A callout created without settings is published, has comments on and accepts no contributions. **(open: F15, Q-CAL-11)** | — | — | — (the client always sends its own settings; the server default is PUBLISHED while every client flow starts in DRAFT) | Not decided: exists in the code |
+| CAL-11 | A callout created without settings is published, has comments on and accepts no contributions. **(open: Q-CAL-11)** | — | — | The web client always sets its own settings and starts in draft; the server default only affects API callers and other clients (Product, 2026-11-20). Draft as the server default is tracked (F15). | Not decided: exists in the code; Product, 2026-11-20 (was F15): behaviour stays, tracked |
 | CAL-12 | A settings change is partial: a field left out keeps its value, and a list is replaced as a whole. | — | — | A null written into a non-null stored leaf would break every later read of the callout and of its whole set; a shorter list must persist (merge comment). | Specs 025, 076; code comment |
 | CAL-13 | A Contributors callout must show at least one of users, organisations and virtual contributors. A fixed map view is accepted only with valid values: longitude −180 to 180, latitude −90 to 90, zoom 0 to 22. | No impossible configuration can be saved; an invalid camera crashes the map for every viewer including anonymous (008 FR-006a, :38, :52; 034 FR-009/010). | — | — | Spec 008 FR-006a; spec 034 FR-009/010 |
 | CAL-14 | Contributor settings fit only a Contributors callout, a selection only a Contributors or Subspaces callout, and a card style only a Subspaces callout. Anything else is refused and nothing is saved. | — | — | Settings belong to the kind that reads them (025 FR-013, 076 FR-004). | Spec 025 FR-013; spec 076 FR-004 |
@@ -237,13 +237,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 5 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 4 to answer, 1 also involved
 
 **To answer**
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F15 | Settings | decision | A callout created without settings is published by the server, while the web client always starts in draft. Anything other than the web client therefore creates published callouts. Which default is right? | Product Lead | — | open |
 | Q-CAL-25 | Publishing | decision | Why does this rule exist? No source gives the reason the activity number counts contributions on one callout and comments on another. | Product Lead | — | open |
 | Q-CAL-33 | Contributions | decision | Why does this rule exist? No source gives the reason a contribution can be moved only within the same Space and lands in the first column of a tasks board. | Product Lead | — | open |
 | Q-CAL-39 | Links | decision | Why does this rule exist? No source gives the reason a link has these edit, delete and file rights. | Product Lead | — | open |
@@ -330,6 +329,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
+| F15 | Behaviour stays: a callout created without settings is published; the web client always sends its own settings and starts in draft. Wanted, tracked: the server default becomes draft, as in the web client. | Product, 2026-11-20 | CAL-11 |
 | F13 | Behaviour stays: a poll has at most 10 options and a vote is bounded by the poll's own maximum (0 = all options); since a poll has at most 10 options, a vote never holds more than 10 selections, which covers spec 038 FR-009. | Product, 2026-11-20 | CAL-51 |
 | F11 | Behaviour stays: a phase's 'visible' and 'allow new callouts' switches are client hints; the server enforces neither. | Product, 2026-11-20 | CAL-72 |
 | F9 | Behaviour stays: 'admins only' means everyone who may edit the callout, so the creator of the callout counts as an admin for it. | Product, 2026-11-20 | CAL-23 |
