@@ -234,7 +234,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 10 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 11 to answer, 1 also involved
 
 **To answer**
 
@@ -246,6 +246,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F11 | Transfer | decision | A flow phase's "allow new callouts" switch is stored and shown, but the server never enforces it. Enforce it, or record it as a hint for the client, like "visible"? | Product Lead, then Technical Lead | — | open |
 | F13 | Polls | spec | Server spec 038 FR-009 says a vote holds at most 10 selections. The code limits a poll to 10 options and a vote only by the poll's own maximum, where 0 means no limit. Which is intended? | Product Lead (Technical Lead then amends the spec or the code) | — | open |
 | F15 | Settings | decision | A callout created without settings is published by the server, while the web client always starts in draft. Anything other than the web client therefore creates published callouts. Which default is right? | Product Lead | — | open |
+| F19 | Contributions | decision | With "inherit membership rights" on, the contribute right on a Sub-subspace goes to members of every Space above, so a member of the top-level Space who is not in the Subspace may contribute and create posts there. The setting's description says "inherited from parent Space". Should it reach every level, or the direct parent only? ([server#6786](https://github.com/alkem-io/server/issues/6786)) | Product Lead, then Technical Lead | — | open |
 | Q-CAL-25 | Publishing | decision | Why does this rule exist? No source gives the reason the activity number counts contributions on one callout and comments on another. | Product Lead | — | open |
 | Q-CAL-33 | Contributions | decision | Why does this rule exist? No source gives the reason a contribution can be moved only within the same Space and lands in the first column of a tasks board. | Product Lead | — | open |
 | Q-CAL-39 | Links | decision | Why does this rule exist? No source gives the reason a link has these edit, delete and file rights. | Product Lead | — | open |
@@ -457,6 +458,7 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 - **F16 — Three `sendNotification` semantics (CAL-20/30).** Required boolean on publish; explicit-false-only on contributions (070 D-OP2: non-client producers must keep notifying); truthy on create-callout. Ruling: one convention in the new core.
 - **F17 — Reaction negatives pin no reason (CAL-55).** Non-member, draft and template refusals assert only "some error"; a draft callout is also unreadable to a member, so the published guard is never isolated; the cap of 100 is asserted as `3 <= 100`. Ruling: rebaseline with codes when the texts move.
 - **F18 — AUTO subspaces list has no per-viewer filter (CAL-63).** Recorded risk R-F in `space.collection.service.ts`: a viewer denied READ_ABOUT on a direct subspace would void the whole non-null list for everyone. Not reproduced. Ruling: follow-up ticket, or accept.
+- **F19 — Depth of "inherit membership rights" (CAL-28).** `collaboration.service.authorization.ts` `getContributorCredentials` adds the member credential of every space above (`getCredentialsForRoleWithParents`); the GraphQL description of the setting says "inherited from parent Space". Live on a local server with a copy of acceptance data (v0.173.0, 2026-11-19): a plain top-level member who is not in the subspace holds CONTRIBUTE and CREATE_CALLOUT on a public sub-subspace with the setting on, 29 of 29 pairs asked. The setting is the default for a new subspace; on acceptance it is on for 441 of 485 sub-subspaces. Ruling: every level, or the direct parent only; the wording of CAL-28 ("the parent Space") follows the answer. Tracked as [server#6786](https://github.com/alkem-io/server/issues/6786); the upload defect that depends on it is `journey.md` F13.
 
 #### Open questions
 
