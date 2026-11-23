@@ -92,7 +92,7 @@ _Whys of the 45 rules: 33 rest on a source or a product decision · 6 carry a te
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | OPS-45 | Only the Platform Audit Reader can read the audit trail: a user's email-change history (addresses in full) and an MCP tool (addresses masked to their domain). Every other role is refused, administrative roles included, and a refused read leaves no audit row. | 027 FR-028: a dedicated read-only role so no role that performs audited actions reviews its own trail | — | A19 re-anchored off the retired catch-all onto an audit-read privilege held by no other role | Spec 027 FR-028, A19 |
-| OPS-46 | Only email-change rows can be read through the normal API. Everything else is reachable only through the MCP tool, which searches by user, so rows about an organisation cannot be read by a reviewer at all. The Audit Reader has no screen in the admin console. **(open: F11a)** | — | — | — | Product, 2026-11-20 (F11b, OQ7): acceptable for release as today; an audit screen in the admin console is a wish on the product issues list |
+| OPS-46 | Only email-change rows can be read through the normal API. Everything else is reachable only through the MCP tool, which searches by user, so rows about an organisation cannot be read by a reviewer at all. The Audit Reader has no screen in the admin console. **(open: F11a)** | — | — | — | Product, 2026-11-20 (F11b, OQ7): acceptable for release as today; an audit screen is not a product matter (amended 2026-11-23) |
 | OPS-47 | An admin acting on themselves (resetting their own user, changing their own email) is allowed, and can be found afterwards as the rows where the actor and the subject are the same person. A platform-wide action names no subject, so it never counts as acting on oneself. | 027 FR-030/SC-015: detection over prevention for the remaining self-affecting actions | — | Derived, not stored (one table change budget) | Spec 027 FR-030, SC-015 |
 | OPS-48 | The avatar migration writes its audit row with no subject user, although it acts on one profile, so it cannot be found as an action on a person. **(defect: F9)** | — | — | — | Not decided: a defect |
 
@@ -257,7 +257,7 @@ Nothing to answer: every Product Lead question is decided (see Decided).
 |---|---|---|---|
 | Q-OPS-29 | Operational jobs are rare maintenance with a platform-wide effect, run by a technical operator through the API; whether that shape is right for release is OQ7. | Product, 2026-11-20 | OPS-29 |
 | CONST | Product rules on the retention values: the in-app notification prune, the whiteboard draft lifetime, the push clean-up and the audit retention, ticked "yes" in Appendix E. Engineering limits, schedules, wire shapes, error texts and the other audit settings go to the Technical Lead or the Security Lead. | Product, 2026-11-20 | Appendix E |
-| OQ7 | Acceptable for release as today: the Operations Admin works through the API, the Audit Reader through the API and the MCP tool. An audit screen in the admin console, where a reviewer can also read the rows about an organisation, is a wish on the product issues list. | Product, 2026-11-20 | OPS-29, OPS-46; PRODUCT-ISSUES OQ7 |
+| OQ7 | Acceptable for release as today: the Operations Admin works through the API, the Audit Reader through the API and the MCP tool. An audit screen in the admin console is not a product matter and is not on the product issues list; it belongs to the operational and security roles (F11a stays with the Technical Lead). | Product, 2026-11-20 (amended 2026-11-23) | OPS-29, OPS-46 |
 | F11b | The same decision as OQ7. | Product, 2026-11-20 | OPS-46 |
 
 ## Appendix
@@ -352,7 +352,7 @@ Read-only extraction against the code, the tests and the specs; nothing below co
 - **OQ4 — Unit of the URL cache `ttl: 1000`.** 108 research R4 documents that the runtime cache-manager (v5, milliseconds) and the compile-time types (v4, seconds) disagree; whether entity URLs are cached for one second or 1,000 s was not determined.
 - **OQ5 — What refreshes a push subscription's `lastActiveDate`?** Decides whether the 30-day cleanup (OPS-32) can ever delete a subscription that is still in use — route to CM-5.
 - **OQ6 — Is `resetLicenseOnAccounts` bounded on acceptance data?** One synchronous request over every account, no task, no batching; the exclusive positive asserts `true` only. A duration or timeout on ACC-size data is unknown.
-- **OQ7 — Product intent for the API-only seats.** Operations Admin has no admin section and Audit Reader no audit screen (checklist `:90`, `:93`, open since 2026-09-21). Is that the intended release shape, and who answers? **Product, 2026-11-20:** acceptable as today; an audit screen in the admin console is a wish.
+- **OQ7 — Product intent for the API-only seats.** Operations Admin has no admin section and Audit Reader no audit screen (checklist `:90`, `:93`, open since 2026-09-21). Is that the intended release shape, and who answers? **Product, 2026-11-20 (amended 2026-11-23):** acceptable as today; an audit screen is not a product matter.
 - **OQ8 — Multi-replica digest sweep.** OPS-33's "no two replicas flush the same digest" is a code reading of the atomic claim; no environment fact says how many API replicas run the sweep, and no case exercises two.
 
 ### D. Test gaps
