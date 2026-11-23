@@ -4,7 +4,7 @@ _Product decisions from reviewing the knowledge files where product wants someth
 
 | ID | File | Rule | Decision | Decided | Issue |
 |---|---|---|---|---|---|
-| CH-EVT-02 (track) | `calendar.md` | EVT-02 | Behaviour stays: only space admins create events. Wanted: members can create calendar events too. | Product, 2026-11-20 | [alkem-io/alkemio#2205](https://github.com/alkem-io/alkemio/issues/2205) (criterion "Should let members create calendar events") |
+| CH-EVT-02 (track) | `calendar.md` | EVT-02 | Behaviour stays: only space admins create events. Wanted: members can create calendar events too, behind a Space setting that admins turn on, like the settings that let members create subspaces or posts. | Product, 2026-11-20 | [alkem-io/alkemio#2205](https://github.com/alkem-io/alkemio/issues/2205) (criterion "Should let members create calendar events") |
 | F7 (track) | `calendar.md` | EVT-24 | Behaviour stays: a creator keeps their rights after leaving. Wanted: a creator's rights on an event end when they leave the community; space admins keep theirs. | Product, 2026-11-20 | To file |
 | F1 (track) | `roleset.md`, `contributor-management.md` | RS-04, CM-34 | Behaviour stays: not enforced. Wanted: a lead, admin or owner must also hold the entry role (member or associate), enforced on assignment, with the existing data repaired (67 space and 757 organisation credentials on acceptance). | Product, 2026-11-20 | To file |
 | F7 (track) | `roleset.md` | RS-77 | Behaviour stays: the stored limits are enforced. Wanted: the code's limits (RS-02) everywhere, with the stored role definitions on acceptance repaired (VC caps, top-level spaces allowing 9 lead organisations). | Product, 2026-11-20 | To file |
