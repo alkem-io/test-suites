@@ -1,3 +1,4 @@
+server	v0.174.0	2026-11-20	false
 server	v0.173.1	2026-11-17	false
 server	v0.173.0	2026-11-13	false
 server	v0.172.0	2026-11-06	false
@@ -557,6 +558,7 @@ server	v0.2.0	2020-10-15	true
 server	v0.1.8	2020-10-06	true
 server	v0.1.7	2020-10-02	true
 server	v0.1.6	2020-10-01	true
+client-web	v0.174.0	2026-11-20	false
 client-web	v0.173.0	2026-11-12	false
 client-web	v0.172.0	2026-11-06	false
 client-web	v0.171.0	2026-10-30	false
