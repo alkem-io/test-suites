@@ -1,5 +1,6 @@
 import { Page, expect, Locator } from '@playwright/test';
 import { chooseFramingChip } from '../../helpers/callout-form.helper';
+import { acceptCookiesIfVisible } from '../../helpers/cookies.helper';
 
 /**
  * Page object for the admin-only **Contributors callout** (client-web feature
@@ -146,17 +147,7 @@ export class ContributorsCalloutPage {
   }
 
   private async dismissCookieBanner() {
-    const accept = this.page.getByRole('button', {
-      name: /accept all cookies/i,
-    });
-    // Wait for the banner to actually render before clicking — a snapshot check
-    // can miss it in the moment right after goto(). No banner is fine.
-    try {
-      await accept.waitFor({ state: 'visible', timeout: 2000 });
-      await accept.click();
-    } catch {
-      /* no banner surfaced — nothing to dismiss */
-    }
+    await acceptCookiesIfVisible(this.page);
   }
 
   // ------------------------------------------------------------- create form

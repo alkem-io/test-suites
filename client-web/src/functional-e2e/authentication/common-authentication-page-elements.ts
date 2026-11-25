@@ -88,15 +88,14 @@ export const accessRestrictedHeading = (page: Page) =>
 export const welcomeHeading = (page: Page) =>
   page.getByRole('link', { name: 'My Account' });
 
-// Cookie consent
-export const cookieConsentBanner = (page: Page) =>
-  // Anchor to a stable interaction hook (the accept button) rather than the
-  // consent prose, which varies by locale spelling ("analyze" vs "analyse").
-  page.getByRole('button', { name: /accept all cookies/i });
-export const acceptAllCookiesButton = (page: Page) =>
-  page.getByRole('button', { name: 'Accept All Cookies', exact: true });
-export const cookieSettingsButton = (page: Page) =>
-  page.getByRole('button', { name: 'settings', exact: true });
+// Cookie consent: the locators live in `helpers/cookies.helper.ts`, the one
+// place that knows the banner's labels. Re-exported here for the
+// authentication walks that already import them from this file.
+export {
+  acceptAllCookiesButton,
+  cookieBanner as cookieConsentBanner,
+  cookieBannerSettingsButton as cookieSettingsButton,
+} from '../helpers/cookies.helper';
 
 // Header entry point (replaces the old PersonIcon avatar menu). The CRD app
 // header now exposes a direct "Log in" link that initiates the Kratos flow.

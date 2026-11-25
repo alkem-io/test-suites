@@ -44,6 +44,7 @@ import {
   TestUserManager,
 } from './organization-user-associates.helpers';
 import { fillSecret } from '../helpers/login.helper';
+import { acceptCookiesIfVisible } from '../helpers/cookies.helper';
 
 baseTest.describe.configure({ mode: 'serial' });
 
@@ -408,8 +409,7 @@ baseTest.describe('US3-AS6 — inviting a user with a pending application is ref
 baseTest.describe('US3-AS7 — an unauthenticated visitor is sent to log in and returned to the profile', () => {
   baseTest('clicking Apply to associate leads to /login and back to the organization profile', async ({ page }) => {
     await page.goto(`${baseUrl}/organization/${orgO.nameID}`);
-    const cookieBtn = page.getByRole('button', { name: 'Accept All Cookies' });
-    if (await cookieBtn.isVisible({ timeout: 2000 }).catch(() => false)) await cookieBtn.click();
+    await acceptCookiesIfVisible(page);
 
     const applyBtn = page
       .getByRole('button', { name: 'Apply to associate' })

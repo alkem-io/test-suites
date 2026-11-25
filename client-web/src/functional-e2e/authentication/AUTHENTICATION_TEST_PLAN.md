@@ -76,11 +76,15 @@ Purpose: Provide a clear, area-based view of authentication testing with explici
 
 ### Cookie Consent Persistence
 
-- Scope: Consent banner visibility and persistence
-- Automated: Yes (authentication-critical-flows.spec.ts)
+- Scope: Consent banner visibility, both choices, later changes, and what is measured
+- Automated: Yes (authentication-cookie-consent.spec.ts)
+- Locators: `helpers/cookies.helper.ts` is the only file that knows the banner's labels
 - Scenarios:
-  - First visit banner, accept, disappearance, cross-page and reload persistence
-  - Rejection path — Not automated (deferred)
+  - First visit banner with "Accept all", "Only necessary" and "Settings"
+  - "Accept all": disappearance, cross-page and reload persistence
+  - "Only necessary": disappearance, only the necessary category stored, reload persistence
+  - Changing the choice later through "Cookie settings" in the footer (on, off, and closing without saving)
+  - Browser measurement (`/intake/v2/rum/events`): none before a choice, none after "Only necessary", and sent after "Accept all" (the control). These three are skipped where `APM_RUM_ENABLED` is off, because there they would pass without proving anything
 
 ### Restricted Access & Redirects
 
@@ -129,9 +133,9 @@ Purpose: Provide a clear, area-based view of authentication testing with explici
 
 ## Automation Status Summary
 
-- Implemented: Page elements, Admin login, Registration + Verify + Sign-in, Password recovery, Cookie consent accept/persist, Restricted redirects (unauthenticated + unauthorized regular user), Logout + re-auth, Invalid credentials, Third-party buttons availability
+- Implemented: Page elements, Admin login, Registration + Verify + Sign-in, Password recovery, Cookie consent accept/persist, Cookie consent "Only necessary" and later change (2026-11-25, alkem-io/test-suites#767), Restricted redirects (unauthenticated + unauthorized regular user), Logout + re-auth, Invalid credentials, Third-party buttons availability
 - Implemented 2026-11-09 (W2 Tier 1 item 14): Admin positive access to `/admin/spaces`; registration read-back of the Alkemio user + profile and removal of every registered user that reached its first sign-in (a sign-up that never signed in leaves its Kratos identity, logged)
-- Not Implemented: Cookie rejection, Private space unauthenticated redirect, Registration error validations (existing email, invalid email, weak password), Space admin role scenarios, Accessibility automation
+- Not Implemented: Private space unauthenticated redirect, Registration error validations (existing email, invalid email, weak password), Space admin role scenarios, Accessibility automation
 
 ---
 
@@ -143,7 +147,6 @@ Purpose: Provide a clear, area-based view of authentication testing with explici
   - Private space unauthenticated redirect (2.1.2)
   - Space admin role access checks (5.3)
 - Low:
-  - Cookie rejection path (1.3)
   - Accessibility automation (axe-core + snapshots)
 
 ---

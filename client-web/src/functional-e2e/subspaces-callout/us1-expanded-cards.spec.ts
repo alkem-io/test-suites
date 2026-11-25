@@ -48,6 +48,7 @@ import {
   type GraphqlActor,
 } from '@alkemio/tests-lib';
 import { must } from '../helpers/lib-actor.helper';
+import { acceptCookiesIfVisible } from '../helpers/cookies.helper';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const adminEmail = process.env.AUTH_TEST_HARNESS_EMAIL || 'admin@alkem.io';
@@ -313,12 +314,6 @@ test.describe(
         must(await deleteSpace(id, admin()), `deleteSpace(${id})`)
       );
     });
-
-    async function acceptCookiesIfVisible(page: Page) {
-      const btn = page.getByRole('button', { name: /accept all cookies/i });
-      if (await btn.isVisible({ timeout: 3000 }).catch(() => false))
-        await btn.click().catch(() => undefined);
-    }
 
     /** The subspaces list `<section>` that belongs to the post titled `title`.
      * The post is anchored by its own "Open <title>" link and `<title>` h3

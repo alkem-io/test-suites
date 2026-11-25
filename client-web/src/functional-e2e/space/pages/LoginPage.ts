@@ -1,5 +1,6 @@
 import { Page, expect } from '@playwright/test';
 import { fillSecret } from '../../helpers/login.helper';
+import { acceptCookiesIfVisible } from '../../helpers/cookies.helper';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 
@@ -15,12 +16,7 @@ export class LoginPage {
   }
 
   async acceptCookies() {
-    const cookieButton = this.page.getByRole('button', {
-      name: 'Accept All Cookies',
-    });
-    if (await cookieButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await cookieButton.click();
-    }
+    await acceptCookiesIfVisible(this.page);
   }
 
   async login(

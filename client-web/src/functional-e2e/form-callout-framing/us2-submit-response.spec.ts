@@ -37,6 +37,7 @@ import {
 } from './form-callout-framing.helpers';
 import fs from 'node:fs';
 import path from 'node:path';
+import { acceptCookiesIfVisible } from '../helpers/cookies.helper';
 
 /**
  * workspace#080-form-callout-framing — User Story 2 (P1): Submit a response to a Form.
@@ -118,14 +119,6 @@ const detailsCode = (result: GraphqlReturnWithError<unknown>) =>
   firstError(result)?.extensions?.details?.code ??
   firstError(result)?.extensions?.code;
 
-async function acceptCookies(page: Page) {
-  const accept = page.getByRole('button', { name: /accept all cookies/i });
-  await accept
-    .waitFor({ state: 'visible', timeout: 8_000 })
-    .then(() => accept.click())
-    .catch(() => undefined);
-}
-
 async function signIn(
   browser: Browser,
   userEmail: string
@@ -157,7 +150,7 @@ async function signIn(
 
 async function open(page: Page, url: string) {
   await page.goto(url);
-  await acceptCookies(page);
+  await acceptCookiesIfVisible(page);
 }
 
 async function shot(page: Page, name: string) {

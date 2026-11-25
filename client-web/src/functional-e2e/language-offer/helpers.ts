@@ -17,6 +17,7 @@
 import { Page, expect, Locator, BrowserContext } from '@playwright/test';
 import { readPlatformLanguageConfiguration } from '@alkemio/tests-lib';
 import { must, sessionActor } from '../helpers/lib-actor.helper';
+import { acceptAllCookiesButton, CONSENT_COOKIE_NAME } from '../helpers/cookies.helper';
 
 export const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -41,14 +42,11 @@ export async function languageConfig(
 // LanguageOfferBanner.tsx: <header data-testid="language-offer-banner" data-language="nl">
 export const languageOfferBanner = (page: Page): Locator => page.getByTestId('language-offer-banner');
 
-// CookieConsentBanner.tsx (crd-layout `cookies.acceptAll`). The label IS
-// localised, so the locator lists every supported rendering and the landing wait
-// stays locale-independent. (In practice an unanswered anonymous visitor sees the
-// platform default — English — per the FR-004/SC-005 invariant the walks assert.)
-export const cookieConsentAcceptAll = (page: Page): Locator =>
-  page.getByRole('button', {
-    name: /Accept All Cookies|Accepteer Alle Cookies|Alle Cookies akzeptieren|Accepter tous les Cookies|Aceptar todas las cookies|Приеми всички бисквитки/i,
-  });
+// CookieConsentBanner.tsx. The label IS localised; the shared locator lists every
+// supported rendering, so the landing wait stays locale-independent. (In practice
+// an unanswered anonymous visitor sees the platform default — English — per the
+// FR-004/SC-005 invariant the walks assert.)
+export const cookieConsentAcceptAll = acceptAllCookiesButton;
 // NOTE (2026-07-28): the `preference`/functional cookie category was removed. The
 // anonymous language choice is session-only (in-memory), never written to the
 // browser, so there is no per-category consent to grant. The cookie banner keeps
@@ -68,7 +66,7 @@ export const dutchDeclineButton = (page: Page): Locator =>
 // localStorage keys the feature governs.
 export const LANGUAGE_OFFER_STORAGE_KEY = 'alkemio.languageOffer';
 export const LEGACY_I18N_KEY = 'i18nextLng';
-export const CONSENT_COOKIE_NAME = 'accepted_cookies';
+export { CONSENT_COOKIE_NAME };
 
 // The footer renders the ACTIVE display language as its endonym ("English" /
 // "Nederlands") in every locale file — this is the app's own ground truth for

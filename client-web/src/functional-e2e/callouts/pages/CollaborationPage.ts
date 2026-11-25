@@ -1,5 +1,6 @@
 import { Page, expect, Locator } from '@playwright/test';
 import { chooseFramingChip, chooseResponseChip } from '../../helpers/callout-form.helper';
+import { acceptCookiesIfVisible } from '../../helpers/cookies.helper';
 
 /**
  * Page object for the Space/Subspace Collaboration (Knowledge) tab
@@ -343,12 +344,7 @@ export class CollaborationPage {
   // CRD: a cookie-consent banner can overlay controls at the viewport bottom
   // (e.g. the create dialog's submit button); dismiss it if present.
   private async dismissCookieBanner() {
-    const accept = this.page.getByRole('button', {
-      name: /accept all cookies/i,
-    });
-    if (await accept.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await accept.click().catch(() => {});
-    }
+    await acceptCookiesIfVisible(this.page);
   }
 
   async openKnowledgeTab() {
