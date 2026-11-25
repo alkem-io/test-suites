@@ -30,7 +30,7 @@ _Whys of the 18 rules: 16 rest on a source · 1 rests only on a technical QA dra
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| AST-05 | The assistant can read, for the user it acts for, whether that user has access and their monthly token allowance. The allowance is the limit of the account's AI-token entitlement; with none, the assistant applies its own default. A read that is not made for a user gets no access and no allowance. **(open: F4a)** | Tiers signed off: free 1M, plus 10M, premium 50M (ENT-13) | — | Budget is a licence entitlement on the account, resolved for the on-behalf-of user only so one user can never read another's (004 FR-027(b); contract §3) | Spec 004 FR-027(b); contract assistant-access-and-budget §3; Product, 2026-11-20 (F4b): a plan-less user gets the assistant service's default, as today; issuing the 1M free tier is a wish (same decision as entitlements F1) |
+| AST-05 | The assistant can read, for the user it acts for, whether that user has access and their monthly token allowance. The allowance is the limit of the account's AI-token entitlement; with none, the assistant applies its own default. A read that is not made for a user gets no access and no allowance. **(open: F4a)** | Tiers signed off: free 1M, plus 10M, premium 50M (ENT-13) | — | Budget is a licence entitlement on the account, resolved for the on-behalf-of user only so one user can never read another's (004 FR-027(b); contract §3) | Spec 004 FR-027(b); contract assistant-access-and-budget §3; Product, 2026-11-20 (F4b) (amended 2026-11-25): a plan-less user gets the assistant service's default, as today; the free tier is for the pricing discussion with Neil; issuing the 1M free tier is a wish (same decision as entitlements F1) |
 | AST-06 | The server does not count or refuse assistant usage: it reports usage as 0 and keeps no record of turns or tokens. Counting and enforcing the monthly budget is left to the assistant backend. **(open: F4a)** | — | — | FR-027(b)/FR-028 enforcement and metering are "go-live requirements — not yet implemented" on the assistant side (spec); the server's part is the resource of AST-05. | Spec 004 FR-027(b), FR-028 ("not yet implemented") |
 
 ### The assistant actor
@@ -182,7 +182,7 @@ Nothing to answer: every Product Lead question is decided (see Decided).
 | Was | Decision | Decided by | Now |
 |---|---|---|---|
 | OQ4b | The Feature Virtual Assistant role stays granted by an admin, as today; turning it into an offer like VC Campaign is not wished now. | Product, 2026-11-20 | Appendix C, OQ4 |
-| F4b | Stays as today: the free tier is never issued, so a user without a plan gets the assistant service's own default. Issuing the signed-off free tier of 1M tokens a month is a wish on the product issues list; it is the same decision as entitlements F1. | Product, 2026-11-20 | AST-05; PRODUCT-ISSUES F4b |
+| F4b | Behaviour stays: the free tier is never issued, so a user without a plan gets the assistant service's own default allowance. Discuss (Neil, pricing): whether the signed-off free tier of 1M tokens a month is issued; same decision as entitlements F1. | Product, 2026-11-20 (amended 2026-11-25) | AST-05; PRODUCT-ISSUES F4b |
 
 
 ## Appendix
