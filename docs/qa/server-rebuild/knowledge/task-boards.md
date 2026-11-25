@@ -28,7 +28,7 @@ _Whys of the 21 rules: all 21 rest on a source or a product decision · none car
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| TSK-03 | A board can only be created as a callout that accepts posts and nothing else. Whether a callout is a board is decided when it is created, also from a template, and never changes afterwards. A board can also be created in a virtual contributor's knowledge base. | Tasks are posts; converting an existing callout to or from a board is out of scope (042 FR-006/007). | — | — | Spec 042 FR-006/007; Product, 2026-11-20 (OQ3) (amended 2026-11-25): a board in a knowledge base stays possible, no wish; a guard is a wish on the product issues list |
+| TSK-03 | A board can only be created as a callout that accepts posts and nothing else. Whether a callout is a board is decided when it is created, also from a template, and never changes afterwards. A board can also be created in a virtual contributor's knowledge base. | Tasks are posts; converting an existing callout to or from a board is out of scope (042 FR-006/007). | — | — | Spec 042 FR-006/007; Product, 2026-11-20 (OQ3): a board in a knowledge base stays possible as today; a guard is a wish on the product issues list |
 | TSK-04 | A board created without columns starts with To Do, In Progress and Done, in that order. A board always has at least one column. | The leanest useful set — `Backlog` was dropped because most teams renamed or deleted it at once (042 FR-005 as refined 2026-08-24, refinements §1). | — | — | Spec 042 FR-005; refinements §1 |
 | TSK-05 | A board can only be made through the board option at creation. A board marker slipped in any other way is removed and makes no board. **(open: F2, OQ1)** | — | — | One entry point to board mode so a template round-trip or a hand-crafted create cannot produce a half-configured board (042 FR-024, D-08). | Spec 042 FR-024, D-08 |
 | TSK-06 | Every task gets exactly one column when it is created: the column asked for, or else the first column. Asking for a column the board does not have is refused and nothing is created. | — | — | An invalid column must not orphan a post (042 FR-009/010; service comment). | Spec 042 FR-009/010 |
@@ -148,7 +148,7 @@ Nothing to answer: every Product Lead question is decided (see Decided).
 | F1 | A board has at most 20 columns; the Technical Lead amends spec 042 D-10. | Product, 2026-11-20 | TSK-11 |
 | OQ4 | The order of tasks within a column is a promise: it is kept, and a new task comes first in its column. | Product, 2026-11-20 | TSK-10 |
 | Q-TSK-17 | The draft why stands: a moved post must still be a valid task, so it takes the first column; off a board a column means nothing. | Product, 2026-11-20 | TSK-17 |
-| OQ3 | Stays as today, no wish: a board in a virtual contributor's knowledge base is allowed; it can be used to organise the knowledge. | Product, 2026-11-20 (amended 2026-11-25) | TSK-03; PRODUCT-ISSUES OQ3 |
+| OQ3 | Stays as today: nothing stops a board in a virtual contributor's knowledge base. A guard against it is a wish on the product issues list. | Product, 2026-11-20 | TSK-03; PRODUCT-ISSUES OQ3 |
 | CONST | Product rules on the default columns, the column cap and the column-name limits, ticked "yes" in Appendix E. Error texts, storage, rights and the GraphQL surface go to the Technical Lead. | Product, 2026-11-20 | Appendix E |
 
 ## Appendix
@@ -208,7 +208,7 @@ Read-only extraction against the code, the tests and the specs; nothing below co
 
 - **OQ1 — Can the generic classification update drop or rename the board marker?** (finding 2) `tagsetService.updateTagsets` was not read to the end; a live probe with `updateCallout` carrying a classification without the `task` tagset would settle it.
 - **OQ2 — Which error a non-member gets on a move.** By analogy with the sidebar case it is `FORBIDDEN_POLICY`; not observed.
-- **OQ3 — Does a board belong in a knowledge base?** No guard and no product statement either way. **Product, 2026-11-20 (amended 2026-11-25):** stays as today, no wish: a board can organise a knowledge base.
+- **OQ3 — Does a board belong in a knowledge base?** No guard and no product statement either way. **Product, 2026-11-20:** stays as today; a guard is a wish on the product issues list.
 - **OQ4 — Is the within-column order a contract?** Code renumbers contribution sort orders; the board persists drag order through the generic reorder (TSK-10); nothing says whether a new task must appear first or last in its column. **Product, 2026-11-20:** yes: the order is kept and a new task comes first in its column.
 - **OQ5 — Spec availability.** `agents-hq/specs/042-kanban-task-board/` and `062-task-board-analytics/` exist only on `origin/main` (fetched 2026-11-06); the local clone of agents-hq is behind and does not carry them.
 
