@@ -2,12 +2,15 @@
 
 _What the platform does today for whiteboards: creating them, editing and who may edit, guest access, drafts, previews, deletion, and whiteboards in templates and collections: what it does, why, who may, and what is still to answer. Licensing rules are in `entitlements.md` (ENT-06, ENT-31) and callout-level rules in `callout.md`. The layout is that of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 7 · Technical Lead 10 · Quality Lead 5 · Security Lead 1 · Architecture Lead 1. By state: 21 open · 3 with a suggested answer. Proof of the 36 rules: 6 proven by a test · 30 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 10 · Quality Lead 5 · Security Lead 1 · Architecture Lead 1. By state: 13 open · 4 with a suggested answer · 7 decided. Proof of the 36 rules: 6 proven by a test · 30 untested (Appendix A)._
+
+_Whys of the 36 rules: 33 rest on a source or a product decision · none carries a draft · 3 have none, and each already carries an open question or a defect (WBD-10, WBD-12, WBD-33)._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. Most product whys are still empty: product fills them in its review.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why, or the part of a why, ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A user story always ends in its "so that"; where no source gives one, QA wrote it. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Not decided" means the behaviour exists in the code and nobody chose it. Product has not reviewed this file yet.
 - A marker in bold at the end of a rule points at section 3: **(open: F4)** means a question on this rule is still open, **(defect: F6)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F5)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -20,8 +23,8 @@ _Open questions per owner: Product Lead 7 · Technical Lead 10 · Quality Lead 5
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | WBD-01 | A new whiteboard gets its own name (default "Whiteboard"), a tag set, a readable identifier taken from its name, and its creator recorded as owner. | — | — | The owner field is what drafts and the owner-only edit policy key on (058 FR-003); a board without the default tagset cannot be opened in the editor (065 US1-AS4). | Spec 058 FR-003; spec 065 US1-AS4 |
-| WBD-02 | Every new whiteboard can be edited by contributors and has an automatic preview. Neither can be chosen when it is created. **(open: Q-WBD-02)** | — | — | — | Not decided: exists in the code |
-| WBD-03 | A whiteboard's identifier is unique within its callout. A taken identifier is refused; a missing one is taken from the title. **(open: Q-WBD-03)** | — | — | — | Not decided: exists in the code |
+| WBD-02 | Every new whiteboard can be edited by contributors and has an automatic preview. Neither can be chosen when it is created. | — | As a space member, I want a new whiteboard to be open to the other contributors and to show a preview straight away, so that we can start drawing together without setting anything up. | — | Product, 2026-11-20 (Q-WBD-02) |
+| WBD-03 | A whiteboard's identifier is unique within its callout. A taken identifier is refused; a missing one is taken from the title. **(open: Q-WBD-03)** | — | — | The identifier is the last part of the whiteboard's web address (`url.generator.service.ts`, `getWhiteboardUrlPath`, see WBD-33), so two whiteboards in one callout cannot share it. | Not decided: exists in the code |
 | WBD-04 | A whiteboard's drawing is never sent through the API. It is kept as a snapshot in the whiteboard's own storage and is read and written only through the live editing session. | — | — | Content unification: one CRDT representation, media locators safe, the room is the single writer of the snapshot (server spec `006-collab-content-unification`, cited by the code comments; not in this checkout). | Server spec 006-collab-content-unification (cited by code comments) |
 | WBD-05 | Creating a whiteboard works fully or not at all. An empty one is stored as an empty board; if anything cannot be stored, the whiteboard is removed again. | — | — | A new board must open empty and editable without a first save (006-collab-content-unification FR-010, per code comment); never a half-created board. | Server spec 006-collab-content-unification FR-010 (per code comment) |
 | WBD-06 | A whiteboard can be started from another one only by someone who may read that one. The drawing, its images and its preview are copied, so the copy stands on its own. Giving both a source and content is refused. | Cloning must not leak boards the actor cannot read (resolver comment; 058 FR-006/FR-007); the copy is independently owned. | — | — | Spec 058 FR-006, FR-007 |
@@ -32,7 +35,7 @@ _Open questions per owner: Product Lead 7 · Technical Lead 10 · Quality Lead 5
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| WBD-09 | Who may change the drawing follows the whiteboard's edit setting: only the creator, the space admins, or the space members. The creator can always edit and delete their own whiteboard, even after leaving the space. **(open: Q-WBD-09)** | — | — | — | Not decided: exists in the code |
+| WBD-09 | Who may change the drawing follows the whiteboard's edit setting: only the creator, the space admins, or the space members. The creator can always edit and delete their own whiteboard, even after leaving the space. | — | As a whiteboard creator, I want to choose whether only I, the admins or all members can change the drawing, so that I stay in control of my work. | — | Product, 2026-11-20 (Q-WBD-09); the creator keeping rights after leaving stays as today, ending them is a wish on the product issues list |
 | WBD-10 | Changing the edit setting takes effect at once for a whiteboard in a callout. A template or draft whiteboard keeps its old rights until its parent is next recalculated. **(open: Q-WBD-10)** | — | — | — | Not decided: exists in the code |
 | WBD-11 | Changing a whiteboard's title, description, tags, edit setting or preview settings needs the update right on it. The drawing cannot be changed this way. | — | — | Boards are edited through the collaboration service only (DTO comment). | Not decided: exists in the code (a code comment gives the reason) |
 | WBD-12 | A new identifier sent with a whiteboard update is accepted but ignored: the link does not change. **(defect: F6)** | — | — | — | Not decided: a defect |
@@ -40,7 +43,7 @@ _Open questions per owner: Product Lead 7 · Technical Lead 10 · Quality Lead 5
 | WBD-14 | When the server itself changes a whiteboard (replacing its drawing from another one, or an MCP edit), it does so through the live session in the name of the person who asked, so people editing see it at once. Replacing needs the edit right on the target and the read right on the source. **(open: F3)** | — | — | An external write must appear live and never be clobbered by a stale autosave (workspace spec 006; code comment). | Workspace spec 006 FR-001/002/005 |
 | WBD-15 | A template's whiteboard content can be written directly. For a whiteboard that frames a live callout, content sent with a callout update is ignored; only its preview settings are applied. | — | — | A direct write would be clobbered by the room's next save (code comment); templates have no live room. | Not decided: exists in the code (a code comment gives the reason) |
 | WBD-16 | Several people can edit a whiteboard at once only when its space has the multi-user whiteboard feature. A template or draft whiteboard is never multi-user (see ENT-31, ENT-06). | Multi-user editing is a paid space feature (server spec 083; `entitlements.md`). | — | — | Server spec 083 |
-| WBD-17 | Each time a whiteboard is saved, the people who contributed are reported to analytics. A failure there never affects editing. **(open: Q-WBD-17)** | — | — | — | Not decided: exists in the code |
+| WBD-17 | Each time a whiteboard is saved, the people who contributed are reported to analytics. A failure there never affects editing. | Alkemio measures who contributes to whiteboards to understand engagement; the report must never get in the way of editing. | — | — | Product, 2026-11-20 (Q-WBD-17) |
 | WBD-18 | An MCP client may edit a whiteboard only with the edit right. An import adds elements and never replaces or repairs. When MCP editing is switched off the answer is "unavailable", not "forbidden". A request above 262,144 bytes is not accepted. | — | — | Documented contract for external editors (`docs/McpWhiteboards.md`). | docs/McpWhiteboards.md; spec 066 |
 
 ### Guest access
@@ -48,7 +51,7 @@ _Open questions per owner: Product Lead 7 · Technical Lead 10 · Quality Lead 5
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | WBD-19 | Guest access on a whiteboard can be switched only by someone with the share right on it, and switched on only while its space allows guest contributions. Switching it off is always allowed. | Governance: never expose a board by accident (server spec 021 FR-001, FR-006). | — | — | Server spec 021 FR-001, FR-006 |
-| WBD-20 | With guest access on, a visitor who gave a name and any signed-in user may read and edit that whiteboard, also when its space is private. Switching it on twice changes nothing. **(open: F4)** | Guests collaborate without accounts. | — | Clients compose the link themselves, the server issues no tokens (021 FR-002, FR-005, FR-007). | Server spec 021 FR-002, FR-005, FR-007 |
+| WBD-20 | With guest access on, a visitor who gave a name and any signed-in user may read and edit that whiteboard, also when its space is private. Switching it on twice changes nothing. | — | As a member with the share right, I want to open one whiteboard to guests, so that outside participants can draw along without an account (021 US1). | Clients compose the link themselves, the server issues no tokens (021 FR-002, FR-005, FR-007). | Server spec 021 FR-002, FR-005, FR-007; Product, 2026-11-20 (F4): stays as today, also in a private Space |
 | WBD-21 | Switching guest access off takes effect at once: a guest's next request is refused. **(open: F2)** | Revocation must be instant (021 FR-003, FR-008, SC-004). | — | — | Server spec 021 FR-003, FR-008 |
 | WBD-22 | While a space allows guest contributions, a whiteboard's creator, the space admins and, where the space lets it act as admin, Platform Support may share its whiteboards with guests. After the space setting is switched off, those rights and any guest access go when the whiteboard's rights are next recalculated. **(open: F1, F2)** | Space admins and owners control sharing; secure by default (server specs 022 FR-001..005, 023 FR-001..008, FR-014; 2025-11-21 GRANT→PUBLIC_SHARE note). | — | — | Server specs 022 FR-001..005 and 023 FR-001..008, FR-014 |
 | WBD-23 | A guest is a visitor without an account who gives a display name. A visitor who gives no name is anonymous. | Ephemeral guests need no account or token (`docs/Guest-Users.md`). | — | — | docs/Guest-Users.md |
@@ -66,7 +69,7 @@ _Open questions per owner: Product Lead 7 · Technical Lead 10 · Quality Lead 5
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| WBD-28 | A whiteboard has a preview image and a preview setting: automatic (refreshed when the editor closes), custom (a frame the user chose) or fixed (never refreshed). A copy starts with the source's preview. The server stores what the web app uploads and makes no preview itself. **(open: F7)** | Preview on templates and cards (server PR #5538). | — | — | Server PR #5538 |
+| WBD-28 | A whiteboard has a preview image and a preview setting: automatic (refreshed when the editor closes), custom (a frame the user chose) or fixed (never refreshed). A copy starts with the source's preview. The server stores what the web app uploads and makes no preview itself. | Preview on templates and cards (server PR #5538). | — | — | Server PR #5538; Product, 2026-11-20 (F7): the preview stays a web-app instruction, not a server guarantee |
 
 ### Deletion
 
@@ -74,7 +77,7 @@ _Open questions per owner: Product Lead 7 · Technical Lead 10 · Quality Lead 5
 |---|---|---|---|---|---|
 | WBD-29 | Deleting a whiteboard needs the delete right. The live editing session is closed first; then the whiteboard, its files and its rights are removed. When a platform role deletes or edits a whiteboard directly, no audit record is written. **(defect in part: F5)** | Platform-role actions must be audited (server CLAUDE.md). | — | Deletion must not leave a live room editing a vanished board (code comment). | Server CLAUDE.md (audit rule); the deletion order is not decided: it exists in the code |
 | WBD-30 | A whiteboard goes with its parent: deleting its callout, contribution or template, or changing the callout to another kind, deletes the whiteboard (see CAL-32, CAL-73). | — | — | Framing content is owned by the callout; no orphans (CAL-73 origin server#6614). | Server #6614 (through CAL-73) |
-| WBD-31 | When a user is deleted, their whiteboards stay and the creator shows as empty. **(open: Q-WBD-31)** | — | — | — (W4 register M5 ruling pending) | Not decided: exists in the code |
+| WBD-31 | When a user is deleted, their whiteboards stay and the creator shows as empty. | Content belongs to the community, so a whiteboard stays when its creator's account is deleted (as for calendar events, calendar.md Q-EVT-25). | — | — | Product, 2026-11-20 (Q-WBD-31; W4 register M5): stays as today, the creator shows as empty |
 
 ### Reading, links and template whiteboards
 
@@ -133,29 +136,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 7 to answer, 1 also involved
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F4 | Guest access | decision | A whiteboard with guest access on can be read and edited by any named visitor and any signed-in user, also when its space is private. Is a guest link on a whiteboard in a private space intended? Should the link be read-only, or allow editing as today? | Product Lead (Security Lead owns the risk of opening content of a private space) | — | open |
-| F7 | Preview | decision | The preview setting is an instruction to the web app; the server does not enforce it. Should the preview be something the server guarantees? | Product Lead | — | open |
-| CONST | All | decision | The "product must rule?" column is blank for 24 of the 27 constants (Appendix E). Which must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
-| Q-WBD-02 | Creation | decision | Why does this rule exist? No source states a reason. Why does every new whiteboard start open to contributors, with no choice at creation? | Product Lead | — | open |
-| Q-WBD-09 | Editing | decision | Why does this rule exist? No source states a reason. Why these three edit settings, and why does the creator keep their rights after leaving the space? | Product Lead | — | open |
-| Q-WBD-17 | Editing | decision | Why does this rule exist? No source states a reason. Who uses the report of whiteboard contributors? | Product Lead | — | open |
-| Q-WBD-31 | Deletion | decision | Why does this rule exist? No source states a reason. A ruling on what the creator field should show for a deleted user is pending (576 whiteboards on acceptance). | Product Lead | — | open |
-
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| OQ6 | Editing | check | Is there a size limit on a whiteboard? The server has none; if one exists it is in the collaboration service. Acceptance data has 2 whiteboards above 1 MB and 173 empty ones. | Technical Lead (Product Lead rules on the value if a limit is wanted) | — | open |
+Nothing to answer: every Product Lead question is decided (see Decided).
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 10 to answer, 2 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 10 to answer, 1 also involved
 
 **To answer**
 
@@ -167,8 +154,8 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | F6 | Editing | defect | A new identifier sent with a whiteboard update is silently ignored, although the field is documented as changing the link. Implement it, or remove the field? | Technical Lead | — | open |
 | OQ1 | Guest access | check | Does changing a space's guest setting recalculate the rights of every whiteboard in it? (Feeds F2.) | Technical Lead | — | open |
 | OQ3 | Editing | check | Is the old live-sync queue of spec 006 still declared or consumed anywhere? (Feeds F3.) | Technical Lead (Service Operations Lead checks the environments) | — | open |
-| OQ6 | Editing | check | Is there a size limit on a whiteboard? The server has none; if one exists it is in the collaboration service. Acceptance data has 2 whiteboards above 1 MB and 173 empty ones. | Technical Lead (Product Lead rules on the value if a limit is wanted) | — | open |
-| Q-WBD-03 | Creation | decision | Why does this rule exist? No source states a reason. Why must the identifier be unique within the callout? | Technical Lead | — | open |
+| OQ6 | Editing | check | Is there a size limit on a whiteboard? The server has none; if one exists it is in the collaboration service. Acceptance data has 2 whiteboards above 1 MB and 173 empty ones. | Technical Lead (Product Lead rules on the value if a limit is wanted) | Product, 2026-11-20: no limit is wanted; it stays as today. The check whether the collaboration service has one remains. | open |
+| Q-WBD-03 | Creation | decision | Why does this rule exist? No source states a reason. Why must the identifier be unique within the callout? | Technical Lead | The identifier is the last part of the whiteboard's web address (`url.generator.service.ts`, `getWhiteboardUrlPath`). The why is on WBD-03. | suggested |
 | Q-WBD-10 | Editing | decision | Why does this rule exist? No source states a reason. Why does a template or draft whiteboard keep its old rights until later? | Technical Lead | — | open |
 | Q-WBD-33 | Reading | decision | Why does this rule exist? No source states a reason. Why these two link shapes? | Technical Lead | — | open |
 
@@ -177,7 +164,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F5 | Deletion | risk | When a platform role edits or deletes a whiteboard directly, no audit record is written, although the server's own rule asks for one. File the gap, or accept it? | Security Lead (Technical Lead fixes it if filed) | — | open |
-| CONST | All | decision | The "product must rule?" column is blank for 24 of the 27 constants (Appendix E). Which must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
 
 ### Quality Lead
 
@@ -195,7 +181,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Security Lead
 
-[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 1 to answer, 4 also involved
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 1 to answer, 3 also involved
 
 **To answer**
 
@@ -209,8 +195,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F1 | Guest access | spec | Server spec 023 promises a rollback, metrics and an audit record when a space's guest setting changes. None of them is built. Drop them from the spec, or file the gap? | Technical Lead (Security Lead owns the audit record) | — | open |
 | F2 | Guest access | check | Specs 021 and 023 promise that guest access ends at once when the space setting is switched off. The code removes it only when the whiteboard's rights are next recalculated. Does the setting change trigger that for every whiteboard? | Technical Lead (answers OQ1 first; Security Lead owns the risk if there is a delay) | Verify live. If the recalculation runs, record the delay; if not, file a defect. | suggested |
-| F4 | Guest access | decision | A whiteboard with guest access on can be read and edited by any named visitor and any signed-in user, also when its space is private. Is a guest link on a whiteboard in a private space intended? Should the link be read-only, or allow editing as today? | Product Lead (Security Lead owns the risk of opening content of a private space) | — | open |
-| CONST | All | decision | The "product must rule?" column is blank for 24 of the 27 constants (Appendix E). Which must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
+| F4 | Guest access | decision | A whiteboard with guest access on can be read and edited by any named visitor and any signed-in user, also when its space is private. Is a guest link on a whiteboard in a private space intended? Should the link be read-only, or allow editing as today? | Product Lead (Security Lead owns the risk of opening content of a private space) | Product, 2026-11-20: stays as today, also in a private Space. Security Lead: accept the risk or raise it. | open |
 
 ### Service Operations Lead
 
@@ -231,6 +216,18 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | OQ2 | Editing | contract | What does the collaboration service do with the multi-user flag, the rights id and a guest whose access was withdrawn? Its contract is written down nowhere in this workspace. | Architecture Lead | — | open |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| F4 | Stays as today: with guest access on, a whiteboard is open to named visitors and signed-in users, also in a private Space (spec 021 FR-002). The Security Lead still owns the risk. | Product, 2026-11-20 | WBD-20 |
+| F7 | Stays as today: the preview setting is an instruction to the web app, not a server guarantee. The client defect is client-web#10283. | Product, 2026-11-20 | WBD-28 |
+| Q-WBD-02 | The draft story stands: a new whiteboard is open to contributors with an automatic preview, so people can start drawing together at once. | Product, 2026-11-20 | WBD-02 |
+| Q-WBD-09 | The three edit settings keep the creator in control. That the creator keeps their rights after leaving stays as today; ending them, as decided for calendar events, is a wish on the product issues list. | Product, 2026-11-20 | WBD-09; PRODUCT-ISSUES Q-WBD-09 |
+| Q-WBD-17 | The draft why stands: the contributor report measures engagement and never gets in the way of editing. | Product, 2026-11-20 | WBD-17 |
+| Q-WBD-31 | Stays as today: a whiteboard stays when its creator's account is deleted, and the creator shows as empty. | Product, 2026-11-20 | WBD-31 |
+| CONST | Product rules on the edit settings, the preview modes, the space's guest-contributions setting, the default names and the notification subjects, ticked "yes" in Appendix E. Error texts go to the Technical Lead; the multi-user flag is ruled in `entitlements.md`. | Product, 2026-11-20 | Appendix E |
 
 ## Appendix
 
@@ -296,10 +293,10 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 - **F1 — Spec 023's rollback, metrics and audit are not implemented (WBD-22).** Code: `appendSettingsDrivenCredentialRules` writes `verbose`/`debug` log lines only; there is no transaction around the cascade, no revert of `allowGuestContributions` on failure (FR-009), no metrics (FR-011), no audit row with triggering user/action (FR-012/013); a failure to resolve admin credentials silently yields no admin rule. Test: none. Ruling: drop those requirements from the spec, or file the gap.
 - **F2 — "Immediately" is "at the next recompute" (WBD-21/22).** Spec 021 (edge case) and 023 FR-005/FR-008 promise synchronous revocation when the space setting flips off. Code: the guest rule and public-share rights are only re-derived inside `applyAuthorizationPolicy` for the board; whether the space-settings mutation cascades that recompute over every callout and board was not read (Open question 1). Test: none. Ruling: verify live; if the cascade exists, record the latency; if not, file.
 - **F3 — Workspace spec 006 describes a mechanism the code no longer uses (WBD-14).** Spec: server emits a versioned delta on a dedicated RabbitMQ queue, the (archived) whiteboard-collaboration-service merges it and broadcasts `SCENE_UPDATE`. Code: the server joins the room through `CollaborationDocumentService` as a Yjs collaborator and never writes the snapshot or pointer directly; the queue constant remains in `providers.ts:16-17`. Ruling: mark 006 superseded (and say by what — the excalidraw-yjs/collaboration-service contract is not in any spec on this checkout), and check whether the queue is still declared anywhere.
-- **F4 — A guest-enabled board ignores the space's privacy (WBD-20).** Code: the `public-access` rule is appended to the board's own policy with cascade for `GLOBAL_GUEST` and `GLOBAL_REGISTERED`, so with the space setting on and the toggle on, a board inside a **private** space is readable and editable by any named visitor and any signed-in user; the toggle gate is the space setting, not privacy. Spec 021 FR-002 states exactly this for "guests and any authenticated user"; spec 022 only promises a "secure posture" by default and never defines a guest. Test: none; the matrix models `pub-open+guests` only. Ruling: is a guest link on a private-space board intended? Should the link be read-only, or edit as today?
+- **F4 — A guest-enabled board ignores the space's privacy (WBD-20).** Code: the `public-access` rule is appended to the board's own policy with cascade for `GLOBAL_GUEST` and `GLOBAL_REGISTERED`, so with the space setting on and the toggle on, a board inside a **private** space is readable and editable by any named visitor and any signed-in user; the toggle gate is the space setting, not privacy. Spec 021 FR-002 states exactly this for "guests and any authenticated user"; spec 022 only promises a "secure posture" by default and never defines a guest. Test: none; the matrix models `pub-open+guests` only. Ruling: is a guest link on a private-space board intended? Should the link be read-only, or edit as today? **Product, 2026-11-20:** stays as today; the Security Lead owns the risk.
 - **F5 — Direct board edits and deletions by a platform role are not audited (WBD-29).** Code: `updateWhiteboard` / `deleteWhiteboard` resolvers have no platform-audit call, while the contribution deletion path audits PCFA (CAL-32) and the server CLAUDE.md requires a row for any platform-role action. Ruling: file (audit gap) or record as accepted.
 - **F6 — A new identifier on a board update is silently ignored (WBD-12).** Code: `UpdateWhiteboardInput.nameID` is documented as changing the URL, but `updateWhiteboard` never copies it. Test: none. Ruling: implement or remove the field.
-- **F7 — Preview "auto/custom/fixed" is a client instruction the server does not enforce (WBD-28).** Code: the server stores the mode and whatever `whiteboardPreview` visual the client uploads. Issue: client-web#10283 — a callout-template whiteboard framing never gets a preview image while a standalone template does. Ruling: product decides whether the preview is a server guarantee; the client defect is filed.
+- **F7 — Preview "auto/custom/fixed" is a client instruction the server does not enforce (WBD-28).** Code: the server stores the mode and whatever `whiteboardPreview` visual the client uploads. Issue: client-web#10283 — a callout-template whiteboard framing never gets a preview image while a standalone template does. Ruling: product decides whether the preview is a server guarantee; the client defect is filed. **Product, 2026-11-20:** stays as today: a web-app instruction, not a server guarantee.
 - **F8 — The activity-log proof for whiteboards is switched off.** Test: `WHITEBOARD_CREATED` is asserted only inside a `test.skip` in all three activity-log files ("To be updated with the changes related to whiteboard callouts"). Code: the activity entry is written (`callout.resolver.mutations.ts:957-968`). Ruling: re-enable or rewrite the case; until then WBD-34's activity half is a code reading.
 
 #### Open questions
@@ -311,7 +308,7 @@ Read-only extraction against the code, the tests and the specs; nothing below co
 - **OQ3 — Is the 006 queue still consumed anywhere?** `WHITEBOARD_COLLABORATION_SERVICE` (`providers.ts:16-17`) survives; whether a consumer or a RabbitMQ declaration still exists was not checked.
 - **OQ4 — Where is the W2 whiteboard walk?** PR test-suites#702 (excalidraw-yjs#13 QA) lives on another worktree; on this checkout `grep -ril excalidraw` finds only the template-form helpers. Until a walk draws and reads back content, every editing rule here is a code reading.
 - **OQ5 — "WhiteboardRt" in the storage suite.** Three `Access to WhiteboardRt Callout …` blocks name a real-time whiteboard kind that no longer exists in the code; the crosscheck notes they duplicate the whiteboard-framed blocks. Retire or rename.
-- **OQ6 — Where is the board size cap?** The server has none (the MCP 262,144-byte request limit is the only number); W4 M4 found 2 boards above 1 MB and 173 empty ones. The cap, if any, is in the collaboration service.
+- **OQ6 — Where is the board size cap?** The server has none (the MCP 262,144-byte request limit is the only number); W4 M4 found 2 boards above 1 MB and 173 empty ones. The cap, if any, is in the collaboration service. **Product, 2026-11-20:** no limit is wanted; it stays as today.
 - **OQ7 — The client-side preview and `isMultiUser` footers.** client-web#10283 (no preview on callout-template framings) and the whiteboard "one editor at a time" footer are client behaviour over server facts; nobody has checked that the footer appears exactly when `isMultiUser` is false.
 
 ### D. Test gaps
@@ -335,37 +332,37 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits and access rules. The "product must rule?" column is as it was: the reviewer ticks the rows product must rule on (row CONST in section 3)._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits and access rules. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Content update policies (3) | `OWNER`, `ADMINS`, `CONTRIBUTORS` (wire `owner`/`admins`/`contributors`); default on create `CONTRIBUTORS`, not settable at creation | `src/common/enums/content.update.policy.ts`; `schema.graphql:392-396`; `whiteboard.service.ts:188` | | Technical Lead |
-| Preview modes (3) | `AUTO` (regenerate on close), `CUSTOM` (user frame), `FIXED` (never); default `AUTO`, coordinates `null`; coordinates = x, y, width, height | `whiteboard.preview.mode.ts`; `schema.graphql:1203-1207, 8392-8419`; `whiteboard.service.ts:225-228` | | Technical Lead |
-| Creator rights | `UPDATE_CONTENT`, `CONTRIBUTE`, `DELETE` via `USER_SELF_MANAGEMENT(createdBy)`, rule `whiteboard-created-by` | `whiteboard.service.authorization.ts:118-141`; `credential.rule.constants.ts:48` | | Security Lead |
-| Content-policy privilege rules | `policyRule-whiteboardContentUpdate`: ADMINS → `UPDATE ⇒ UPDATE_CONTENT`, CONTRIBUTORS → `CONTRIBUTE ⇒ UPDATE_CONTENT`, OWNER → none | `whiteboard.service.authorization.ts:294-318`; `policy.rule.constants.ts:3` | | Security Lead |
-| Guest rule | name `public-access`, cascade, privileges `READ`, `UPDATE_CONTENT`, `CONTRIBUTE`, credentials `GLOBAL_GUEST('')` + `GLOBAL_REGISTERED('')` | `whiteboard.guest-access.service.ts:25-47` | F4 | Security Lead |
-| Public-share rules | `whiteboard-owner-public-share` (creator), `space-admin-public-share` (admin credentials of the board's community **with parents**; fallback `SPACE_ADMIN(space)`), `policyRule-whiteboardGrantPublicShare` (`GRANT ⇒ PUBLIC_SHARE`); support: L0 + `allowPlatformSupportAsAdmin` + `allowGuestContributions`; all only while `allowGuestContributions` | `whiteboard.service.authorization.ts:167-257, 320-333`; `space.service.platform.roles.access.ts:146-157` | | Security Lead |
-| Space setting | `collaboration.allowGuestContributions`, default `false` for L0 and subspaces; migration set every existing space to `false` | `access-matrix.md:107-108`; server `specs/022-…/spec.md` FR-002, US4 | | Security Lead |
-| Guest identification | header `x-guest-name` (raw ASCII or UTF-8 base64) → `GLOBAL_GUEST`; no header → `GLOBAL_ANONYMOUS`; session → `GLOBAL_REGISTERED` | `docs/Guest-Users.md` | | Security Lead |
-| Draft lifecycle | TTL 7 days; consumed marker = Unix epoch; per-draft advisory lock `whiteboard-draft:<id>`, lock timeout 5,000 ms; sweep every hour, batch 25; draft profile name "Whiteboard draft", identifier 8 random characters | `whiteboard.draft.service.ts:21-22, 60-68, 123-126, 275-283`; `whiteboard.draft.sweep.service.ts:347-358`; 058 data-semantics table | | Product Lead (the 7-day lifetime) · Technical Lead (the rest) |
-| Default names | "Whiteboard" (board), "Callout Framing Whiteboard" (framing replacement), "Whiteboard Template" (template); identifier derived from the name | `whiteboard.service.ts:190-192`; `callout.framing.service.ts:672-678`; `template.service.ts:224-229` | | Product Lead |
-| Profile / policy / visuals | profile type `whiteboard`; policy type `whiteboard`; visuals `CARD` + `WHITEBOARD_PREVIEW` (`whiteboardPreview`); the reserved `default` tagset is always created (FREEFORM) and a caller's `default` tagset dropped | `profile.type.ts:10`; `authorization.policy.type.ts:18`; `visual.type.ts:8`; `whiteboard.service.ts:199-223` | | Technical Lead |
-| Multi-user entitlement | `SPACE_FLAG_WHITEBOARD_MULTI_USER` on the collaboration licence; standalone boards `false` (see `entitlements.md` ENT-31) | `whiteboard.service.ts:1269-1289` | (ENT) | Product Lead |
-| Collaboration client | connect timeout 15,000 ms (`COLLABORATION_SERVICE_CONNECT_TIMEOUT`), durability timeout 20,000 ms (`COLLABORATION_SERVICE_DURABILITY_TIMEOUT`), 2 idempotent resends; a read-only join fails at once | `alkemio.yml:640-642`; `collaboration-document.service.ts:34-40, 85-120` | | Technical Lead |
-| MCP editing | request limit 262,144 bytes; outcomes `durable-success`, `busy`, `indeterminate-after-go`, `unavailable`, `forbidden`; import appends, never replaces | `docs/McpWhiteboards.md` | | Technical Lead |
-| Activity / analytics kinds | `whiteboard-created`, `whiteboard-content-modified`; analytics `CALLOUT_WHITEBOARD_CREATED`, `whiteboardContribution` | `activity.event.type.ts:7-8`; `contribution.reporter.service.ts:187-200, 337-350` | | Technical Lead |
-| Notification subjects | `<space>: New whiteboard contribution created by <name>` (admins) / `…, have a look!` (members) | test › `wb-contributions.it-spec.ts:268-269` | | Product Lead |
-| Error text — create | `A whiteboard create must supply EITHER content OR sourceWhiteboardID, not both`; `draftWhiteboardID must be claimed by the owning create mutation before Whiteboard materialization`; `Unable to create Whiteboard: the provided nameID is already taken: <id>`; `Please provide a whiteboard`; `Whiteboard framing can only be used with whiteboard framing type`; `Callout Framing of type WHITEBOARD requires whiteboard data.`; `Whiteboard Template requires whiteboard input` | `whiteboard.service.ts:136-147`; `callout.service.ts:1089, 522-534`; `callout.framing.service.ts:149-151`; `template.service.ts:218-221` | | Technical Lead |
-| Error text — media | `Whiteboard snapshot references an image asset that is missing from its file map`; `Whiteboard content is not a Yjs snapshot`; `Whiteboard import image source is missing, ambiguous or invalid`; `Whiteboard asset preparation deadline exceeded` | `whiteboard.service.ts:390-401, 650-654, 898-904` | | Technical Lead |
-| Error text — guest | `Guest contributions are disabled for the space` (toggle on while the space setting is off) | `whiteboard.guest-access.service.ts:98-104` | | Product Lead |
-| Error text — drafts | `Whiteboard drafts require an authenticated actor`; `sourceWhiteboardID and sourceCalloutID are mutually exclusive`; `Whiteboard draft not found`; `Only the actor that created a Whiteboard draft may consume it` / `… may discard it`; `Whiteboard draft has expired`; `draftWhiteboardID and sourceWhiteboardID are mutually exclusive`; `draftWhiteboardID and contribution-default source fields are mutually exclusive`; `draftWhiteboardID, contribution-default source fields, and clearWhiteboardContent are mutually exclusive` | `whiteboard.draft.service.ts:175-179, 235-253, 325-337`; `callouts.set.resolver.mutations.ts:184-200`; `callout.resolver.mutations.ts:250-253` | | Technical Lead |
-| Error text — lookups | `Not able to locate Whiteboard with the specified ID: <id>` (id embedded — contrary to the repo's exception rule, like ENT F-7) | `whiteboard.service.ts:917-920` | | Technical Lead |
-| Legacy error codes | 14116 `EXCALIDRAW_AMQP_RESULT_ERROR`, 14117 `EXCALIDRAW_REDIS_INIT`, 14118 `EXCALIDRAW_SERVER_INIT` (old collaboration service) | `docs/error-codes.md:154-156` | | Technical Lead |
-| URL path element | `whiteboards` (contribution boards); framing boards use the callout URL + identifier | `url.generator.service.ts:1172-1210` | | Technical Lead |
-| Live-sync queue (006) | provider `alkemio-whiteboard-collaboration` (`WHITEBOARD_COLLABORATION_SERVICE`) — consumer repo archived | `providers.ts:16-17`; ws spec 006 FR-003 | F3 | Technical Lead |
-| Legacy migration gate | `platform-operations-admin`, audited | `collaboration-migration.resolver.mutations.ts` | | Security Lead |
-| Snapshot files | stored with NULL per-file authorization in the board's bucket (by design; W4 G3) | `whiteboard.service.ts:1053-1056`; `acc-defect-register.md:96` | | Security Lead |
-| GraphQL surface | `Whiteboard{contentUpdatePolicy, createdBy, guestContributionsAllowed, isMultiUser, nameID, previewSettings, profile, authorization}`; `CreateWhiteboardInput{profile, nameID, sourceWhiteboardID, draftWhiteboardID, previewSettings}`; mutations `updateWhiteboard`, `deleteWhiteboard`, `updateWhiteboardGuestAccess`, `replaceWhiteboardContentFromSource`, `createWhiteboardDraftOnCalloutsSet`, `createWhiteboardDraftOnTemplatesSet`, `deleteWhiteboardDraft`, `migrateLegacyWhiteboardContent`; `UrlResolverQueryResultCalloutsSet.whiteboardId` | `schema.graphql:8365-8419, 9556-9580, 7691-7696, 7715-7723`; `catalogue/root-fields.md:122-129` | | Technical Lead |
+| Content update policies (3) | `OWNER`, `ADMINS`, `CONTRIBUTORS` (wire `owner`/`admins`/`contributors`); default on create `CONTRIBUTORS`, not settable at creation | `src/common/enums/content.update.policy.ts`; `schema.graphql:392-396`; `whiteboard.service.ts:188` | yes | Technical Lead |
+| Preview modes (3) | `AUTO` (regenerate on close), `CUSTOM` (user frame), `FIXED` (never); default `AUTO`, coordinates `null`; coordinates = x, y, width, height | `whiteboard.preview.mode.ts`; `schema.graphql:1203-1207, 8392-8419`; `whiteboard.service.ts:225-228` | yes | Technical Lead |
+| Creator rights | `UPDATE_CONTENT`, `CONTRIBUTE`, `DELETE` via `USER_SELF_MANAGEMENT(createdBy)`, rule `whiteboard-created-by` | `whiteboard.service.authorization.ts:118-141`; `credential.rule.constants.ts:48` | no | Security Lead |
+| Content-policy privilege rules | `policyRule-whiteboardContentUpdate`: ADMINS → `UPDATE ⇒ UPDATE_CONTENT`, CONTRIBUTORS → `CONTRIBUTE ⇒ UPDATE_CONTENT`, OWNER → none | `whiteboard.service.authorization.ts:294-318`; `policy.rule.constants.ts:3` | no | Security Lead |
+| Guest rule | name `public-access`, cascade, privileges `READ`, `UPDATE_CONTENT`, `CONTRIBUTE`, credentials `GLOBAL_GUEST('')` + `GLOBAL_REGISTERED('')` | `whiteboard.guest-access.service.ts:25-47` | no (F4) | Security Lead |
+| Public-share rules | `whiteboard-owner-public-share` (creator), `space-admin-public-share` (admin credentials of the board's community **with parents**; fallback `SPACE_ADMIN(space)`), `policyRule-whiteboardGrantPublicShare` (`GRANT ⇒ PUBLIC_SHARE`); support: L0 + `allowPlatformSupportAsAdmin` + `allowGuestContributions`; all only while `allowGuestContributions` | `whiteboard.service.authorization.ts:167-257, 320-333`; `space.service.platform.roles.access.ts:146-157` | no | Security Lead |
+| Space setting | `collaboration.allowGuestContributions`, default `false` for L0 and subspaces; migration set every existing space to `false` | `access-matrix.md:107-108`; server `specs/022-…/spec.md` FR-002, US4 | yes | Security Lead |
+| Guest identification | header `x-guest-name` (raw ASCII or UTF-8 base64) → `GLOBAL_GUEST`; no header → `GLOBAL_ANONYMOUS`; session → `GLOBAL_REGISTERED` | `docs/Guest-Users.md` | no | Security Lead |
+| Draft lifecycle | TTL 7 days; consumed marker = Unix epoch; per-draft advisory lock `whiteboard-draft:<id>`, lock timeout 5,000 ms; sweep every hour, batch 25; draft profile name "Whiteboard draft", identifier 8 random characters | `whiteboard.draft.service.ts:21-22, 60-68, 123-126, 275-283`; `whiteboard.draft.sweep.service.ts:347-358`; 058 data-semantics table | no | Product Lead (the 7-day lifetime) · Technical Lead (the rest) |
+| Default names | "Whiteboard" (board), "Callout Framing Whiteboard" (framing replacement), "Whiteboard Template" (template); identifier derived from the name | `whiteboard.service.ts:190-192`; `callout.framing.service.ts:672-678`; `template.service.ts:224-229` | yes | Product Lead |
+| Profile / policy / visuals | profile type `whiteboard`; policy type `whiteboard`; visuals `CARD` + `WHITEBOARD_PREVIEW` (`whiteboardPreview`); the reserved `default` tagset is always created (FREEFORM) and a caller's `default` tagset dropped | `profile.type.ts:10`; `authorization.policy.type.ts:18`; `visual.type.ts:8`; `whiteboard.service.ts:199-223` | no | Technical Lead |
+| Multi-user entitlement | `SPACE_FLAG_WHITEBOARD_MULTI_USER` on the collaboration licence; standalone boards `false` (see `entitlements.md` ENT-31) | `whiteboard.service.ts:1269-1289` | no ((ENT)) | Product Lead |
+| Collaboration client | connect timeout 15,000 ms (`COLLABORATION_SERVICE_CONNECT_TIMEOUT`), durability timeout 20,000 ms (`COLLABORATION_SERVICE_DURABILITY_TIMEOUT`), 2 idempotent resends; a read-only join fails at once | `alkemio.yml:640-642`; `collaboration-document.service.ts:34-40, 85-120` | no | Technical Lead |
+| MCP editing | request limit 262,144 bytes; outcomes `durable-success`, `busy`, `indeterminate-after-go`, `unavailable`, `forbidden`; import appends, never replaces | `docs/McpWhiteboards.md` | no | Technical Lead |
+| Activity / analytics kinds | `whiteboard-created`, `whiteboard-content-modified`; analytics `CALLOUT_WHITEBOARD_CREATED`, `whiteboardContribution` | `activity.event.type.ts:7-8`; `contribution.reporter.service.ts:187-200, 337-350` | no | Technical Lead |
+| Notification subjects | `<space>: New whiteboard contribution created by <name>` (admins) / `…, have a look!` (members) | test › `wb-contributions.it-spec.ts:268-269` | yes | Product Lead |
+| Error text — create | `A whiteboard create must supply EITHER content OR sourceWhiteboardID, not both`; `draftWhiteboardID must be claimed by the owning create mutation before Whiteboard materialization`; `Unable to create Whiteboard: the provided nameID is already taken: <id>`; `Please provide a whiteboard`; `Whiteboard framing can only be used with whiteboard framing type`; `Callout Framing of type WHITEBOARD requires whiteboard data.`; `Whiteboard Template requires whiteboard input` | `whiteboard.service.ts:136-147`; `callout.service.ts:1089, 522-534`; `callout.framing.service.ts:149-151`; `template.service.ts:218-221` | no | Technical Lead |
+| Error text — media | `Whiteboard snapshot references an image asset that is missing from its file map`; `Whiteboard content is not a Yjs snapshot`; `Whiteboard import image source is missing, ambiguous or invalid`; `Whiteboard asset preparation deadline exceeded` | `whiteboard.service.ts:390-401, 650-654, 898-904` | no | Technical Lead |
+| Error text — guest | `Guest contributions are disabled for the space` (toggle on while the space setting is off) | `whiteboard.guest-access.service.ts:98-104` | no | Technical Lead |
+| Error text — drafts | `Whiteboard drafts require an authenticated actor`; `sourceWhiteboardID and sourceCalloutID are mutually exclusive`; `Whiteboard draft not found`; `Only the actor that created a Whiteboard draft may consume it` / `… may discard it`; `Whiteboard draft has expired`; `draftWhiteboardID and sourceWhiteboardID are mutually exclusive`; `draftWhiteboardID and contribution-default source fields are mutually exclusive`; `draftWhiteboardID, contribution-default source fields, and clearWhiteboardContent are mutually exclusive` | `whiteboard.draft.service.ts:175-179, 235-253, 325-337`; `callouts.set.resolver.mutations.ts:184-200`; `callout.resolver.mutations.ts:250-253` | no | Technical Lead |
+| Error text — lookups | `Not able to locate Whiteboard with the specified ID: <id>` (id embedded — contrary to the repo's exception rule, like ENT F-7) | `whiteboard.service.ts:917-920` | no | Technical Lead |
+| Legacy error codes | 14116 `EXCALIDRAW_AMQP_RESULT_ERROR`, 14117 `EXCALIDRAW_REDIS_INIT`, 14118 `EXCALIDRAW_SERVER_INIT` (old collaboration service) | `docs/error-codes.md:154-156` | no | Technical Lead |
+| URL path element | `whiteboards` (contribution boards); framing boards use the callout URL + identifier | `url.generator.service.ts:1172-1210` | no | Technical Lead |
+| Live-sync queue (006) | provider `alkemio-whiteboard-collaboration` (`WHITEBOARD_COLLABORATION_SERVICE`) — consumer repo archived | `providers.ts:16-17`; ws spec 006 FR-003 | no (F3) | Technical Lead |
+| Legacy migration gate | `platform-operations-admin`, audited | `collaboration-migration.resolver.mutations.ts` | no | Security Lead |
+| Snapshot files | stored with NULL per-file authorization in the board's bucket (by design; W4 G3) | `whiteboard.service.ts:1053-1056`; `acc-defect-register.md:96` | no | Security Lead |
+| GraphQL surface | `Whiteboard{contentUpdatePolicy, createdBy, guestContributionsAllowed, isMultiUser, nameID, previewSettings, profile, authorization}`; `CreateWhiteboardInput{profile, nameID, sourceWhiteboardID, draftWhiteboardID, previewSettings}`; mutations `updateWhiteboard`, `deleteWhiteboard`, `updateWhiteboardGuestAccess`, `replaceWhiteboardContentFromSource`, `createWhiteboardDraftOnCalloutsSet`, `createWhiteboardDraftOnTemplatesSet`, `deleteWhiteboardDraft`, `migrateLegacyWhiteboardContent`; `UrlResolverQueryResultCalloutsSet.whiteboardId` | `schema.graphql:8365-8419, 9556-9580, 7691-7696, 7715-7723`; `catalogue/root-fields.md:122-129` | no | Technical Lead |
 
 ### F. Where this lands in the new core
 
@@ -376,6 +373,8 @@ The catalogue puts CT-4 in slice 4–5 as a `document` of engine `yjs` with a `s
 Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy suites — there is **no** `server-api/src/functional-api/whiteboard*/` folder, so the proof is the whiteboard cases of other areas (`templates/whiteboard` 2 cases, `notifications/space/collaboration/wb-contributions` 5 + 1, `platform-roles` A11 row, the `storage/auth` whiteboard document rows already reconciled in the access matrix) and the client-web walks (`public-space/non-member-whiteboard-access` 4, `templates-CRD/template-types/whiteboard-template` 3, `templates-CRD/…/callout-tests` whiteboard rows, `callouts/0.5callout-creation` 2); the specs, issues and docs listed in § Sources. Scope (catalogue CT-4): whiteboard framing and contributions, editing and drafts, multi-user mode, guest access, content replace, preview, external writes, standalone vs template boards. Licensing rules are cross-referenced to `entitlements.md` (ENT-06, ENT-31), callout-level rules to `callout.md` (CAL-03, CAL-27, CAL-30, CAL-31, CAL-32, CAL-38, CAL-73). WHAT and WHY only — no mutations, fixtures or request params. Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`. The extraction notes with every file:line are in `whiteboards-dossier.md`.
 
 2026-11-19 converted to the three-section layout. The status legend and the review-load line of the old header were dropped; the counts line at the top replaces them.
+
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains. Q-WBD-03 gets a suggested answer from the web-address code; the WBD-20 user story comes from server spec 021 US1.
 
 #### Sources
 
@@ -401,3 +400,4 @@ Specs / issues:
 - `agents-hq origin/main:specs/058-draft-whiteboard-flow/spec.md`, `065-whiteboard-correctness/spec.md` (read with `git show`; not on the local branch), `055-restore-whiteboard-tools`, `066-mcp-whiteboard-executor` (listed)
 - server `specs/021-toggle-whiteboard-guest/spec.md`, `022-guest-contributions-policy/spec.md`, `023-guest-contributions-privileges/spec.md`, `078-ut-services-whiteboard/spec.md` (unit-test scope only), `083-collab-entitlement/spec.md` (via `entitlements.md`)
 - Issues cited (not re-derived): client-web#10283, client-web#10206, client-web#10326, server#6523, server#6464, alkemio#2129, whiteboard-collaboration-service#238
+- 2026-11-20 whys pass: server `specs/021-toggle-whiteboard-guest/spec.md` US1; `src/services/infrastructure/url-generator/url.generator.service.ts` (`getWhiteboardUrlPath`)

@@ -2,13 +2,16 @@
 
 _What the platform does today for memos: creating them, editing and who may edit, memos in collections, signing through Cleverbase, PDF download, and memos in templates: what it does, why, who may, and what is still to answer. Licensing rules are in `entitlements.md` (ENT-06, ENT-31) and callout-level rules in `callout.md`. The layout is that of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 6 · Technical Lead 7 · Quality Lead 3 · Security Lead 1 · Architecture Lead 1. By state: 12 open · 6 with a suggested answer. Proof of the 35 rules: 14 proven by a test · 21 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 7 · Quality Lead 3 · Security Lead 1 · Architecture Lead 1. By state: 7 open · 5 with a suggested answer · 6 decided. Proof of the 35 rules: 14 proven by a test · 21 untested (Appendix A)._
+
+_Whys of the 35 rules: 33 rest on a source or a product decision · 0 carry a draft · 2 have none, and each carries an open question (MEM-05, MEM-06)._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. Most product whys are still empty: product fills them in its review.
-- **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Not decided" means the behaviour exists in the code and nobody chose it. Product has not reviewed this file yet.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why, or the part of a why, ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A user story always ends in its "so that"; where no source gives one, QA wrote it. A rule with no why at all carries an open question in section 3.
+- **Decided by** names the source of the decision: a spec, a commit or pull request, an issue or a document. "Not decided" means the behaviour exists in the code and nobody chose it. Product reviewed section 3 on 2026-11-20.
 - A marker in bold at the end of a rule points at section 3: **(open: F2)** means a question on this rule is still open, **(defect in part: F1)** means part of today's behaviour is a fault and must not be copied as intended. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
 - A decided question leaves section 3 and moves onto its rule. Nothing is decided in this file yet.
@@ -20,7 +23,7 @@ _Open questions per owner: Product Lead 6 · Technical Lead 7 · Quality Lead 3 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | MEM-01 | A new memo gets its own name (default "Memo"), a tag set, a readable identifier taken from its title and unique within its callout, an image slot for its card, and its creator recorded as owner when the creating path passes one. | Memos are first-class content next to posts and whiteboards (server spec 016 FR-001/FR-004/FR-006). | — | — | Server spec 016 FR-001, FR-004, FR-006 |
-| MEM-02 | Every new memo can be edited by contributors. This cannot be chosen when it is created. **(open: Q-MEM-02)** | — | — | — | Not decided: exists in the code |
+| MEM-02 | Every new memo can be edited by contributors. This cannot be chosen when it is created. | — | As a space member, I want a new memo to be open to the other contributors straight away, so that we can start writing together without setting anything up. | — | Product, 2026-11-20 (Q-MEM-02) |
 | MEM-03 | The text given when a memo is created becomes its first saved version in the memo's own storage; its images are copied in when the person may read them. If any step fails, the memo is removed again. | — | — | Content unification: the room, not the API, owns later edits; a half-created memo is never returned (code comments R2/R4/FR-005, server spec `006-collab-content-unification`, not in this checkout). | Server spec 006-collab-content-unification (per code comments) |
 | MEM-04 | After creation a memo's text is never written through the API. The API only shows the last saved version; edits happen in the live editing session. | — | — | Memos are updated through the collaboration service only (DTO comment; `docs/Memo-Conversion.md`). | docs/Memo-Conversion.md |
 
@@ -34,30 +37,30 @@ _Open questions per owner: Product Lead 6 · Technical Lead 7 · Quality Lead 3 
 | MEM-08 | When the server replaces a memo's text (a template's memo on update), it does so through the live session in the name of the person who asked, so open editors see it and the next save cannot undo it. For a memo that frames a live callout, text sent with a callout update is ignored. | — | — | A direct snapshot write would be clobbered by the room's next save (code comment, 006 write-path fix). | Not decided: exists in the code (a code comment cites the 006 write-path fix) |
 | MEM-09 | Live edits are saved by the editing session, not by the server. The server only keeps the version number and a pointer to the latest snapshot. | — | — | The room owns version and snapshot (code comments; same contract as whiteboards WBD-13). | Not decided: exists in the code (a code comment gives the reason) |
 | MEM-10 | Several people can edit a memo at once only when its space has the multi-user memo feature. A template or standalone memo is never multi-user (see ENT-31, ENT-06). **(open: F6)** | Multi-user editing is a paid space feature (server spec 083; `entitlements.md`). | — | — | Server spec 083 |
-| MEM-11 | Each time a memo is saved, the people who contributed are reported to analytics. A failure there never affects editing. **(open: Q-MEM-11)** | — | — | — | Not decided: exists in the code |
+| MEM-11 | Each time a memo is saved, the people who contributed are reported to analytics. A failure there never affects editing. | Alkemio measures who contributes to memos to understand engagement; the report must never get in the way of editing. | — | — | Product, 2026-11-20 (Q-MEM-11) |
 
 ### Collections, deletion and reading
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| MEM-12 | A memo can be a contribution in a collection, like a post or a whiteboard: allowed through the callout's allowed types, counted and ordered like the others, and reached at the callout's link, then "memos", then its identifier. Adding one needs the general contribute right; there is no memo-specific right. **(open: F4)** | Memos usable in collections like posts and whiteboards (server spec 016 FR-002/003/005/007/008/009/013). | — | — | Server spec 016 FR-002..009, FR-013 |
-| MEM-13 | Adding a memo to a published collection is recorded as activity and sends the contribution notification, unless the contributor chose not to notify (see CAL-30). Nothing is recorded when a memo is updated or deleted. **(open: F2)** | Members are told about input they can see (CAL-30 / 070). | — | 016 FR-011 asked for created/updated/deleted events. | Server spec 016 FR-011, FR-012; CAL-30 in `callout.md` |
+| MEM-12 | A memo can be a contribution in a collection, like a post or a whiteboard: allowed through the callout's allowed types, counted and ordered like the others, and reached at the callout's link, then "memos", then its identifier. Adding one needs the general contribute right; there is no memo-specific right. | Memos usable in collections like posts and whiteboards (server spec 016 FR-002/003/005/007/008/009/013). | — | — | Server spec 016 FR-002..009, FR-013; Product, 2026-11-20 (F4, as callout F1): one contribute right for every type, as today |
+| MEM-13 | Adding a memo to a published collection is recorded as activity and sends the contribution notification, unless the contributor chose not to notify (see CAL-30). Nothing is recorded when a memo is updated or deleted. | Members are told about input they can see (CAL-30 / 070). | — | 016 FR-011 asked for created/updated/deleted events. | Server spec 016 FR-011, FR-012; CAL-30 in `callout.md`; Product, 2026-11-20 (F2): stays as today, only creation is reported; spec 016 FR-011/012 is amended |
 | MEM-14 | Deleting a memo needs the delete right. The live editing session is closed first; then its signing attempts, its files (signed copies and previews included), its rights and the memo itself are removed. When a platform role deletes or edits a memo directly, no audit record is written. **(defect in part: F5)** | Platform-role actions must be audited (server CLAUDE.md). | — | Deletion must not leave a live room editing a vanished memo (code comment). | Server CLAUDE.md (audit rule); the deletion order is not decided: it exists in the code |
 | MEM-15 | A memo goes with its parent: deleting its callout or contribution, or changing the callout to another kind, deletes the memo (see CAL-73, CAL-32). | — | — | Framing content is owned by the callout; no orphans (016 FR-014). | Server spec 016 FR-014 |
 | MEM-16 | Only a Platform Operations Admin may run the migration of old memo content. It can be run again safely and is audited. | Operations-only, audited platform actions (027). | — | — | Spec 027 |
-| MEM-17 | When a user is deleted, their memos stay and the creator shows as empty. A copy they signed shows a "deleted user" placeholder. **(open: Q-MEM-17)** | — | — | — (W4 register M5 ruling pending) | Not decided: exists in the code |
+| MEM-17 | When a user is deleted, their memos stay and the creator shows as empty. A copy they signed shows a "deleted user" placeholder. | Content belongs to the community, so a memo stays when its creator's account is deleted (as WBD-31); a signed copy stays attributed to its signer, shown with the deleted-user placeholder (spec 031 US3, FR-008). | — | — | Product, 2026-11-20 (Q-MEM-17; W4 register M5): stays as today, the creator shows as empty; the signed-copy attribution: spec 031 (agents-hq branch `031-cleverbase-memo-signing`) US3, FR-008 |
 
 ### Signing (Cleverbase)
 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
-| MEM-18 | Preparing a memo for signing needs, in this order: the contribute right on the memo, the memo-signing feature on its space, and a linked Cleverbase identity. A memo outside a space can never be signed. The web app offers Sign only when all three hold. **(open: OQ1)** | Signing is a paid space feature and a qualified identity is required (server PR #6478, alkemio#2025; `entitlements.md` ENT-06). | — | — | Server PR #6478; alkemio#2025 |
+| MEM-18 | Preparing a memo for signing needs, in this order: the contribute right on the memo, the memo-signing feature on its space, and a linked Cleverbase identity. A memo outside a space can never be signed. The web app offers Sign only when all three hold. **(open: OQ1)** | Signing is a paid space feature and a qualified identity is required (server PR #6478, alkemio#2025; `entitlements.md` ENT-06). | — | — | Server PR #6478; alkemio#2025; spec 031 (agents-hq branch `031-cleverbase-memo-signing`) FR-011 |
 | MEM-19 | Preparing makes an exact PDF of the memo's current text, stores it as a private preview, and opens a signing attempt tied to that preview. | What is signed is exactly what was previewed (087 FR-016, D-1; signing feature #6468). | — | — | Spec 087 FR-016; server PR #6468 |
-| MEM-20 | The signing preview can be viewed only by the person who prepared it, while they still have the contribute right, and only once it is ready. | A signing copy is personal to its signer. | — | — | Not decided: exists in the code |
-| MEM-21 | Signing can be started only on your own attempt, within 60 minutes of preparing, while the conditions of MEM-18 still hold and the preview is unchanged. An attempt is started once: after a second start or a failure, a fresh preparation is needed. | — | — | One-shot, tamper-evident start (unique client state and correlation per attempt). | Not decided: exists in the code |
-| MEM-22 | On return from the signing service the user must be signed in and the return must match their own attempt. A declined signature is recorded as cancelled, an expired session as expired, another failure as failed. A completed signature stores the signed PDF with the memo, deletes the preview and sends the user back to the memo. | The signed copy is immutable evidence. | — | Outcome is decided from the gateway, never from the browser. | Not decided: exists in the code |
-| MEM-23 | Anyone who may read a memo sees its signed copies, newest first, each with its signer and its PDF. Any reader can have a signed copy checked: verified, invalid, or unavailable when the signing service cannot be reached. | Readers of a memo may see and check what was signed (CT-5 "signing = attribute rows"). | — | — | Catalogue CT-5 |
-| MEM-24 | A signing attempt expires 60 minutes after preparation if signing never started, or one minute after the signing service's own expiry. Every hour, 25 at a time, expired attempts are marked and their previews deleted. Signed copies are kept. | Previews are personal, short-lived files; signed copies are permanent. | — | — | Not decided: exists in the code |
+| MEM-20 | The signing preview can be viewed only by the person who prepared it, while they still have the contribute right, and only once it is ready. | — | — | Every step of a signing attempt checks the attempt's own actor and the current memo right (spec 031 FR-004). | spec 031 (agents-hq branch `031-cleverbase-memo-signing`) FR-004 |
+| MEM-21 | Signing can be started only on your own attempt, within 60 minutes of preparing, while the conditions of MEM-18 still hold and the preview is unchanged. An attempt is started once: after a second start or a failure, a fresh preparation is needed. | — | — | One attempt per deliberate signing action: a double start is prevented, a returned attempt is consumed once, and nothing is restarted (spec 031 FR-001, US3, edge cases). | spec 031 (agents-hq branch `031-cleverbase-memo-signing`) FR-001, US3 |
+| MEM-22 | On return from the signing service the user must be signed in and the return must match their own attempt. A declined signature is recorded as cancelled, an expired session as expired, another failure as failed. A completed signature stores the signed PDF with the memo, deletes the preview and sends the user back to the memo. | Signed PDFs attach to the content item, "so it is always unambiguous which memo a signature attests to" (alkemio#2025). | — | The terminal status is fetched server to server and never trusted from the browser return (spec 031 FR-006, US2). | spec 031 (agents-hq branch `031-cleverbase-memo-signing`) FR-006, US2; alkemio#2025 |
+| MEM-23 | Anyone who may read a memo sees its signed copies, newest first, each with its signer and its PDF. Any reader can have a signed copy checked: verified, invalid, or unavailable when the signing service cannot be reached. | Readers of a memo may see and check what was signed (CT-5 "signing = attribute rows"). | — | — | Catalogue CT-5; spec 031 (agents-hq branch `031-cleverbase-memo-signing`) FR-005, FR-010 |
+| MEM-24 | A signing attempt expires 60 minutes after preparation if signing never started, or one minute after the signing service's own expiry. Every hour, 25 at a time, expired attempts are marked and their previews deleted. Signed copies are kept. | — | — | A prepared attempt expires at the shared preparation deadline, a started one at the gateway's expiry plus a margin; neither is restarted, and a signed copy is never deleted (spec 031 edge cases, FR-005). | spec 031 (agents-hq branch `031-cleverbase-memo-signing`) edge cases, FR-005; the hourly batch of 25 is not decided: exists in the code |
 
 ### PDF download
 
@@ -122,22 +125,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 6 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| F2 | Collections | spec | Server spec 016 promises events when a memo is updated or deleted, and search indexing. Only creation is reported. Amend the spec, or file the gap? (Posts behave the same.) | Product Lead, then Technical Lead | — | open |
-| F4 | Collections | decision | Adding a memo to a collection has no right of its own: the general contribute right decides. Should each kind of contribution have its own right? The same question is finding F1 in `callout.md`. | Product Lead (Architecture Lead models the answer in the new core) | The ruling on the callout finding carries here. | suggested |
-| CONST | All | decision | The "product must rule?" column is blank for 24 of the 27 constants (Appendix E). Which must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
-| Q-MEM-02 | Creation | decision | Why does this rule exist? No source states a reason. Why does every new memo start open to contributors, with no choice at creation? | Product Lead | — | open |
-| Q-MEM-11 | Editing | decision | Why does this rule exist? No source states a reason. Who uses the report of memo contributors? | Product Lead | — | open |
-| Q-MEM-17 | Deletion | decision | Why does this rule exist? No source states a reason. A ruling on what the creator field should show for a deleted user is pending (31 memos on acceptance). | Product Lead | — | open |
+Nothing to answer: every Product Lead question is decided (see Decided).
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 7 to answer, 3 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 7 to answer, 2 also involved
 
 **To answer**
 
@@ -155,9 +149,8 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F2 | Collections | spec | Server spec 016 promises events when a memo is updated or deleted, and search indexing. Only creation is reported. Amend the spec, or file the gap? (Posts behave the same.) | Product Lead, then Technical Lead | — | open |
+| F2 | Collections | spec | Server spec 016 promises events when a memo is updated or deleted, and search indexing. Only creation is reported. Amend the spec, or file the gap? (Posts behave the same.) | Product Lead, then Technical Lead | Product, 2026-11-20: stays as today; the Technical Lead amends spec 016 FR-011/012 to what the server does. | open |
 | F5 | Deletion | risk | When a platform role edits or deletes a memo directly, no audit record is written, although the server's own rule asks for one. File the gap, or accept it? (The same as whiteboards F5.) | Security Lead (Technical Lead fixes it if filed) | — | open |
-| CONST | All | decision | The "product must rule?" column is blank for 24 of the 27 constants (Appendix E). Which must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
 
 ### Quality Lead
 
@@ -173,7 +166,7 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Security Lead
 
-[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 1 to answer, 1 also involved
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 1 to answer
 
 **To answer**
 
@@ -181,11 +174,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F5 | Deletion | risk | When a platform role edits or deletes a memo directly, no audit record is written, although the server's own rule asks for one. File the gap, or accept it? (The same as whiteboards F5.) | Security Lead (Technical Lead fixes it if filed) | — | open |
 
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| CONST | All | decision | The "product must rule?" column is blank for 24 of the 27 constants (Appendix E). Which must product rule on before the rebuild? | Product Lead (Technical Lead and Security Lead for the rows pre-filled with their role) | — | open |
 
 ### Architecture Lead
 
@@ -201,7 +189,18 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
-| F4 | Collections | decision | Adding a memo to a collection has no right of its own: the general contribute right decides. Should each kind of contribution have its own right? The same question is finding F1 in `callout.md`. | Product Lead (Architecture Lead models the answer in the new core) | The ruling on the callout finding carries here. | suggested |
+| F4 | Collections | decision | Adding a memo to a collection has no right of its own: the general contribute right decides. Should each kind of contribution have its own right? The same question is finding F1 in `callout.md`. | Product Lead (Architecture Lead models the answer in the new core) | Product, 2026-11-20: one contribute right for every type, as today (callout.md F1). The Architecture Lead models it in the new core. | open |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| F2 | Stays as today: only adding a memo is reported. The Technical Lead amends spec 016 FR-011/012 to match; no wish is listed. | Product, 2026-11-20 | MEM-13 |
+| F4 | One contribute right for every contribution type, as today; the callout ruling (callout.md F1) carries here. | Product, 2026-11-20 | MEM-12 |
+| Q-MEM-02 | A new memo is open to contributors straight away, so people can start writing together, as for whiteboards (WBD-02). | Product, 2026-11-20 | MEM-02 |
+| Q-MEM-11 | The contributor report measures engagement and never gets in the way of editing, as for whiteboards (WBD-17). | Product, 2026-11-20 | MEM-11 |
+| Q-MEM-17 | Stays as today: a memo stays when its creator's account is deleted and the creator shows as empty, as for whiteboards (WBD-31). | Product, 2026-11-20 | MEM-17 |
+| CONST | Product rules on the edit settings and the default names, ticked "yes" in Appendix E. Signing, PDF, storage, rights, error texts and the GraphQL surface go to the Technical Lead or the Security Lead; the entitlements are ruled in `entitlements.md`. | Product, 2026-11-20 | Appendix E |
 
 ## Appendix
 
@@ -264,9 +263,9 @@ _The original text of every finding (F) and open question (OQ), with its evidenc
 #### Findings
 
 - **F1 — A memo created inside a callout template has no owner (MEM-05, MEM-33).** Code: template callouts are created without a user id, so `memo.createdBy` is empty, the creator rule is never appended, and under the default "contributors" policy nobody holds edit on the template's memo; whiteboard templates pass the actor and are editable. Test: `collaboration-tool-template-roundtrip` MT-1/MT-2 pinned red and skipped on server#6682. Spec: none says who owns template content. Ruling: fix (record the creator) — the issue is open.
-- **F2 — Spec 016 promises memo update/delete events and search indexing; only creation is reported (MEM-13).** Code: `CALLOUT_MEMO_CREATED` activity + analytics on contribution creation; no event on update or delete; search indexing of memos not traced in this area. Spec 016 FR-011/FR-012. Test: none. Ruling: amend the spec or file the gap (posts behave the same — check CAL before filing).
+- **F2 — Spec 016 promises memo update/delete events and search indexing; only creation is reported (MEM-13).** Code: `CALLOUT_MEMO_CREATED` activity + analytics on contribution creation; no event on update or delete; search indexing of memos not traced in this area. Spec 016 FR-011/FR-012. Test: none. Ruling: amend the spec or file the gap (posts behave the same — check CAL before filing). **Product, 2026-11-20:** stays as today; amend spec 016 FR-011/012.
 - **F3 — Spec 087 still says "authenticated" where product ruled "signed-in readers only" against the story's "visitors of public spaces".** Resolved by product on 2026-10-21 (test plan); the spec text on `origin/main` was not updated and the spec is not on the local branch. Ruling: editorial — update 087 FR-002/FR-019; MEM-31 records the ruling.
-- **F4 — Memo contributions have no per-type right (MEM-12).** Cross-reference callout F1 / crosscheck F10 — not re-derived; the ruling there carries here.
+- **F4 — Memo contributions have no per-type right (MEM-12).** Cross-reference callout F1 / crosscheck F10 — not re-derived; the ruling there carries here. **Product, 2026-11-20:** as callout F1: one contribute right for every type, as today.
 - **F5 — Direct memo edits and deletions by a platform role are not audited (MEM-14).** Code: `updateMemo` / `deleteMemo` have no platform-audit call; the server CLAUDE.md requires one. Ruling: file or accept (same as whiteboards F5).
 - **F6 — The client explains a read-only memo with the wrong reason and leaves its toolbar live (MEM-10, MEM-05).** Server facts are right (`isMultiUser` false → the room makes the second join read-only; `UPDATE_CONTENT` absent for a non-member); client-web#10455 (single-editor footer blames the owner) and client-web#10457 (toolbar buttons still run commands, "Saving…" shown, nothing persisted) are client defects filed on 2026-10-21. Ruling: track there; the rule rows stay as the server guarantees.
 
@@ -298,37 +297,37 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits and access rules. The "product must rule?" column is as it was: the reviewer ticks the rows product must rule on (row CONST in section 3)._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, plan constants and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for security limits and access rules. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Content update policies (3) | `OWNER`, `ADMINS`, `CONTRIBUTORS`; default `CONTRIBUTORS`, not settable at creation | `src/common/enums/content.update.policy.ts`; `memo.service.ts:78` | | Technical Lead |
-| Creator rights | `UPDATE_CONTENT`, `CONTRIBUTE`, `DELETE` via `USER_SELF_MANAGEMENT(createdBy)`, rule `credentialRule-memoCreatedBy`; absent when `createdBy` is unset | `memo.service.authorization.ts:627-644`; `credential.rule.constants.ts:53` | F1 | Security Lead |
-| Content-policy privilege rules | `policyRule-memoContentUpdate`: ADMINS → `UPDATE ⇒ UPDATE_CONTENT`, CONTRIBUTORS → `CONTRIBUTE ⇒ UPDATE_CONTENT`, OWNER → none; no guest or public-share rules on memos | `memo.service.authorization.ts:652-687`; `policy.rule.constants.ts:7` | | Security Lead |
-| Signing attempt statuses (5) | `PENDING`, `SIGNED`, `CANCELLED`, `FAILED`, `EXPIRED` (wire lowercase) | `src/domain/common/content-signing/signing.attempt.status.ts`; `schema.graphql:989-995` | | Technical Lead |
-| Verification statuses (3) | `VERIFIED`, `INVALID`, `UNAVAILABLE` | `memo.signature.verification.status.ts`; `schema.graphql:584-588` | | Technical Lead |
-| Gateway outcome mapping | `declined` → CANCELLED; `failed` + `authorization_expired` / `session_expired` → EXPIRED; other `failed` → FAILED; no correlation → EXPIRED; `completed` without result → EXPIRED; result `null` → still pending | `memo.signing.service.ts:446-460, 258-261` | | Technical Lead |
-| Signing windows | preparation window 60 min; gateway expiry margin 60 s; sweep hourly, batch 25 | `signing.attempt.service.ts:13-14`; `memo.signing.sweep.service.ts` | | Security Lead |
-| Signing file names | preview `memo-signing-preview.pdf` (internal document, no dedup, NULL per-file authorization — W4 G3), signed copy `memo-signed.pdf` (document with bucket policy, no creator) | `memo.signing.service.ts:74-81, 262-274`; `acc-defect-register.md:96` | | Technical Lead (Security Lead for the missing per-file access rule) |
-| Signing REST + redirect | `rest/content-signing/<snapshot>/:attemptId` (inline PDF, `private, no-store`, `nosniff`), `rest/content-signing/<complete>?correlationId&clientState` → `302 <memo url>?signingAttemptId=<id>`; 401 → public return URL; Forbidden → 403; Validation → 409 | `content.signing.controller.ts`; `content.signing.return.filter.ts`; `url.generator.service.ts:1298` | | Technical Lead |
-| Hash formats | client state 32 random bytes base64url; stored hashes 64 lowercase hex (`'<label> must be 64 lowercase hexadecimal characters'`); unique `correlationId` and `clientStateHash` | `memo.signing.service.ts:166-169`; `signing.attempt.service.ts:9, 209-215`; `signing.attempt.entity.ts:238-241` | | Security Lead |
-| Entitlements | `SPACE_FLAG_MEMO_SIGNING` (prepare/continue), `SPACE_FLAG_MEMO_MULTI_USER` (`isMultiUser`); standalone memos fail closed / `false` (see `entitlements.md`) | `memo.signing.service.ts:316-326`; `memo.service.ts:492-512` | (ENT) | Product Lead |
-| Error text — signing | `Link a Cleverbase identity before signing this memo`; `Entitlement space-flag-memo-signing is not available for License: <id>`; `Memo storage is unavailable`; `The memo was deleted while preparing the signing copy`; `Signing preview belongs to another actor`; `Signing preview is not ready`; `Signing preview has expired`; `The signing preview bytes have changed`; `Signing was already started; prepare a fresh signing attempt`; `Signing return does not match this actor`; `Signing return parameters are invalid`; `Signing is still in progress; retry this page`; `Signing attempt is not available for this actor`; `Signed Memo copy is not available` | `memo.signing.service.ts`; `signing.attempt.service.ts:91-96, 112-115, 153-156`; `content.signing.controller.ts:71-74`; `license.service.ts:202` (via `entitlements.md`) | | Technical Lead |
-| PDF REST | `GET rest/memo/:memoId/pdf`; statuses 401 / 403 / 404 / 400 / 422 `{ message }` / 429 (`busy-actor`) / 503 (`busy-global`, `deadline`, `crashed`, `launch-failed`, `source-unavailable`) with `Retry-After: 5` / 500 | `src/common/enums/rest.endpoint.ts:9`; `memo.pdf.controller.ts:175-199`; `memo.pdf.unavailable.exception.ts` | | Technical Lead |
-| PDF headers | `Content-Type: application/pdf`; `Content-Disposition: attachment; filename="<slug>-<YYYY-MM-DD>.pdf"`; `Cache-Control: private, no-store`; `X-Content-Type-Options: nosniff` | `memo.pdf.controller.ts:162-167` | | Technical Lead |
-| Filename slug | lowercase, `[^a-z0-9]+` → `-`, trimmed, ≤ 80 then re-trimmed, fallback `memo`, UTC date | `memo.pdf.filename.ts` | | Technical Lead |
-| Render capacity | `max_concurrent_renders` 3 (downloads ≤ cap−1; 0 = off), `max_concurrent_renders_per_actor` 1 (min 1), `heap_mb` 512, `deadline_ms` 30,000 — env `MEMO_PDF_EXPORT_MAX_CONCURRENT_RENDERS`, `…_PER_ACTOR`, `…_HEAP_MB`, `…_DEADLINE_MS` | `alkemio.yml:651-672`; `memo.pdf.executor.ts:35-72` | | Technical Lead |
-| Render content limits | editor content ≤ 1,000,000 bytes; `MAX_IMAGES` 20; `MAX_SOURCE_IMAGE_PIXELS` 16,777,216; rendered edge ≤ 1,200 px, JPEG quality 80; normalized images ≤ 16 MiB total | `conversion/yjs.state.to.tiptap.html.ts:13`; `memo.pdf.limits.ts`; `memo.pdf.image.resolver.ts:73-74, 118-132` | | Technical Lead |
-| Error text — PDF | `Memo PDF supports at most 1,000,000 bytes of memo editor content`; `Memo PDF image does not belong to the memo bucket`; `Memo PDF image supports at most 16,777,216 source pixels`; `Memo PDF images exceed the 16 MiB normalized size limit`; `Memo PDF contains content that cannot be exported`; `Memo PDF rendering is unavailable (<reason>)` | `memo.pdf.renderer.ts:42-45`; `memo.pdf.image.resolver.ts:107, 132, 143`; `memo.pdf.download.service.ts:376-379`; `memo.pdf.unavailable.exception.ts` | | Technical Lead |
-| Error code | 14122 `MEMO_PDF_UNAVAILABLE` ("PDF export temporarily unavailable — try again later") | `docs/error-codes.md:160`; `alkemio.error.status.ts:91` | | Technical Lead |
-| Render log line | one per job: memo id, actor id, purpose (`download` / `signing`), outcome, duration, bytes, image count; never title or content; no DB audit row | spec › 087 FR-018; `memo.pdf.executor.ts` | | Security Lead |
-| Default names | "Memo" (memo), "Callout Framing Memo" (framing replacement); identifier derived from the name; visuals `CARD` (+ `BANNER` for framing); profile type `memo`; policy type `memo` | `memo.service.ts:80-86`; `callout.framing.service.ts:435-445, 703-710`; `profile.type.ts:11`; `authorization.policy.type.ts:19` | | Product Lead |
-| Error text — create | `Unable to create Memo: the provided nameID is already taken: <id>`; `Callout Framing of type MEMO requires memo data.`; `Cannot replace memo content without an initiating actor`; `Not able to locate Memo with the specified ID: <id>` (id embedded — repo rule) | `callout.service.ts:1109`; `callout.framing.service.ts:182`; `memo.service.ts:229-231, 446-450` | | Technical Lead |
-| Activity / analytics kinds | `memo-created` (`CALLOUT_MEMO_CREATED`); analytics `CALLOUT_MEMO_CREATED`, `memoContribution`; no update/delete events | `activity.event.type.ts:10`; `contribution.reporter.service.ts:202-215, 352-365` | F2 | Technical Lead |
-| URL path element | `memos` (contribution memos); framing memos use the callout URL + identifier | `url.generator.service.ts:1057-1075, 1172-1210` | | Technical Lead |
-| Collaboration client | connect timeout 15,000 ms, durability timeout 20,000 ms, 2 idempotent resends (shared with whiteboards) | `alkemio.yml:640-642`; `collaboration-document.service.ts` | | Technical Lead |
-| Legacy migration gate | `platform-operations-admin`, audited | `collaboration-migration.resolver.mutations.ts` | | Security Lead |
-| GraphQL surface | `Memo{contentUpdatePolicy, createdBy, isMultiUser, markdown, nameID, profile, signatures, authorization}`; `MemoSignature{actor, document, status, createdDate}`; `CreateMemoData{profile, markdown}`; mutations `updateMemo`, `deleteMemo`, `prepareMemoSigning` → `{attemptId, previewUrl}`, `continueMemoSigning` → `{authorizeUrl}`, `migrateLegacyMemoContent`; queries `signingAttempt(ID)`, `verifyMemoSignature`; `UrlResolverQueryResultCalloutsSet.memoId`; no PDF field (fixed client path, 087 FR-021) | `schema.graphql:4594-4641, 7715-7723`; `catalogue/root-fields.md:130-136` | | Technical Lead |
+| Content update policies (3) | `OWNER`, `ADMINS`, `CONTRIBUTORS`; default `CONTRIBUTORS`, not settable at creation | `src/common/enums/content.update.policy.ts`; `memo.service.ts:78` | yes | Technical Lead |
+| Creator rights | `UPDATE_CONTENT`, `CONTRIBUTE`, `DELETE` via `USER_SELF_MANAGEMENT(createdBy)`, rule `credentialRule-memoCreatedBy`; absent when `createdBy` is unset | `memo.service.authorization.ts:627-644`; `credential.rule.constants.ts:53` | no (F1) | Security Lead |
+| Content-policy privilege rules | `policyRule-memoContentUpdate`: ADMINS → `UPDATE ⇒ UPDATE_CONTENT`, CONTRIBUTORS → `CONTRIBUTE ⇒ UPDATE_CONTENT`, OWNER → none; no guest or public-share rules on memos | `memo.service.authorization.ts:652-687`; `policy.rule.constants.ts:7` | no | Security Lead |
+| Signing attempt statuses (5) | `PENDING`, `SIGNED`, `CANCELLED`, `FAILED`, `EXPIRED` (wire lowercase) | `src/domain/common/content-signing/signing.attempt.status.ts`; `schema.graphql:989-995` | no | Technical Lead |
+| Verification statuses (3) | `VERIFIED`, `INVALID`, `UNAVAILABLE` | `memo.signature.verification.status.ts`; `schema.graphql:584-588` | no | Technical Lead |
+| Gateway outcome mapping | `declined` → CANCELLED; `failed` + `authorization_expired` / `session_expired` → EXPIRED; other `failed` → FAILED; no correlation → EXPIRED; `completed` without result → EXPIRED; result `null` → still pending | `memo.signing.service.ts:446-460, 258-261` | no | Technical Lead |
+| Signing windows | preparation window 60 min; gateway expiry margin 60 s; sweep hourly, batch 25 | `signing.attempt.service.ts:13-14`; `memo.signing.sweep.service.ts` | no | Security Lead |
+| Signing file names | preview `memo-signing-preview.pdf` (internal document, no dedup, NULL per-file authorization — W4 G3), signed copy `memo-signed.pdf` (document with bucket policy, no creator) | `memo.signing.service.ts:74-81, 262-274`; `acc-defect-register.md:96` | no | Technical Lead (Security Lead for the missing per-file access rule) |
+| Signing REST + redirect | `rest/content-signing/<snapshot>/:attemptId` (inline PDF, `private, no-store`, `nosniff`), `rest/content-signing/<complete>?correlationId&clientState` → `302 <memo url>?signingAttemptId=<id>`; 401 → public return URL; Forbidden → 403; Validation → 409 | `content.signing.controller.ts`; `content.signing.return.filter.ts`; `url.generator.service.ts:1298` | no | Technical Lead |
+| Hash formats | client state 32 random bytes base64url; stored hashes 64 lowercase hex (`'<label> must be 64 lowercase hexadecimal characters'`); unique `correlationId` and `clientStateHash` | `memo.signing.service.ts:166-169`; `signing.attempt.service.ts:9, 209-215`; `signing.attempt.entity.ts:238-241` | no | Security Lead |
+| Entitlements | `SPACE_FLAG_MEMO_SIGNING` (prepare/continue), `SPACE_FLAG_MEMO_MULTI_USER` (`isMultiUser`); standalone memos fail closed / `false` (see `entitlements.md`) | `memo.signing.service.ts:316-326`; `memo.service.ts:492-512` | no ((ENT)) | Product Lead |
+| Error text — signing | `Link a Cleverbase identity before signing this memo`; `Entitlement space-flag-memo-signing is not available for License: <id>`; `Memo storage is unavailable`; `The memo was deleted while preparing the signing copy`; `Signing preview belongs to another actor`; `Signing preview is not ready`; `Signing preview has expired`; `The signing preview bytes have changed`; `Signing was already started; prepare a fresh signing attempt`; `Signing return does not match this actor`; `Signing return parameters are invalid`; `Signing is still in progress; retry this page`; `Signing attempt is not available for this actor`; `Signed Memo copy is not available` | `memo.signing.service.ts`; `signing.attempt.service.ts:91-96, 112-115, 153-156`; `content.signing.controller.ts:71-74`; `license.service.ts:202` (via `entitlements.md`) | no | Technical Lead |
+| PDF REST | `GET rest/memo/:memoId/pdf`; statuses 401 / 403 / 404 / 400 / 422 `{ message }` / 429 (`busy-actor`) / 503 (`busy-global`, `deadline`, `crashed`, `launch-failed`, `source-unavailable`) with `Retry-After: 5` / 500 | `src/common/enums/rest.endpoint.ts:9`; `memo.pdf.controller.ts:175-199`; `memo.pdf.unavailable.exception.ts` | no | Technical Lead |
+| PDF headers | `Content-Type: application/pdf`; `Content-Disposition: attachment; filename="<slug>-<YYYY-MM-DD>.pdf"`; `Cache-Control: private, no-store`; `X-Content-Type-Options: nosniff` | `memo.pdf.controller.ts:162-167` | no | Technical Lead |
+| Filename slug | lowercase, `[^a-z0-9]+` → `-`, trimmed, ≤ 80 then re-trimmed, fallback `memo`, UTC date | `memo.pdf.filename.ts` | no | Technical Lead |
+| Render capacity | `max_concurrent_renders` 3 (downloads ≤ cap−1; 0 = off), `max_concurrent_renders_per_actor` 1 (min 1), `heap_mb` 512, `deadline_ms` 30,000 — env `MEMO_PDF_EXPORT_MAX_CONCURRENT_RENDERS`, `…_PER_ACTOR`, `…_HEAP_MB`, `…_DEADLINE_MS` | `alkemio.yml:651-672`; `memo.pdf.executor.ts:35-72` | no | Technical Lead |
+| Render content limits | editor content ≤ 1,000,000 bytes; `MAX_IMAGES` 20; `MAX_SOURCE_IMAGE_PIXELS` 16,777,216; rendered edge ≤ 1,200 px, JPEG quality 80; normalized images ≤ 16 MiB total | `conversion/yjs.state.to.tiptap.html.ts:13`; `memo.pdf.limits.ts`; `memo.pdf.image.resolver.ts:73-74, 118-132` | no | Technical Lead |
+| Error text — PDF | `Memo PDF supports at most 1,000,000 bytes of memo editor content`; `Memo PDF image does not belong to the memo bucket`; `Memo PDF image supports at most 16,777,216 source pixels`; `Memo PDF images exceed the 16 MiB normalized size limit`; `Memo PDF contains content that cannot be exported`; `Memo PDF rendering is unavailable (<reason>)` | `memo.pdf.renderer.ts:42-45`; `memo.pdf.image.resolver.ts:107, 132, 143`; `memo.pdf.download.service.ts:376-379`; `memo.pdf.unavailable.exception.ts` | no | Technical Lead |
+| Error code | 14122 `MEMO_PDF_UNAVAILABLE` ("PDF export temporarily unavailable — try again later") | `docs/error-codes.md:160`; `alkemio.error.status.ts:91` | no | Technical Lead |
+| Render log line | one per job: memo id, actor id, purpose (`download` / `signing`), outcome, duration, bytes, image count; never title or content; no DB audit row | spec › 087 FR-018; `memo.pdf.executor.ts` | no | Security Lead |
+| Default names | "Memo" (memo), "Callout Framing Memo" (framing replacement); identifier derived from the name; visuals `CARD` (+ `BANNER` for framing); profile type `memo`; policy type `memo` | `memo.service.ts:80-86`; `callout.framing.service.ts:435-445, 703-710`; `profile.type.ts:11`; `authorization.policy.type.ts:19` | yes | Product Lead |
+| Error text — create | `Unable to create Memo: the provided nameID is already taken: <id>`; `Callout Framing of type MEMO requires memo data.`; `Cannot replace memo content without an initiating actor`; `Not able to locate Memo with the specified ID: <id>` (id embedded — repo rule) | `callout.service.ts:1109`; `callout.framing.service.ts:182`; `memo.service.ts:229-231, 446-450` | no | Technical Lead |
+| Activity / analytics kinds | `memo-created` (`CALLOUT_MEMO_CREATED`); analytics `CALLOUT_MEMO_CREATED`, `memoContribution`; no update/delete events | `activity.event.type.ts:10`; `contribution.reporter.service.ts:202-215, 352-365` | no (F2) | Technical Lead |
+| URL path element | `memos` (contribution memos); framing memos use the callout URL + identifier | `url.generator.service.ts:1057-1075, 1172-1210` | no | Technical Lead |
+| Collaboration client | connect timeout 15,000 ms, durability timeout 20,000 ms, 2 idempotent resends (shared with whiteboards) | `alkemio.yml:640-642`; `collaboration-document.service.ts` | no | Technical Lead |
+| Legacy migration gate | `platform-operations-admin`, audited | `collaboration-migration.resolver.mutations.ts` | no | Security Lead |
+| GraphQL surface | `Memo{contentUpdatePolicy, createdBy, isMultiUser, markdown, nameID, profile, signatures, authorization}`; `MemoSignature{actor, document, status, createdDate}`; `CreateMemoData{profile, markdown}`; mutations `updateMemo`, `deleteMemo`, `prepareMemoSigning` → `{attemptId, previewUrl}`, `continueMemoSigning` → `{authorizeUrl}`, `migrateLegacyMemoContent`; queries `signingAttempt(ID)`, `verifyMemoSignature`; `UrlResolverQueryResultCalloutsSet.memoId`; no PDF field (fixed client path, 087 FR-021) | `schema.graphql:4594-4641, 7715-7723`; `catalogue/root-fields.md:130-136` | no | Technical Lead |
 
 ### F. Where this lands in the new core
 
@@ -339,6 +338,9 @@ The catalogue puts CT-5 in slice 4–5 as a `document` of engine `yjs` whose sig
 Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy suites — there is **no** `server-api/src/functional-api/memo*/` folder, so the proof is `entitlements/memo-signing-entitlement` (7 cases), the `platform-roles` A11 row, and the client-web walks `memo-pdf-download/us1`, `us2` (12 cases), `authz-admin-guard/memo-sign-action-gate` (2), `templates-CRD/…/callout-tests` memo rows, `callouts/0.5callout-creation` (2), `templates-CRD/…/collaboration-tool-template-roundtrip` MT-1/MT-2 (skipped on server#6682); the specs, issues and docs listed in § Sources. Scope (catalogue CT-5): memo framing and contributions, editing, multi-user, signing via Cleverbase, PDF download, collection contributions. Licensing rules are cross-referenced to `entitlements.md` (ENT-06, ENT-31), callout-level rules to `callout.md` (CAL-27, CAL-30, CAL-37, CAL-73, CAL-76). WHAT and WHY only — no mutations, fixtures or request params. Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`. The extraction notes with every file:line are in `memos-dossier.md`.
 
 2026-11-19 converted to the three-section layout. The status legend and the review-load line of the old header were dropped; the counts line at the top replaces them.
+
+
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. Restating whys with no source were dropped where a sourced one remains (MEM-20, MEM-24). The memo-signing spec 031 (agents-hq branch `031-cleverbase-memo-signing`, linked from alkemio#2025) was added as a source; it replaces the unsourced whys of the signing rules and answers Q-MEM-17 in part.
 
 #### Sources
 
@@ -361,3 +363,4 @@ Specs / issues:
 - `agents-hq origin/main:specs/087-memo-pdf-download/spec.md` (read with `git show`; not on the local branch)
 - server `specs/016-memo-collection-contribution/spec.md`; `specs/083-collab-entitlement/spec.md` (via `entitlements.md`)
 - alkem-io/server#6660 (story), #6682 (template memo owner), #6686 (PR), #6478 (PR), #6468 (PR), #6510; alkem-io/alkemio#1721, #2025, #2117 (R-5); alkem-io/client-web#10445 (PR), #10455, #10457
+- `agents-hq/specs/031-cleverbase-memo-signing/spec.md` on branch `031-cleverbase-memo-signing` (FR-001…FR-011, US1–US3, edge cases); alkemio#2025 (memo signing story)

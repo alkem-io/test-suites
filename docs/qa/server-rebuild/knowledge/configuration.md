@@ -2,12 +2,15 @@
 
 _What the platform does today for the public configuration document that the web client reads when it starts: feature switches, locations, monitoring addresses, the upload limit, languages, the sign-in provider and the limits for images and videos: what it does, why, who may, and what is still to answer. The layout is the three-section one of `communications.md`: **1. Rules**, **2. Rights**, **3. Open questions**, with the evidence in an **Appendix**._
 
-_Open questions per owner: Product Lead 1 · Technical Lead 4 · Quality Lead 7 · Service Operations Lead 1 · Architecture Lead 1. By state: 7 open · 7 with a suggested answer. Proof of the 13 rules: 6 proven by a test · 7 untested (Appendix A)._
+_Open questions per owner: Product Lead 0 · Technical Lead 4 · Quality Lead 7 · Service Operations Lead 1 · Architecture Lead 1. By state: 6 open · 7 with a suggested answer · 1 decided. Proof of the 13 rules: 6 proven by a test · 7 untested (Appendix A)._
+
+_Whys of the 13 rules: 10 rest on a source · 1 technical why is still a QA draft, for the Technical Lead (CFG-02) · 2 have none, and each already carries an open question (CFG-04: Q-CFG-04; CFG-10: F7)._
 
 **How to read it**
 
 - **Rule** is one or two plain sentences. The exact behaviour, with error messages and limits, is in Appendix A under the same id. The new core is checked against the exact text.
-- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason, when there is one. "—" means no source states one. Product has not reviewed this file yet, so most user stories are still to be written.
+- **Why: business** is what Alkemio needs. **Why: product** is the user story. **Why: technical** is the engineering reason. A rule needs at least one why, and gets a second or third only where it adds something for the decision or the code. "—" means none is given.
+- A why that names a spec, issue, pull request, code comment or code line rests on that source. A why, or the part of a why, ending in _(draft)_ was written by QA and no source states it: product keeps, rewrites or deletes it, and sets **Decided by**. A user story always ends in its "so that"; where no source gives one, QA wrote it. A rule with no why at all carries an open question in section 3.
 - **Decided by** names the source of the decision: a spec, a commit, a pull request or an issue. "Not decided: exists in the code" means the behaviour is in the code and nobody chose it in a source we could find.
 - A marker in bold at the end of a rule points at section 3: **(open: F3)** means a question on this rule is still open, **(defect: F2)** means today's behaviour is a fault and must not be copied as intended, **(defect in part: F5)** means part of it is. A rule with no marker stands as written. Every rule is logged as the server behaves today, also when that is not the intended end state. Whether a test proves the rule sits in Appendix A as **proven** or **untested**.
 - Hard rules are not marked yet. Some rules are choices that a new feature may challenge, and some can never change; a later version will mark the second kind with "(hard rule)" after the why that makes it so. Until then, no marker does not mean a rule is open to change.
@@ -21,12 +24,12 @@ _Open questions per owner: Product Lead 1 · Technical Lead 4 · Quality Lead 7 
 | ID | Rule | Why: business | Why: product | Why: technical | Decided by |
 |---|---|---|---|---|---|
 | CFG-01 | Anyone can read the platform configuration, signed in or not, and everyone gets the same complete document. **(open: F3)** | — | — | "Provides configuration to external services in the Alkemio ecosystem" (schema description): the client and other services need it before anyone is signed in. | Not decided: exists in the code |
-| CFG-02 | The document is put together on every request from the server's deployment settings. It is not stored and nothing in the API can change it; only a change of the settings and a restart does. **(open: F3)** | — | — | Deployment-owned settings published to clients; the same keys drive the server itself. | Not decided: exists in the code |
+| CFG-02 | The document is put together on every request from the server's deployment settings. It is not stored and nothing in the API can change it; only a change of the settings and a restart does. **(open: F3)** | — | — | Deployment-owned settings published to clients; the same keys drive the server itself. _(draft)_ | Not decided: exists in the code |
 | CFG-03 | The document lists exactly eight feature switches, always in the same order. On a standard installation all are on except the landing page. **(open: F3, F6)** | — | — | Client-side feature switches driven by the deployment (the flag list was introduced with the licence/feature-flag module, #3351). | Server PR #3351 |
 | CFG-04 | The published switches are advice for the web client: the server never reads the list back, and each switch may or may not also change what the server itself does. **(open: Q-CFG-04, F3)** | — | — | — | Not decided: exists in the code |
 | CFG-05 | The document carries 24 locations: the domain, the environment name, the documentation address and 21 outside links such as terms, privacy, support and help. None of them is ever empty. **(open: F3)** | Legal, help and marketing links the client renders are owned by the deployment, not the client build (`alkemio.yml:705` "legal / usability aspects of the platform"). | — | — | Not decided: exists in the code |
 | CFG-06 | The document tells the web client whether error and performance monitoring are on and where to send the data. Where no address is set, the field reads "0". **(defect in part: F5)** **(open: F3)** | — | — | Client monitoring is switched on per deployment (`alkemio.yml:316-334`); the `"0"` is a loader artefact — an unset string setting becomes the number 0 (F-5). | Not decided: exists in the code |
-| CFG-07 | The document says whether finding a location from an IP address is switched on, and which address the client calls for it. **(open: F3)** | — | — | — (integration switch, `alkemio.yml:477-481`). | Not decided: exists in the code |
+| CFG-07 | The document says whether finding a location from an IP address is switched on, and which address the client calls for it. **(open: F3)** | — | — | The web client labels its performance monitoring with the user's rough location (client-web `src/core/analytics/apm/useApmInit.ts:111`, `src/core/analytics/geo/useUserGeo.ts`); the switch lets a deployment without the lookup service leave it out (`alkemio.yml:477-481`). | Not decided: exists in the code |
 | CFG-08 | The document publishes the largest file the server accepts: 15 MB by default. The same figure guards uploads and is the starting limit of every storage area. **(open: F1, F3)** | — | — | One limit, three places: the published value lets the client refuse before uploading; the middleware guard and the bucket default must stay equal or a larger file is buffered and then refused (`alkemio.yml:354-358`; lowered from 20 MB in #6196). | Server #6196 |
 | CFG-09 | The document publishes the languages the platform offers to people by itself and the default language, which falls back to English when the configured default is not supported. **(open: F3)** | — | — | 029 detect-signup-language: every other language rule derives from this set (`language.request.params.ts:139`). | Spec 029 |
 | CFG-10 | The document lists exactly one sign-in provider, Ory Kratos, with its public address. **(open: F7, F3)** | — | — | — (the block predates the OIDC/BFF sign-in; whether the client still reads it is F-7). | Not decided: exists in the code |
@@ -59,17 +62,13 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Product Lead
 
-[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 1 to answer
+[Product Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Strategy/Sub-circles/Product/Roles/Product%20Lead.md) · Strategy › Product (Simone); Denise decides on her behalf · 0 to answer
 
-**To answer**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| CONST | All | decision | 12 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and security values) | — | open |
+Nothing to answer: every Product Lead question is decided (see Decided).
 
 ### Technical Lead
 
-[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 4 to answer, 3 also involved
+[Technical Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Technical%20Lead.md) · Delivery (Anton) · 4 to answer, 2 also involved
 
 **To answer**
 
@@ -86,7 +85,6 @@ _One section per role, so each owner reads only their own part. **To answer** li
 |---|---|---|---|---|---|---|
 | F1 | Document | test | The configuration case expects an upload limit of 20 MB; the server has published 15 MB since server#6196. The case is stale. Does the web client read the published value, or does it hard-code 20 MB? | Quality Lead (Technical Lead confirms what the web client reads) | Rebaseline the case to 15 MB. | suggested |
 | F6 | Document | contract | One of the eight public switch names is misspelt (`GUIDENCE_ENGINE`). Keep it as it is, because renaming breaks the published schema, or add the right name and retire the old one? | Architecture Lead (Technical Lead makes the schema change) | — | open |
-| CONST | All | decision | 12 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and security values) | — | open |
 
 ### Quality Lead
 
@@ -106,13 +104,9 @@ _One section per role, so each owner reads only their own part. **To answer** li
 
 ### Security Lead
 
-[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 1 also involved
+[Security Lead](https://github.com/alkem-io/organisation/blob/develop/vault/Model/Alkemio/Sub-circles/Delivery/Roles/Security%20Lead.md) · Delivery (Valentin) · 0 to answer
 
-**Also involved**
-
-| ID | Area | Type | Question | Owner | Proposed answer | State |
-|---|---|---|---|---|---|---|
-| CONST | All | decision | 12 constants are blank in "product must rule?" (Appendix E). Which of them must product rule on? | Product Lead (Technical Lead and Security Lead rule on the engineering and security values) | — | open |
+Nothing to answer.
 
 ### Service Operations Lead
 
@@ -139,6 +133,12 @@ _One section per role, so each owner reads only their own part. **To answer** li
 | ID | Area | Type | Question | Owner | Proposed answer | State |
 |---|---|---|---|---|---|---|
 | F7 | Document | check | The sign-in provider block still describes Ory Kratos and was not changed by the newer sign-in work (server PR #6143). Does the web client still read it at start-up, or is the block dead? Decide before the new core carries it over. | Technical Lead, then Architecture Lead | — | open |
+
+### Decided
+
+| Was | Decision | Decided by | Now |
+|---|---|---|---|
+| CONST | Product rules on the 8 constants pre-filled for the Product Lead (location defaults, upload ceiling, language, the visual size limits, allowed image and video types), ticked "yes" in Appendix E. Engineering and security values go to the Technical Lead and the Security Lead. | Product, 2026-11-20 | Appendix E |
 
 ## Appendix
 
@@ -211,27 +211,27 @@ Behaviours the area has that neither reading nor tests pinned down:
 
 ### E. Constants the rules depend on
 
-_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, limits a user notices and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for access and security values. The "product must rule?" column is unchanged: the reviewer ticks the rows product must rule on._
+_"Rules on it" is pre-filled with the role whose domain covers the value: Product Lead for business values, limits a user notices and user-facing copy; Technical Lead for engineering limits and wire shapes; Security Lead for access and security values. The "product must rule?" column was ticked by Product, 2026-11-20 (CONST): "yes" rows wait for a product ruling before the rebuild._
 
 | Constant | Value today | Source | product must rule? | Rules on it |
 |---|---|---|---|---|
-| Feature flags (8, in order) | `COMMUNICATIONS`, `COMMUNICATIONS_DISCUSSIONS`, `SUBSCRIPTIONS`, `NOTIFICATIONS`, `WHITEBOARDS`, `MEMO`, `LANDING_PAGE`, `GUIDENCE_ENGINE` (wire `communications`, `communications-discussions`, `subscriptions`, `notifications`, `whiteboards`, `memo`, `landing-page`, `guidance-engine`) | `platform.feature.flag.name.ts`; `config.service.ts:72-122` | F-6 | Technical Lead |
-| Flag → deployment key and default | `communications.enabled` true · `communications.discussions.enabled` true · `hosting.subscriptions.enabled` true · `notifications.enabled` true · `collaboration.whiteboards.enabled` true · `collaboration.memo.enabled` true · `platform.landing_page.enabled` false (k8s base `"true"`, test overlay `"false"`) · `platform.guidance_engine.enabled` true | `alkemio.yml`; `dev-orchestration/…/01-configMap-base.yml:16`, `overlays/test/…/01-configMap-overlay.yml:17` |  | Technical Lead |
-| Locations (24 keys) | `domain`, `environment`, `documentation`, `terms`, `privacy`, `security`, `support`, `feedback`, `forumreleases`, `about`, `landing`, `blog`, `impact`, `inspiration`, `innovationLibrary`, `foundation`, `contactsupport`, `switchplan`, `opensource`, `releases`, `help`, `community`, `newuser`, `tips`, `aup` | `schema.graphql:5929-5960`; `config.service.ts:123-151` |  | Technical Lead |
-| Location defaults | `welcome.alkem.io` (terms, privacy, security, support, feedback, about, landing, inspiration, contactsupport, switchplan, newuser, tips, aup), `alkem.io` (forumreleases, innovationLibrary, releases, help, community), `blog.alkem.io`, `alkemio.org` (impact, foundation), `github.com/alkem-io/`; `environment` `local`; `documentation_path` `/documentation` | `alkemio.yml:706-770`; test pins all 23 selected |  | Product Lead |
-| Sentry / APM defaults | enabled false, submit_pii false, environment `development`, endpoints unset → `"0"`; rumEnabled false | `alkemio.yml:316-334`; `configuration.ts:34-50` | F-5 | Security Lead |
-| Geo | enabled false; endpoint `<cluster>/api/public/rest/geo` | `alkemio.yml:477-481` |  | Technical Lead |
-| Upload ceiling | `storage.file.max_file_size` 15,728,640 (15 MB); was 20,971,520 (20 MB) until #6196; the test pins 20 MB | `alkemio.yml:354-358`; `49f96273e` | F-1 | Product Lead |
-| Language | eligible `nl`; default `en`; invalid entries dropped with a warning; unsupported default → `en` | `alkemio.yml:701-703`; `config.service.ts:40-66` |  | Product Lead |
-| Authentication provider | one entry: name/label `Ory Kratos Config`, icon `''`, enabled true, `issuer` `http://alkemio-server-dev/`, `kratosPublicBaseURL` `<cluster>/ory/kratos/public` | `config.service.ts:178-201`; `alkemio.yml:125-128` | F-7 | Security Lead |
-| Visual types (7) | `AVATAR`, `BANNER`, `WHITEBOARD_PREVIEW`, `CARD`, `BANNER_WIDE`, `MEDIA_GALLERY_IMAGE`, `MEDIA_GALLERY_VIDEO` (wire camelCase) | `visual.type.ts:5-13` |  | Technical Lead |
-| BANNER constraints | 1200–3840 × 120–640; aspect 10, min 6, max 10 | `visual.constraints.ts:49-58`; #6439, #6452 | F-2 | Product Lead |
-| AVATAR / CARD / WHITEBOARD_PREVIEW / BANNER_WIDE | 190–410 × 190–410, 1 · 307–410 × 192–256, 1.6 · 500–1800 × 200–720, 2.5 · 640–2560 × 64–256, 10 | `visual.constraints.ts:39-88` |  | Product Lead |
-| MEDIA_GALLERY_IMAGE / _VIDEO | 1–8000 × 1–8000; aspect 1, min 0.01, max 100 | `visual.constraints.ts:89-108` |  | Product Lead |
-| Allowed image types (9) | `image/png`, `image/jpeg`, `image/jpg`, `image/svg+xml`, `image/webp`, `image/gif`, `image/avif`, `image/heic`, `image/heif` | `visual.constraints.ts:4-14` |  | Product Lead |
-| Allowed video types (4) | `video/mp4`, `video/webm`, `video/ogg`, `video/quicktime` | `visual.constraints.ts:16-21` |  | Product Lead |
-| Height-bound invariant (BANNER) | `minHeight = ceil(minWidth / maxAspectRatio)`; `maxHeight = maxWidth / minAspectRatio` | `visual.constraints.ts:33-37`; test TC-03 asserts the first |  | Technical Lead |
-| GraphQL surface | `Platform.configuration: Config!`; `Config {apm, authentication, defaultVisualTypeConstraints(type), featureFlags, geo, language, locations, sentry, storage}`; no mutations | `schema.graphql:2822-2835, 5721-5740` |  | Technical Lead |
+| Feature flags (8, in order) | `COMMUNICATIONS`, `COMMUNICATIONS_DISCUSSIONS`, `SUBSCRIPTIONS`, `NOTIFICATIONS`, `WHITEBOARDS`, `MEMO`, `LANDING_PAGE`, `GUIDENCE_ENGINE` (wire `communications`, `communications-discussions`, `subscriptions`, `notifications`, `whiteboards`, `memo`, `landing-page`, `guidance-engine`) | `platform.feature.flag.name.ts`; `config.service.ts:72-122` | no (F-6) | Technical Lead |
+| Flag → deployment key and default | `communications.enabled` true · `communications.discussions.enabled` true · `hosting.subscriptions.enabled` true · `notifications.enabled` true · `collaboration.whiteboards.enabled` true · `collaboration.memo.enabled` true · `platform.landing_page.enabled` false (k8s base `"true"`, test overlay `"false"`) · `platform.guidance_engine.enabled` true | `alkemio.yml`; `dev-orchestration/…/01-configMap-base.yml:16`, `overlays/test/…/01-configMap-overlay.yml:17` | no | Technical Lead |
+| Locations (24 keys) | `domain`, `environment`, `documentation`, `terms`, `privacy`, `security`, `support`, `feedback`, `forumreleases`, `about`, `landing`, `blog`, `impact`, `inspiration`, `innovationLibrary`, `foundation`, `contactsupport`, `switchplan`, `opensource`, `releases`, `help`, `community`, `newuser`, `tips`, `aup` | `schema.graphql:5929-5960`; `config.service.ts:123-151` | no | Technical Lead |
+| Location defaults | `welcome.alkem.io` (terms, privacy, security, support, feedback, about, landing, inspiration, contactsupport, switchplan, newuser, tips, aup), `alkem.io` (forumreleases, innovationLibrary, releases, help, community), `blog.alkem.io`, `alkemio.org` (impact, foundation), `github.com/alkem-io/`; `environment` `local`; `documentation_path` `/documentation` | `alkemio.yml:706-770`; test pins all 23 selected | yes | Product Lead |
+| Sentry / APM defaults | enabled false, submit_pii false, environment `development`, endpoints unset → `"0"`; rumEnabled false | `alkemio.yml:316-334`; `configuration.ts:34-50` | no (F-5) | Security Lead |
+| Geo | enabled false; endpoint `<cluster>/api/public/rest/geo` | `alkemio.yml:477-481` | no | Technical Lead |
+| Upload ceiling | `storage.file.max_file_size` 15,728,640 (15 MB); was 20,971,520 (20 MB) until #6196; the test pins 20 MB | `alkemio.yml:354-358`; `49f96273e` | yes (F-1) | Product Lead |
+| Language | eligible `nl`; default `en`; invalid entries dropped with a warning; unsupported default → `en` | `alkemio.yml:701-703`; `config.service.ts:40-66` | yes | Product Lead |
+| Authentication provider | one entry: name/label `Ory Kratos Config`, icon `''`, enabled true, `issuer` `http://alkemio-server-dev/`, `kratosPublicBaseURL` `<cluster>/ory/kratos/public` | `config.service.ts:178-201`; `alkemio.yml:125-128` | no (F-7) | Security Lead |
+| Visual types (7) | `AVATAR`, `BANNER`, `WHITEBOARD_PREVIEW`, `CARD`, `BANNER_WIDE`, `MEDIA_GALLERY_IMAGE`, `MEDIA_GALLERY_VIDEO` (wire camelCase) | `visual.type.ts:5-13` | no | Technical Lead |
+| BANNER constraints | 1200–3840 × 120–640; aspect 10, min 6, max 10 | `visual.constraints.ts:49-58`; #6439, #6452 | yes (F-2) | Product Lead |
+| AVATAR / CARD / WHITEBOARD_PREVIEW / BANNER_WIDE | 190–410 × 190–410, 1 · 307–410 × 192–256, 1.6 · 500–1800 × 200–720, 2.5 · 640–2560 × 64–256, 10 | `visual.constraints.ts:39-88` | yes | Product Lead |
+| MEDIA_GALLERY_IMAGE / _VIDEO | 1–8000 × 1–8000; aspect 1, min 0.01, max 100 | `visual.constraints.ts:89-108` | yes | Product Lead |
+| Allowed image types (9) | `image/png`, `image/jpeg`, `image/jpg`, `image/svg+xml`, `image/webp`, `image/gif`, `image/avif`, `image/heic`, `image/heif` | `visual.constraints.ts:4-14` | yes | Product Lead |
+| Allowed video types (4) | `video/mp4`, `video/webm`, `video/ogg`, `video/quicktime` | `visual.constraints.ts:16-21` | yes | Product Lead |
+| Height-bound invariant (BANNER) | `minHeight = ceil(minWidth / maxAspectRatio)`; `maxHeight = maxWidth / minAspectRatio` | `visual.constraints.ts:33-37`; test TC-03 asserts the first | no | Technical Lead |
+| GraphQL surface | `Platform.configuration: Config!`; `Config {apm, authentication, defaultVisualTypeConstraints(type), featureFlags, geo, language, locations, sentry, storage}`; no mutations | `schema.graphql:2822-2835, 5721-5740` | no | Technical Lead |
 
 ### F. Where this lands in the new core
 
@@ -242,6 +242,8 @@ The document is pure deployment configuration published through the API: it has 
 Extracted 2026-11-06 from three sources: server develop @ `eeecf9ddb` (Release/79) code + `schema.graphql`; the legacy server-api suite (`server-api/src/functional-api/configuration/`, 2 files, 2 cases); the specs, issues and docs listed in § Sources. WHAT and WHY only — no mutations, fixtures or request params. Evidence paths are relative to the server repo unless prefixed `test ›` or `spec ›`. The document is what the client reads at boot: feature flags, locations, monitoring endpoints, storage limit, language, the authentication provider, and the visual constraint table.
 
 History: 2026-11-19 converted to the three-section layout: the single why was split in three, the who-may table became section 2, and every finding, open question and unexplained rule became a question row routed to an organisation role. Nothing in this file has been reviewed by product yet.
+
+2026-11-20 whys pass: every rule has at least one why, sourced where a spec, issue or code line states it and marked _(draft)_ where QA wrote it. CFG-07 takes its why from the web client code that reads the location (performance monitoring). CFG-04 and CFG-10 keep no why; their open questions ask for one.
 
 #### Sources
 
@@ -263,3 +265,4 @@ Tests (worktree `w1-access-matrix/test-suites`):
 Specs / issues:
 - client-web#10178, client-web#10222, server#6439, server#6452 (banner constraints); server#6196 / workspace 009 (upload ceiling); server PR #3351 (feature flags); agents-hq `specs/029-detect-signup-language/spec.md` (language block)
 - No spec describes the configuration document itself (grep over `agents-hq/specs/*/spec.md` and server `specs/*/spec.md`)
+- client-web `src/core/analytics/apm/useApmInit.ts:111`, `src/core/analytics/geo/useUserGeo.ts` (what the location switch is used for, CFG-07)
