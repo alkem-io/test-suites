@@ -403,19 +403,19 @@ describe('Upload visual tests', () => {
       visualId
     );
 
+    // The server no longer returns the size rule in `details`; the refusal
+    // is its code, and the visual keeps the image it had.
     expect(res?.errors).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           message: 'Upload on visual failed!',
           extensions: expect.objectContaining({
-            details: expect.objectContaining({
-              message:
-                "Upload image has a width resolution of '1299' which is not in the allowed range of 190 - 410 pixels!",
-            }),
+            code: 'STORAGE_UPLOAD_FAILED',
           }),
         }),
       ])
     );
+    expect(await getVisualUri(baseScenario.organization.id)).toEqual(visualUri);
   });
   if (!isCI) {
     test('read uploaded visual', async () => {

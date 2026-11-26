@@ -96,8 +96,20 @@ describe('Space BANNER visual constraints (10178)', () => {
       TestUser.GLOBAL_ADMIN
     );
     expect(rejected.errors?.length).toBeGreaterThan(0);
-    // Assert only that the minimum appears in the message — it is server
-    // copy and will drift; do not pin the whole sentence.
-    expect(JSON.stringify(rejected.errors)).toContain('1200');
+    // The server no longer returns the size rule in the error (only the
+    // code), so the refusal is proven by its code and by the visual still
+    // holding the 1200×120 upload.
+    expect(
+      (rejected.errors?.[0]?.extensions as { code?: string } | undefined)?.code
+    ).toBe('STORAGE_UPLOAD_FAILED');
+    expect(rejected.data?.uploadImageOnVisual?.uri).toBeUndefined();
+    const after = await lookupProfileVisuals(
+      baseScenario.space.about.profile.id,
+      TestUser.GLOBAL_ADMIN
+    );
+    const bannerAfter = (after.data?.lookup.profile?.visuals ?? []).find(
+      visual => visual.name === 'BANNER'
+    );
+    expect(bannerAfter?.uri).toEqual(uploadedUri);
   });
 });
