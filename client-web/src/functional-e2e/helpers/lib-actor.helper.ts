@@ -1,6 +1,8 @@
 import type { BrowserContext, Page } from '@playwright/test';
 import {
+  readUserAccount,
   testConfiguration,
+  TestUser,
   type GraphqlActor,
   type GraphqlReturnWithError,
 } from '@alkemio/tests-lib';
@@ -43,6 +45,21 @@ export function answeredNothing<T>(
   return (
     result.error.errors.length === 1 &&
     result.error.errors[0].code === 'FORBIDDEN_POLICY'
+  );
+}
+
+/**
+ * Whether the platform admin can still read this user. A teardown delete that
+ * answers the generic FORBIDDEN_POLICY may be a refusal, not "already gone":
+ * the server answers both alike. The platform admin may read every user, so
+ * only its read decides. Any other answer is thrown.
+ */
+export async function userStillPresent(userId: string): Promise<boolean> {
+  const result = await readUserAccount(userId, TestUser.GLOBAL_ADMIN);
+  if (result.data?.lookup?.user?.id === userId) return true;
+  if (answeredNothing(result, data => data.lookup?.user)) return false;
+  throw new Error(
+    `userStillPresent(${userId}): unexpected answer ${JSON.stringify(result.error?.errors ?? result.data)}`
   );
 }
 

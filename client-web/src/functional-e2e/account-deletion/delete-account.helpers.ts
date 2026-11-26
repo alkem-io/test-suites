@@ -140,7 +140,7 @@ export const userExists = async (userId: string): Promise<boolean> => {
     bearerToken: await getAdminToken(),
   });
   if (result.data?.lookup?.user?.id === userId) return true;
-  if (result.error && answeredNothing(result, data => data.lookup?.user)) {
+  if (answeredNothing(result, data => data.lookup?.user)) {
     return false;
   }
   throw new Error(

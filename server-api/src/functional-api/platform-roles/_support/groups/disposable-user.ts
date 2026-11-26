@@ -1,6 +1,7 @@
 import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 import { rawRequest } from '../raw-request';
 import { registerUser } from '../users';
+import { deleteResidue } from '../still-present';
 
 /**
  * A user registered for ONE run and one purpose: a target that a positive may
@@ -49,13 +50,13 @@ export const deleteDisposableUsers = async (
 ): Promise<void> => {
   const failures: string[] = [];
   for (const user of users) {
-    if (!(await userExists(usersAdminToken, user.id))) continue;
     const { errors } = await rawRequest(usersAdminToken, DELETE_USER, {
       id: user.id,
     });
-    if (errors.length > 0) {
-      failures.push(`${user.email}: ${errors[0].message}`);
-    }
+    // A generic answer is "already gone" only if the global admin can no
+    // longer read the user; otherwise the delete was refused.
+    const residue = await deleteResidue('user', user.id, errors);
+    if (residue) failures.push(`${user.email}: ${residue}`);
   }
   if (failures.length > 0) {
     throw new Error(

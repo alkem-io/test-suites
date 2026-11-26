@@ -108,10 +108,6 @@ describe('Delete user', () => {
 
     // Assert
     expect(userData.data?.user == null, 'no user is returned').toBe(true);
-    expect(
-      (userData.error?.errors ?? [])
-        .map(e => e.code)
-        .filter(code => code !== NEUTRAL_ERROR_CODE)
-    ).toEqual([]);
+    expectUnavailable(userData);
   });
 });

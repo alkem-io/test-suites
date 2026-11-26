@@ -6,7 +6,7 @@ import {
 } from '@alkemio/tests-lib';
 import { rawRead, rawRequest } from '../raw-request';
 import type { RunContext } from '../types';
-import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
+import { deleteResidue } from '../still-present';
 
 /**
  * An organization whose ACCOUNT owns content — shared by A7 and A8.
@@ -299,10 +299,10 @@ const REMOVE = {
 /**
  * Removes the content, then the organization (the server refuses to delete an
  * organization whose account still holds resources). Something a positive
- * already deleted answers the generic FORBIDDEN_POLICY code — expected;
- * anything else is collected and thrown, so residue is reported. A refusal
- * carries the same code, so a removal these tokens may not make would pass
- * here unreported.
+ * already deleted answers the generic FORBIDDEN_POLICY code — expected. A
+ * refusal carries the same code, so that answer counts as gone only when the
+ * global admin can no longer read the entity; a refusal or any other error is
+ * collected and thrown, so residue is reported.
  */
 export const removeOwnedOrganization = async (
   ctx: Ctx,
@@ -325,8 +325,8 @@ export const removeOwnedOrganization = async (
   const residue: string[] = [];
   for (const [kind, token, id] of steps) {
     const { errors } = await rawRequest(token, REMOVE[kind], { id });
-    const real = errors.filter(e => e.extensions?.code !== NEUTRAL_ERROR_CODE);
-    if (real.length > 0) residue.push(`${kind} ${id}: ${real[0].message}`);
+    const left = await deleteResidue(kind, id, errors);
+    if (left) residue.push(`${kind} ${id}: ${left}`);
   }
   if (residue.length > 0) throw new Error(residue.join(' | '));
 };

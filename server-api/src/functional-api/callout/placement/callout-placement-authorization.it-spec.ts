@@ -176,6 +176,18 @@ const responseOrder = async (calloutId: string): Promise<string[]> => {
     .map(c => c.id);
 };
 
+/**
+ * The member reads the target before it is refused, so the generic refusal
+ * below means "may not change it", not "may not see it".
+ */
+const expectMemberReads = (res: {
+  error?: unknown;
+  data?: unknown;
+}) => {
+  expect(res.error, JSON.stringify(res.error)).toBeUndefined();
+  expect(res.data).toBeTruthy();
+};
+
 const errorCodes = (res: {
   error?: { errors: Array<Record<string, unknown>> };
 }) => (res.error?.errors ?? []).map(e => e.code);
@@ -229,6 +241,9 @@ describe('Post order: updateCalloutsSortOrder', () => {
   test('PO-1 a plain member is refused with FORBIDDEN_POLICY, and no post moves', async () => {
     const before = await placement();
     const reversed = orderOf(before, posts).reverse();
+    expectMemberReads(
+      await readCalloutsPlacement(calloutsSetId, TestUser.SPACE_MEMBER)
+    );
 
     const res = await updateCalloutsSortOrder(
       calloutsSetId,
@@ -282,6 +297,9 @@ describe("A post's phase: updateCallout with a FLOW_STATE classification", () =>
   test('PH-1 a plain member is refused with FORBIDDEN_POLICY, and the post stays in its phase', async () => {
     const before = placementOf(await placement(), memberTarget);
     expect(before.phase).toBe(firstPhase);
+    expectMemberReads(
+      await readCalloutsPlacement(calloutsSetId, TestUser.SPACE_MEMBER)
+    );
 
     const res = await movePhase(
       memberTarget,
@@ -326,6 +344,12 @@ describe('Moving a response: moveContributionToCallout', () => {
   });
 
   test("MV-1 a plain member, the response's author, is refused with FORBIDDEN_POLICY, and the response stays in its post", async () => {
+    expectMemberReads(
+      await readCalloutContributions(source, TestUser.SPACE_MEMBER)
+    );
+    expectMemberReads(
+      await readCalloutContributions(target, TestUser.SPACE_MEMBER)
+    );
     const res = await moveContributionToCallout(
       memberResponse,
       target,
@@ -385,6 +409,9 @@ describe('Response order inside a post: updateContributionsSortOrder', () => {
 
   test("CS-2 a plain member, the responses' author, is refused with FORBIDDEN_POLICY, and the order is unchanged", async () => {
     const before = await responseOrder(post);
+    expectMemberReads(
+      await readCalloutContributionsOrder(post, TestUser.SPACE_MEMBER)
+    );
 
     const res = await updateContributionsSortOrder(
       post,
