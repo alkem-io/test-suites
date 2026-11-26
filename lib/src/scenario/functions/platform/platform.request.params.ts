@@ -12,6 +12,20 @@ export const readPlatformLanguageConfiguration = (
     sdk.ReadPlatformLanguageConfiguration({}, headers),
   );
 
+/**
+ * Whether the browser is told to run measurement (Elastic APM RUM), and where
+ * it would send it (anonymous-readable). `APM_RUM_ENABLED` on the server.
+ */
+export const readPlatformBrowserMeasurement = async (
+  actor: GraphqlActor = { anonymous: "private" },
+) => {
+  const result = await runAs(actor, (sdk, headers) =>
+    sdk.fullConfiguration({}, headers),
+  );
+  const apm = result.data?.platform.configuration.apm;
+  return { enabled: Boolean(apm?.rumEnabled && apm?.endpoint), result };
+};
+
 /** Name + version of every service the platform reports (anonymous-readable). */
 export const readPlatformServiceVersions = (
   actor: GraphqlActor = { anonymous: "private" },

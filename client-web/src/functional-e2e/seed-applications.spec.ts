@@ -13,6 +13,7 @@ import {
 } from '@alkemio/client-lib';
 
 import { fillSecret } from './helpers/login.helper';
+import { acceptCookiesIfVisible } from './helpers/cookies.helper';
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -72,7 +73,7 @@ test.afterAll(async () => {
 });
 test.skip('seed', async ({ page }) => {
   await page.goto(`${baseUrl}/login`);
-  await page.getByRole('button', { name: 'Accept All Cookies' }).click();
+  await acceptCookiesIfVisible(page);
   await page
     .getByRole('textbox', { name: 'E-Mail' })
     .fill(`${TestUser.NON_SPACE_MEMBER}@alkem.io`);

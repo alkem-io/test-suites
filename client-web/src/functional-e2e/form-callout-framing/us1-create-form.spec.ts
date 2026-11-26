@@ -42,6 +42,7 @@ import {
   loadHarnessPersonas,
   openMembership,
 } from './form-callout-framing.helpers';
+import { acceptCookiesIfVisible } from '../helpers/cookies.helper';
 
 /**
  * workspace#080-form-callout-framing — User Story 1 (P1): Create a Post with a Form.
@@ -120,14 +121,6 @@ const firstError = (result: GraphqlReturnWithError<unknown>) =>
 const detailsCode = (result: GraphqlReturnWithError<unknown>) =>
   firstError(result)?.extensions?.details?.code;
 
-async function acceptCookies(page: Page) {
-  const accept = page.getByRole('button', { name: /accept all cookies/i });
-  await accept
-    .waitFor({ state: 'visible', timeout: 8_000 })
-    .then(() => accept.click())
-    .catch(() => undefined);
-}
-
 /** Contexts opened by `signIn`; closed after every test, pass or fail. */
 const openContexts: BrowserContext[] = [];
 
@@ -163,7 +156,7 @@ async function signIn(
 
 async function open(page: Page, url: string) {
   await page.goto(url);
-  await acceptCookies(page);
+  await acceptCookiesIfVisible(page);
 }
 
 const fixture = {

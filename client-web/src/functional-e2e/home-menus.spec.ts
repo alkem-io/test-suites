@@ -7,6 +7,7 @@ import {
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 import { fillSecret } from './helpers/login.helper';
+import { acceptCookiesIfVisible } from './helpers/cookies.helper';
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -38,12 +39,7 @@ test.describe.skip('Home Page Menus', () => {
     // CRD header uses a direct "Log in" link (not the MUI PersonIcon menu).
     // NOTE: this describe block remains test.skip — selectors migrated only.
     await page.goto(baseUrl);
-    const cookieButton = page.getByRole('button', {
-      name: 'Accept All Cookies',
-    });
-    if (await cookieButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await cookieButton.click();
-    }
+    await acceptCookiesIfVisible(page);
     const loginLink = page.getByRole('link', { name: 'Log in', exact: true });
     await loginLink.waitFor({ state: 'visible', timeout: 30_000 });
     await loginLink.click();

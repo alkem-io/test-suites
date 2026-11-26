@@ -37,6 +37,7 @@ import {
 } from '@alkemio/tests-lib';
 
 import { fillSecret } from '../helpers/login.helper';
+import { acceptCookiesIfVisible } from '../helpers/cookies.helper';
 export const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 export const PASSWORD = process.env.AUTH_TEST_HARNESS_PASSWORD || 'ChatAvatars!Test2026';
 
@@ -102,7 +103,6 @@ export async function getVerificationLinkFor(email: string): Promise<string | un
   return link ? link[0].replace(/&amp;/g, '&') : undefined;
 }
 
-const CONSENT_COOKIE_NAME = 'accepted_cookies';
 
 /**
  * Answers the cookie banner, waiting for it to appear the first time.
@@ -114,15 +114,7 @@ const CONSENT_COOKIE_NAME = 'accepted_cookies';
  * already answered pay nothing.
  */
 export async function acceptCookiesIfPresent(page: Page): Promise<void> {
-  const answered = (await page.context().cookies()).some(cookie => cookie.name === CONSENT_COOKIE_NAME);
-  if (answered) return;
-
-  const accept = page.getByRole('button', { name: 'Accept All Cookies', exact: true });
-  await accept.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
-  if (await accept.isVisible()) {
-    await accept.click();
-    await expect(accept).toHaveCount(0, { timeout: 10000 });
-  }
+  await acceptCookiesIfVisible(page);
 }
 
 /**

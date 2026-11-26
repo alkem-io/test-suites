@@ -38,6 +38,7 @@ import {
   loadHarnessPersonas,
   openMembership,
 } from './form-callout-framing.helpers';
+import { acceptCookiesIfVisible } from '../helpers/cookies.helper';
 
 /**
  * workspace#080-form-callout-framing — User Story 4 (P1): Notifications on
@@ -308,10 +309,7 @@ async function signIn(browser: Browser, userEmail: string): Promise<Page> {
   });
   const page = await context.newPage();
   await page.goto(BASE);
-  const cookies = page.getByRole('button', { name: /accept all cookies/i });
-  if (await cookies.isVisible({ timeout: 3_000 }).catch(() => false)) {
-    await cookies.click();
-  }
+  await acceptCookiesIfVisible(page);
   const login = page.getByRole('link', { name: 'Log in', exact: true });
   await login.waitFor({ state: 'visible', timeout: 30_000 });
   await login.click();

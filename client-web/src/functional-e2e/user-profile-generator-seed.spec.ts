@@ -1,12 +1,13 @@
 import { test } from '@playwright/test';
 
 import { fillSecret } from './helpers/login.helper';
+import { acceptCookiesIfVisible } from './helpers/cookies.helper';
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change-me!';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 test.skip('seed', async ({ page }) => {
   await page.goto(baseUrl);
-  await page.getByRole('button', { name: 'Accept All Cookies' }).click();
+  await acceptCookiesIfVisible(page);
   await page.getByTestId('PersonIcon').click();
   await page.getByRole('menuitem', { name: 'Log In | Sign Up' }).click();
   await page.waitForURL(/.*login.*/);

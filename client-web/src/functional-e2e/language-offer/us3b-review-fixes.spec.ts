@@ -84,12 +84,10 @@ test.describe("US3b — Phase V' review-fix regressions", () => {
   // corr-client-2 robustness: a non-JSON accepted_cookies cookie must NOT crash the
   // app. Seed the raw cookie BEFORE load.
   //
-  // NOTE on behavior: react-cookie returns the raw (unparseable) string, so App.tsx
-  // sees `cookies.accepted_cookies` as truthy and does NOT re-show the cookie-consent
-  // banner; useCrdLanguage's `consentResolved` is a plain presence check (=== undefined)
-  // and is therefore true. Nothing JSON-parses the raw value anymore (the anonymous
-  // choice is session-only, so LanguageOfferProvider no longer reads the cookie). The
-  // load-bearing assertion is only that nothing crashes on the unparseable value.
+  // NOTE on behavior: since client-web#10682 an unreadable consent value counts as
+  // "no choice made": the cookie banner comes back and the language offer waits for
+  // it (both read the same consent). The load-bearing assertion here is only that
+  // nothing crashes on the unparseable value.
   test('corr-client-2 — non-JSON consent cookie does not crash the app', async ({ page, context }, testInfo) => {
     const url = new URL(BASE_URL);
     await context.addCookies([
@@ -127,11 +125,9 @@ test.describe("US3b — Phase V' review-fix regressions", () => {
       'corr-client-2: malformed accepted_cookies must not trip the error boundary'
     ).toHaveCount(0);
 
-    // NOTE: deliberately NO assertion on the cookie-consent banner. Whether an
-    // unreadable consent value re-asks for consent is environment-dependent —
-    // the deployed acc build re-shows the banner, which is the SAFER behaviour,
-    // so pinning it to "not shown" would lock in the worse one. Out of scope for
-    // this scenario, which is about not crashing.
+    // NOTE: deliberately NO assertion on the cookie-consent banner. This scenario
+    // is about not crashing; the banner's own behaviour is covered in
+    // authentication/authentication-cookie-consent.spec.ts.
 
     await page.screenshot({ path: testInfo.outputPath('us3b-corr-client-2-bad-cookie-no-crash.png'), fullPage: false });
   });
