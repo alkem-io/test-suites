@@ -45,12 +45,10 @@ async function whyMeasurementCannotBeTested(
   try {
     await storeCookieChoice(context, ['technical', 'analysis']);
     const page = await context.newPage();
-    const measured = page
-      .waitForRequest(RUM_EVENTS, { timeout: 45_000 })
-      .then(
-        () => true,
-        () => false
-      );
+    const measured = page.waitForRequest(RUM_EVENTS, { timeout: 45_000 }).then(
+      () => true,
+      () => false
+    );
     await page.goto(baseUrl);
     return (await measured)
       ? undefined
@@ -279,7 +277,11 @@ test.describe('Cookie Consent - browser measurement', () => {
     });
   });
 
-  // Accepting on the banner starts measurement without a reload.
+  // Proves that a page with analytics accepted sends measurement. It does not
+  // prove the start without a reload: the navigation below loads a new
+  // document, and a client that only starts the agent on load would pass too.
+  // The start in the same page is covered in client-web ("starts the agent
+  // when the visitor accepts mid-session", ApmProvider.test.tsx).
   test('after "Accept all", browser measurement is sent', async ({ page }) => {
     await page.goto(baseUrl);
     await expect(cookieBanner(page)).toBeVisible({ timeout: 15_000 });
@@ -287,7 +289,7 @@ test.describe('Cookie Consent - browser measurement', () => {
     const measured = page.waitForRequest(RUM_EVENTS, { timeout: 60_000 });
     await acceptAllCookiesButton(page).click();
     await expect(cookieBanner(page)).toHaveCount(0);
-    // The agent reports a navigation once it has finished
+    // A full page load with the choice stored: the agent reports it once done
     await page.goto(`${baseUrl}/spaces`);
     await measured;
   });
