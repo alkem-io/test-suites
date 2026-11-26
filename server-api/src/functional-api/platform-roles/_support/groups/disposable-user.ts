@@ -55,7 +55,12 @@ export const deleteDisposableUsers = async (
     });
     // A generic answer is "already gone" only if the global admin can no
     // longer read the user; otherwise the delete was refused.
-    const residue = await deleteResidue('user', user.id, errors);
+    // A failed presence read is recorded too, and the loop goes on, so one
+    // user never stops the others being removed.
+    const residue = await deleteResidue('user', user.id, errors).catch(
+      (error: unknown) =>
+        `presence check failed: ${error instanceof Error ? error.message : String(error)}`
+    );
     if (residue) failures.push(`${user.email}: ${residue}`);
   }
   if (failures.length > 0) {

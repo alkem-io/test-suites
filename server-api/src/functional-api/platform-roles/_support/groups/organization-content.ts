@@ -325,7 +325,11 @@ export const removeOwnedOrganization = async (
   const residue: string[] = [];
   for (const [kind, token, id] of steps) {
     const { errors } = await rawRequest(token, REMOVE[kind], { id });
-    const left = await deleteResidue(kind, id, errors);
+    // A failed presence read is residue too; the remaining steps still run.
+    const left = await deleteResidue(kind, id, errors).catch(
+      (error: unknown) =>
+        `presence check failed: ${error instanceof Error ? error.message : String(error)}`
+    );
     if (left) residue.push(`${kind} ${id}: ${left}`);
   }
   if (residue.length > 0) throw new Error(residue.join(' | '));
