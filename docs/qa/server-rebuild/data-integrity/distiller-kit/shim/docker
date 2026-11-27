@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# shim/docker: lets the kit run where there is NO Docker (the runner pod of file 88). The kit calls
+# "docker exec alkemio_dev_postgres <tool> ..." in 33 files; here that runs <tool> directly, against the Postgres
+# named by PGHOST / PGPORT. The scripts themselves are not changed, so the local run and the pod run use the same code.
+# Calls that need the application stack are translated to plain HTTP when its address is given, and refused otherwise:
+#   KRATOS_ADMIN_URL   login service admin address (for the one-time sign-in link)
+#   RABBIT_API         queue service management address, with user:password in RABBIT_AUTH (for the reset queue length)
+#   WORKERS_EXTERNAL=1 the reset workers are started and stopped by an operator, not by the kit
+# Installed as /usr/local/bin/docker in the kit image (cluster/Dockerfile.kit). Never put it on PATH next to a real Docker.
+set -euo pipefail
+PGC=${KIT_PG_CONTAINER:-alkemio_dev_postgres}
+no() { echo "kit shim: '$*' needs the application stack, which is not declared here (see cluster/RUNBOOK.md)" >&2; exit 97; }
+sub=${1:-}; shift || true
+case "$sub" in
+  exec)
+    while [ $# -gt 0 ]; do case "$1" in -i|-t|-it|-ti) shift;; *) break;; esac; done
+    c=${1:?container}; shift
+    case "$c" in
+      "$PGC") exec "$@";;
+      alkemio_dev_rabbitmq)
+        [ -n "${RABBIT_API:-}" ] || no "queue length"
+        curl -fsS -u "${RABBIT_AUTH:?RABBIT_AUTH}" "$RABBIT_API/api/queues?columns=name,messages_ready,messages_unacknowledged" |
+          python3 -c 'import json,sys; [print(q["name"], q.get("messages_ready",0), q.get("messages_unacknowledged",0)) for q in json.load(sys.stdin)]';;
+      *) no "exec $c";;
+    esac;;
+  run)   # only use in the kit: curl inside the network of the login service
+    case " $* " in *" container:alkemio_dev_kratos "*) ;; *) no "run $*";; esac
+    [ -n "${KRATOS_ADMIN_URL:-}" ] || no "sign-in link"
+    while [ $# -gt 0 ] && [ "$1" != curlimages/curl ]; do shift; done; shift
+    args=(); for a in "$@"; do args+=("${a/http:\/\/localhost:4434/${KRATOS_ADMIN_URL%/}}"); done
+    exec curl "${args[@]}";;
+  compose|ps|logs)
+    [ -n "${WORKERS_EXTERNAL:-}" ] || no "$sub (reset workers)"
+    exit 0;;   # the operator runs the workers: nothing to start, list or read here
+  *) no "$sub $*";;
+esac

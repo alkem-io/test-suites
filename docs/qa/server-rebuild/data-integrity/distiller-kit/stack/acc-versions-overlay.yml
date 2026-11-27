@@ -1,0 +1,31 @@
+# acc-versions-overlay.yml (2026-11-17): pins the local services to the versions acceptance is deployed with.
+# Source: infrastructure-operations origin/develop at bb7fa7f5 (2026-11-17), the branch acceptance is deployed from.
+# Read from the manifests, not from the live cluster. The server itself runs on the host from the server clone
+# (release/82 = v0.173.0, the acceptance version). Nothing in the server repository is changed by this file.
+# Left as they are: traefik (acceptance v3.7.17, local v2.11.20: the local routing files are written for v2),
+# rabbitmq (acceptance runs an operator-managed cluster), postgres (same 18.6, other digest), kratos, hydra,
+# synapse and collabora (already the same version).
+# Use: add  -f <kit>/stack/acc-versions-overlay.yml  after the other compose files.
+services:
+  oidc-service:
+    image: alkemio/oidc-service:v0.8.1
+  notification:
+    image: alkemio/notifications:v0.44.0
+  matrix-adapter:
+    image: alkemio/matrix-adapter:v0.8.28
+  collaboration:
+    image: alkemio/collaboration-service:v0.0.5
+  file-service:
+    image: alkemio/file-service:v0.3.4
+  file-backup-migrate:
+    image: alkemio/file-backup-service:v0.0.6
+  file-backup-service:
+    image: alkemio/file-backup-service:v0.0.6
+  kratos-hooks:
+    image: alkemio/kratos-webhooks:v0.2.7
+  authorization-evaluation:
+    image: alkemio/authorization-evaluation-service:v0.0.6
+  wopi-service:
+    image: alkemio/wopi-service:v0.2.1
+  livekit:
+    image: livekit/livekit-server:v1.13.11

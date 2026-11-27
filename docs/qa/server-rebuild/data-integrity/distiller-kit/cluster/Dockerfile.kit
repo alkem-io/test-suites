@@ -1,0 +1,25 @@
+# Image of the kit for the runner pod (file 88). Scripts and agreed counts only: .dockerignore keeps every dump,
+# run output and local stack file out. Same Postgres client version as the acceptance server (18.6).
+#   docker build -f cluster/Dockerfile.kit --build-arg SERVER_IMAGE=<server image of the release> -t <registry>/distiller-kit:<tag> .
+# SERVER_IMAGE gives the compiled server code that file 85 calls (the server's own access function).
+# WITH_BROWSER=1 adds the browser that the walks as a user need (files 77 to 86). Without it the image covers the
+# stages that need the database only: source, copy, repairs, guards, access.
+ARG SERVER_IMAGE
+FROM ${SERVER_IMAGE} AS server
+FROM postgres:18.6-trixie@sha256:e3d24f6906d0760bf4da0dae872415391ededefad23fd471c47dc53b0ddf3c42
+ARG WITH_BROWSER=0
+RUN apt-get update && apt-get install -y --no-install-recommends python3 nodejs npm curl bc git ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+COPY --from=server /usr/src/app/dist /server/dist
+COPY --from=server /usr/src/app/node_modules /server/node_modules
+COPY --from=server /usr/src/app/package.json /server/package.json
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/browsers
+RUN mkdir -p /opt/pw && cd /opt/pw && npm init -y > /dev/null \
+ && if [ "$WITH_BROWSER" = 1 ]; then npm install playwright && npx playwright install --with-deps chromium; fi
+COPY shim/docker /usr/local/bin/docker
+COPY --chown=999:999 . /kit
+ENV SERVER_DIR=/server PW_FROM=/opt/pw/package.json KIT_TMP=/volumes/work/tmp VOLUME_ROOT=/volumes HOME=/tmp
+USER 999
+WORKDIR /kit
+ENTRYPOINT []
+CMD ["sleep", "infinity"]
