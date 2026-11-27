@@ -24,6 +24,21 @@ import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { notifWithPush } from '@functional-api/notifications/notification.helpers';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
+
+/** The caller is refused with the generic code and sentence. */
+const expectRefused = (
+  res: { error?: { errors: Array<Record<string, unknown>> } } | undefined
+) => {
+  expect(res?.error?.errors?.[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+  expect(
+    res?.error?.errors?.[0]?.message === NEUTRAL_ERROR_MESSAGE,
+    'refusal carries the generic sentence'
+  ).toBe(true);
+};
 
 const uniqueId = UniqueIDGenerator.getID();
 let userId: string;
@@ -95,11 +110,11 @@ describe('Organization settings', () => {
   describe('DDT user WITHOUT privileges to update organization settings', () => {
     // Arrange
     test.each`
-      userRole                     | message
-      ${TestUser.NON_SPACE_MEMBER} | ${"Authorization: unable to grant 'update' privilege: organization settings update:"}
+      userRole
+      ${TestUser.NON_SPACE_MEMBER}
     `(
-      'User: "$userRole" get message: "$message", when intend to update organization settings ',
-      async ({ userRole, message }) => {
+      'User: "$userRole" is refused, when intend to update organization settings ',
+      async ({ userRole }) => {
         // Act
         const res = await updateOrganizationSettings(
           baseScenario.organization.id,
@@ -112,7 +127,7 @@ describe('Organization settings', () => {
         );
 
         // Assert
-        expect(res?.error?.errors[0].message).toContain(message);
+        expectRefused(res);
       }
     );
   });
@@ -449,9 +464,7 @@ describe('Organization settings — allowSpaceInvitations (061)', () => {
       TestUser.NON_SPACE_MEMBER
     );
 
-    expect(res?.error?.errors?.[0]?.message).toContain(
-      "Authorization: unable to grant 'update' privilege: organization settings update:"
-    );
+    expectRefused(res);
   });
 });
 
@@ -606,9 +619,7 @@ describe('Organization settings — allowApplications (062, US5-AS4/US6-AS1)', (
       TestUser.NON_SPACE_MEMBER
     );
 
-    expect(res?.error?.errors?.[0]?.message).toContain(
-      "Authorization: unable to grant 'update' privilege: organization settings update:"
-    );
+    expectRefused(res);
   });
 });
 

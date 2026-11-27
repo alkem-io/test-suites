@@ -11,11 +11,9 @@ import {
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import {
-  errorAuthCreatePostTemplate,
-  errorAuthDeleteTemplate,
-  errorAuthUpdatePostTemplate,
-  errorNoPostTemplate,
-} from './post-template-testdata';
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 import {
   deletePost,
   createPostOnCallout,
@@ -34,6 +32,17 @@ import {
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 const uniqueId = UniqueIDGenerator.getID();
+
+/** The caller is refused with the generic code and sentence. */
+const expectRefused = (res: {
+  error?: { errors: Array<Record<string, unknown>> };
+}) => {
+  expect(res.error?.errors[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+  expect(
+    res.error?.errors[0]?.message === NEUTRAL_ERROR_MESSAGE,
+    'refusal carries the generic sentence'
+  ).toBe(true);
+};
 
 let spacePostId = '';
 let subspacePostId = '';
@@ -386,12 +395,12 @@ describe('Post templates - CRUD Authorization', () => {
     describe('DDT user privileges to create space post template - negative', () => {
       // Arrange
       test.each`
-        userRole                     | message
-        ${TestUser.SPACE_MEMBER}     | ${errorAuthCreatePostTemplate}
-        ${TestUser.NON_SPACE_MEMBER} | ${errorAuthCreatePostTemplate}
+        userRole
+        ${TestUser.SPACE_MEMBER}
+        ${TestUser.NON_SPACE_MEMBER}
       `(
-        'User: "$userRole" get message: "$message", when intend to create space post template ',
-        async ({ userRole, message }) => {
+        'User: "$userRole" is refused with the generic code, when intend to create space post template ',
+        async ({ userRole }) => {
           // Act
           const resCreatePostTempl = await createPostTemplate(
             baseScenario.space.templateSetId,
@@ -402,9 +411,7 @@ describe('Post templates - CRUD Authorization', () => {
           );
 
           // Assert
-          expect(resCreatePostTempl.error?.errors[0].message).toContain(
-            message
-          );
+          expectRefused(resCreatePostTempl);
         }
       );
     });
@@ -447,12 +454,12 @@ describe('Post templates - CRUD Authorization', () => {
       );
 
       test.each`
-        userRole                     | message
-        ${TestUser.SPACE_MEMBER}     | ${errorAuthUpdatePostTemplate}
-        ${TestUser.NON_SPACE_MEMBER} | ${errorAuthUpdatePostTemplate}
+        userRole
+        ${TestUser.SPACE_MEMBER}
+        ${TestUser.NON_SPACE_MEMBER}
       `(
-        'User: "$userRole" get message: "$message", when intend to update space post template ',
-        async ({ userRole, message }) => {
+        'User: "$userRole" is refused with the generic code, when intend to update space post template ',
+        async ({ userRole }) => {
           // Act
           const resUpdatePostTempl = await updatePostTemplate(
             postTemplateId,
@@ -463,9 +470,7 @@ describe('Post templates - CRUD Authorization', () => {
           );
 
           // Assert
-          expect(resUpdatePostTempl?.error?.errors[0].message).toContain(
-            message
-          );
+          expectRefused(resUpdatePostTempl);
         }
       );
     });
@@ -500,12 +505,12 @@ describe('Post templates - CRUD Authorization', () => {
       );
 
       test.each`
-        userRole                     | message
-        ${TestUser.SPACE_MEMBER}     | ${errorAuthDeleteTemplate}
-        ${TestUser.NON_SPACE_MEMBER} | ${errorAuthDeleteTemplate}
+        userRole
+        ${TestUser.SPACE_MEMBER}
+        ${TestUser.NON_SPACE_MEMBER}
       `(
-        'User: "$userRole" get message: "$message", whe intend to remova space post template ',
-        async ({ userRole, message }) => {
+        'User: "$userRole" is refused with the generic code, whe intend to remova space post template ',
+        async ({ userRole }) => {
           // Act
           const resCreatePostTempl = await createPostTemplate(
             baseScenario.space.templateSetId
@@ -515,7 +520,7 @@ describe('Post templates - CRUD Authorization', () => {
           const removeRes = await deleteTemplate(postTemplateId, userRole);
 
           // Assert
-          expect(removeRes?.error?.errors[0].message).toContain(message);
+          expectRefused(removeRes);
         }
       );
     });
@@ -531,6 +536,6 @@ describe('Post templates - Negative Scenarios', () => {
     // Act
 
     const res = await deleteTemplate('0bade07d-6736-4ee2-93c0-b2af22a998ff');
-    expect(res.error?.errors[0].message).toContain(errorNoPostTemplate);
+    expectRefused(res);
   });
 });

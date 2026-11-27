@@ -1,10 +1,11 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import {
+  readAccountResources,
   readSpaceByNameId,
   readSpaceCalloutNames,
   SpaceLevel,
 } from '@alkemio/tests-lib';
-import { must } from '../helpers/lib-actor.helper';
+import { answeredNothing, must } from '../helpers/lib-actor.helper';
 import { baseUrl, contentFeed } from '../helpers/space-access.helper';
 
 /**
@@ -77,23 +78,34 @@ export const expectTutorialCalloutsRendered = async (
 };
 
 /**
- * After the UI delete, the Space is gone server-side (`lookupByName` answers
- * ENTITY_NOT_FOUND) and its About route no longer resolves: the client shows
- * its "We are redirecting you..." not-found dialog instead of the Space.
+ * After the UI delete, the Space is gone server-side and its About route no
+ * longer resolves: the client shows its "We are redirecting you..." not-found
+ * dialog instead of the Space.
+ *
+ * Gone, by three reads: `expectCreatedSpaceRecord` read the Space by nameID as
+ * the platform admin before the delete; its host account no longer lists it;
+ * and the same read then answers nothing (null, or exactly one
+ * FORBIDDEN_POLICY, which the server also gives for a Space the reader may
+ * not see — so that answer alone proves nothing).
  */
 export const expectSpaceGone = async (
   page: Page,
-  nameID: string
+  nameID: string,
+  created: { spaceId: string; accountId: string }
 ): Promise<void> => {
+  const hosted = must(
+    await readAccountResources(created.accountId),
+    'host account Spaces after delete'
+  ).lookup.account?.spaces.map(s => s.id);
+  expect(
+    hosted !== undefined && !hosted.includes(created.spaceId),
+    'the host account no longer lists the Space'
+  ).toBe(true);
   const lookup = await readSpaceByNameId(nameID);
   expect(
-    lookup.data?.lookupByName.space,
-    `Space '${nameID}' after delete`
-  ).toBeFalsy();
-  // Rebaseline candidate: ENTITY_NOT_FOUND is a server error code.
-  expect(JSON.stringify(lookup.error?.errors ?? lookup.error ?? '')).toContain(
-    'ENTITY_NOT_FOUND'
-  );
+    answeredNothing(lookup, data => data.lookupByName.space),
+    'the Space no longer reads back by its nameID'
+  ).toBe(true);
 
   // The client leaves the deleted Space's pages on its own (to /home) once
   // the delete is sent. `SpaceSettingsPage.deleteSpace` can return before

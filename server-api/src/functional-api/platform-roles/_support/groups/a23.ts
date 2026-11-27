@@ -10,6 +10,7 @@ import type { DisposableUser } from '../disposable-user';
 import { rawRead, rawRequest } from '../raw-request';
 import type { GroupModule, Headers, PerRole } from '../types';
 import { undoOnFailure } from '../undo-on-failure';
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 import {
   createOwnedOrganization,
   organizationAdminOf,
@@ -145,7 +146,13 @@ const stateOf = async (reader: string, id: string): Promise<string> =>
     )
   ).lookup.application.state;
 
-/** `true` only on the server's own not-found; any other error is thrown. */
+/**
+ * `true` when the read returns no entity, with no error or only the generic
+ * FORBIDDEN_POLICY code; any other error is thrown. That code is the same for
+ * a missing entity and a refused read, so `build` makes the same read with the
+ * same token first and requires the entity back: the generic answer after the
+ * delete then means the entity is gone rather than refused.
+ */
 const gone = async (
   reader: string,
   query: string,
@@ -156,7 +163,7 @@ const gone = async (
   }>(reader, query, { id });
   // Resolved: gone only if the lookup answered null.
   if (errors.length === 0) return Object.values(data?.lookup ?? {})[0] == null;
-  if (errors.every(e => e.extensions?.code === 'ENTITY_NOT_FOUND')) return true;
+  if (errors.every(e => e.extensions?.code === NEUTRAL_ERROR_CODE)) return true;
   throw new Error(`could not read ${id}: ${errors[0].message}`);
 };
 
@@ -260,6 +267,20 @@ export const A23_GROUP: GroupModule<A23> = {
         deleteEmailInvitations[role] = await emailInvitation();
       }
       const denyEmailInvitation = await emailInvitation();
+
+      // The reads the delete positives repeat in `verify`, made now with the
+      // same token (the role's): each must return its invitation.
+      const readable = async (role: PlatformRole, query: string, id: string) => {
+        const { data, errors } = await rawRequest(ctx.tokens[role], query, {
+          id,
+        });
+        if (errors.length > 0 || !JSON.stringify(data ?? null).includes(id))
+          throw new Error(`A23 build: ${role} cannot read an invitation`);
+      };
+      for (const [role, id] of Object.entries(deleteInvitations))
+        await readable(role as PlatformRole, INVITATION_EXISTS, id);
+      for (const [role, id] of Object.entries(deleteEmailInvitations))
+        await readable(role as PlatformRole, EMAIL_INVITATION_EXISTS, id);
 
       // applications
       const approveApplicant = await register('approve');
@@ -484,13 +505,9 @@ export const A23_GROUP: GroupModule<A23> = {
           },
           headers
         ),
-      verify: async ({ fx, role, caller }) =>
+      verify: async ({ ctx, fx, role }) =>
         expect(
-          await gone(
-            caller.token,
-            INVITATION_EXISTS,
-            fx.deleteInvitations[role]!
-          )
+          await gone(ctx.tokens[role], INVITATION_EXISTS, fx.deleteInvitations[role]!)
         ).toBe(true),
     },
 
@@ -504,13 +521,9 @@ export const A23_GROUP: GroupModule<A23> = {
           },
           headers
         ),
-      verify: async ({ fx, role, caller }) =>
+      verify: async ({ ctx, fx, role }) =>
         expect(
-          await gone(
-            caller.token,
-            EMAIL_INVITATION_EXISTS,
-            fx.deleteEmailInvitations[role]!
-          )
+          await gone(ctx.tokens[role], EMAIL_INVITATION_EXISTS, fx.deleteEmailInvitations[role]!)
         ).toBe(true),
     },
 

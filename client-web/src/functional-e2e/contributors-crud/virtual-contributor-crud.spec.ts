@@ -14,6 +14,7 @@ import {
   AiPersonaEngine,
   createCalloutWithData,
   createVirtualContributorWithData,
+  readAccountResources,
   readCalloutContributions,
   readCalloutsSetCallouts,
   readVirtualContributor,
@@ -28,7 +29,7 @@ import {
 } from '@alkemio/tests-lib';
 import path from 'path';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { must } from '../helpers/lib-actor.helper';
+import { answeredNothing, must } from '../helpers/lib-actor.helper';
 import {
   expectMutationAnswered,
   openPersonaPage,
@@ -597,7 +598,20 @@ test.describe('Contributors CRUD — Virtual Contributor', () => {
         .getByRole('main')
         .getByRole('link', { name: vcMain!.name, exact: true })
     ).toBeVisible();
+    // Gone, by three reads: the platform admin read the VC before the delete,
+    // its account no longer lists it, and the same read now finds nothing.
+    const listed = must(
+      await readAccountResources(scenario!.organization.accountId),
+      'account VCs after delete'
+    ).lookup.account?.virtualContributors.map(vc => vc.id);
+    expect(
+      listed !== undefined && !listed.includes(vcDoomed!.id),
+      'the account no longer lists the VC'
+    ).toBe(true);
     const after = await readVirtualContributor(vcDoomed!.id);
-    expect(after.error?.errors?.[0]?.code).toBe('ENTITY_NOT_FOUND');
+    expect(
+      answeredNothing(after, data => data.lookup.virtualContributor),
+      'the VC no longer reads back'
+    ).toBe(true);
   });
 });

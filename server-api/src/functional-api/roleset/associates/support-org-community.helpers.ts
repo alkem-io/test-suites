@@ -29,6 +29,10 @@ import {
 } from '@alkemio/tests-lib';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
+import {
   type AuditRecord,
   callAuditTool,
   MCP_AVAILABLE,
@@ -325,6 +329,12 @@ export const applicationState = async (
   return data.lookup.application;
 };
 
+/**
+ * The invitation's state, or null when the read answers only the generic
+ * FORBIDDEN_POLICY (a missing invitation and a refused read look the same).
+ * Any other error throws. A null is proof of deletion only where the same
+ * token read a state beforehand: that shows the token may read the invitation.
+ */
 export const invitationState = async (
   token: string,
   invitationId: string
@@ -335,7 +345,7 @@ export const invitationState = async (
     id: invitationId,
   });
   if (errors.length > 0) {
-    if (errors.every(e => e.extensions?.code === 'ENTITY_NOT_FOUND'))
+    if (errors.every(e => e.extensions?.code === NEUTRAL_ERROR_CODE))
       return null;
     throw new Error(`invitation read failed: ${errors[0].message}`);
   }
@@ -382,17 +392,18 @@ export const SELF_TARGET_TEXT = 'self-targeted platform-support action is not al
 type Refusal = Pick<RawResult<unknown>, 'errors'> & { data?: unknown };
 
 /**
- * A plain authorization refusal, named by the privilege it was refused on. The
- * message is the server's `Authorization: unable to grant '<privilege>'
- * privilege: ...`, so a different privilege or a different failure (not found,
- * validation) cannot pass.
+ * A plain refusal: the generic FORBIDDEN_POLICY with the generic sentence. It
+ * names no privilege, so a validation failure or another code cannot pass, but
+ * a refusal on a different privilege can; the positive controls beside these
+ * calls are what show the call itself is sound.
  */
-export const expectForbidden = (res: Refusal, privilege: string): void => {
+export const expectForbidden = (res: Refusal): void => {
   expect(res.errors.length).toBeGreaterThan(0);
-  expect(res.errors[0].extensions?.code).toEqual('FORBIDDEN_POLICY');
-  expect(res.errors[0].message).toMatch(
-    new RegExp(`Authorization: unable to grant '${privilege}' privilege`)
-  );
+  expect(res.errors[0].extensions?.code).toEqual(NEUTRAL_ERROR_CODE);
+  expect(
+    res.errors[0].message === NEUTRAL_ERROR_MESSAGE,
+    'refusal carries the generic sentence'
+  ).toBe(true);
 };
 
 /** The Support self-target refusal: its own code AND its own text. */

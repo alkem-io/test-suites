@@ -30,10 +30,10 @@ import {
   ALL_PUBLIC_COMBO,
   buildHierarchyScenarioConfig,
   cleanupScenarioSafely,
-  COMBINED_FLOW_REJECTION,
   comboLabel,
   expectCombinedAncestryGrant,
   HIERARCHY_TEST_TIMEOUT_MS,
+  isCombinedFlowRejection,
   isUserMemberOfRoleSet,
   PRIVACY_COMBOS,
   PrivacyCombo,
@@ -130,9 +130,10 @@ describe('Application hierarchy parity — combined flow (FR-019/SC-009)', () =>
               // US3 AS-1/3: a private ancestor -> the combined flow is
               // unavailable; the non-parent-member's apply attempt is
               // rejected the same way it is today ("join the parent first").
-              expect(applicationResult?.error?.errors?.[0]?.message).toMatch(
-                COMBINED_FLOW_REJECTION
-              );
+              expect(
+                isCombinedFlowRejection(applicationResult?.error?.errors?.[0]),
+                'the application is rejected by the combined flow'
+              ).toBe(true);
               expect(
                 applicationResult?.data?.applyForEntryRoleOnRoleSet?.id
               ).toBeFalsy();
@@ -167,9 +168,10 @@ describe('Application hierarchy parity — combined flow (FR-019/SC-009)', () =>
         );
 
         try {
-          expect(applicationResult?.error?.errors?.[0]?.message).toMatch(
-            COMBINED_FLOW_REJECTION
-          );
+          expect(
+            isCombinedFlowRejection(applicationResult?.error?.errors?.[0]),
+            'the application is rejected by the combined flow'
+          ).toBe(true);
           expect(
             applicationResult?.data?.applyForEntryRoleOnRoleSet?.id
           ).toBeFalsy();

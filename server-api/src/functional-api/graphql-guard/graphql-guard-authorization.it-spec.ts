@@ -20,6 +20,10 @@ import {
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { getGraphqlClient } from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 /**
  * GraphQL Guard Authorization Tests
@@ -351,10 +355,13 @@ describe('GraphQL Guard - Synchronous Authorization', () => {
       );
       // Non-existent space should result in an error response
       expect(response?.data?.lookup?.space).toBeUndefined();
-      expect(response?.error?.errors[0].message).toEqual(
-        "Unable to find Space using options 'undefined'"
-      );
-      expect(response?.error?.errors).toHaveLength(1);
+      expect(response?.error?.errors.map(e => e.code)).toEqual([
+        NEUTRAL_ERROR_CODE,
+      ]);
+      expect(
+        response?.error?.errors[0]?.message === NEUTRAL_ERROR_MESSAGE,
+        'the missing space is answered with the generic sentence'
+      ).toBe(true);
     });
 
     test('Forbidden access returns structured error with FORBIDDEN_POLICY code', async () => {

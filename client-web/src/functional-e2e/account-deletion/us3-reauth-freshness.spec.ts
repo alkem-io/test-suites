@@ -44,6 +44,7 @@ import {
   runTeardown,
   typedNameField,
   userExists,
+  userListed,
 } from './delete-account.helpers';
 
 /**
@@ -147,12 +148,15 @@ test.describe(
     });
 
     test('US3-AS3: confirming on the freshly re-authenticated session deletes the account', async () => {
+      // Positive control for the read-backs below.
+      expect(await userExists(staleSubject!.userId)).toBe(true);
       await typedNameField(stalePage).fill(staleSubject!.displayName);
       const confirmButton = confirmDeleteButton(stalePage);
       await expect(confirmButton).toBeEnabled();
       await confirmButton.click();
 
       await expect(logInHeaderLink(stalePage)).toBeVisible();
+      expect(await userListed(staleSubject!)).toBe(false);
       expect(await userExists(staleSubject!.userId)).toBe(false);
     });
   }

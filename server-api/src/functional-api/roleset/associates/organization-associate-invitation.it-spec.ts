@@ -53,6 +53,10 @@ import {
 } from '../application/application.request.params';
 import { getOrganizationAssociateEligibility } from '@functional-api/contributor-management/organization/organization.request.params';
 import { rawRead } from '../../platform-roles/_support/raw-request';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const message = 'Come associate with our organization';
 
@@ -499,9 +503,11 @@ describe('Organization associate invitations (US1)', () => {
         [],
         TestUser.GLOBAL_BETA_TESTER
       );
-      expect(res?.error?.errors?.[0]?.message).toMatch(
-        /Authorization: unable to grant/
-      );
+      expect(res?.error?.errors?.[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+      expect(
+        res?.error?.errors?.[0]?.message === NEUTRAL_ERROR_MESSAGE,
+        'refusal carries the generic sentence'
+      ).toBe(true);
       expect(res?.data?.inviteForEntryRoleOnRoleSet).toBeUndefined();
     } finally {
       await deleteUser(invitee.id);
@@ -853,9 +859,11 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
         'ACCEPT',
         TestUser.GLOBAL_BETA_TESTER
       );
-      expect(res?.error?.errors?.[0]?.message).toMatch(
-        /Authorization: unable to grant/
-      );
+      expect(res?.error?.errors?.[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+      expect(
+        res?.error?.errors?.[0]?.message === NEUTRAL_ERROR_MESSAGE,
+        'refusal carries the generic sentence'
+      ).toBe(true);
     } catch (error) {
       testError = error;
     }

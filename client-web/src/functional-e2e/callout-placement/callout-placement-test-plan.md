@@ -168,7 +168,7 @@ The API gates J6 deferred (test-suites#713) and the EXP-1 charter, on the local 
 | MV-1 | member (the author) `moveContributionToCallout` | MOVE_CONTRIBUTION on the response | `FORBIDDEN_POLICY`; still in the source, not in the target | MV-1c: admin, gone from the source with the same id, the sibling stays, present in the target |
 | CS-1 | admin `updateContributionsSortOrder` (reverse three responses) | UPDATE on the callout | stored order (`readCalloutContributionsOrder`) equals the reversed list | — (it is the positive) |
 | CS-2 | member `updateContributionsSortOrder` | UPDATE on the callout | `FORBIDDEN_POLICY`; order unchanged | CS-1 |
-| CS-3 | admin, list ending with a response id from another post | the service's lookup | `ENTITY_NOT_FOUND`; neither post's order changes | CS-1 |
+| CS-3 | admin, list ending with a response id from another post | the service's lookup | `FORBIDDEN_POLICY`; neither post's order changes | CS-1 |
 | EXP1-0…2 | admin moves a response into a draft post; member resolves the new and old url | READ on the holding post (url resolver) | new url `Forbidden`, no contribution id; old url resolves to the source post only | EXP1-C: setting a post to draft hides its responses by id |
 | EXP1-3/4 | member `lookup.contribution` / `lookup.post` on the moved response | READ on the response's / post's own policy | expected `FORBIDDEN_POLICY` | **skipped**: the member reads both, holding READ + CONTRIBUTE |
 

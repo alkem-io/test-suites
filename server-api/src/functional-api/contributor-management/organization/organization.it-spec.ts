@@ -19,6 +19,10 @@ import {
   deleteOrganization,
   updateOrganization,
 } from './organization.request.params';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
 const legalEntityName = 'Legal alkemio';
@@ -162,9 +166,11 @@ describe('Organization', () => {
       const mockId = '29d8b951-667e-429a-9e0e-89c6376ff08d';
       const res = await deleteOrganization(mockId);
 
-      expect(res.error?.errors[0].message).toBe(
-        `Unable to find Organization with ID: ${mockId}`
-      );
+      expect(res.error?.errors[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+      expect(
+        res.error?.errors[0]?.message === NEUTRAL_ERROR_MESSAGE,
+        'the answer carries the generic sentence'
+      ).toBe(true);
     });
   });
 });

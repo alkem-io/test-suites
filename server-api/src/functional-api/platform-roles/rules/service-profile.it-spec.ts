@@ -3,8 +3,8 @@ import { PLATFORM_ROLES } from '../capabilities.data';
 import { describeOutcome } from '../_support/outcome';
 import {
   assignRole,
+  expectGenericRefusal,
   orThrow,
-  rejectionOf,
   removeRole,
   revokeAllRoles,
   setServiceProfile,
@@ -22,8 +22,6 @@ import { mcpTest } from '../_support/mcp-client';
  * rule 3, to an unmarked one.
  */
 const SPACES_READER = 'PLATFORM_SPACES_READER';
-const RULE_3 =
-  'Rejected: platform-spaces-reader may only be granted to a service account';
 const OTHER_ROLES = PLATFORM_ROLES.filter(r => r !== 'PLATFORM_ROLES_ADMIN');
 
 let ctx: RunContext;
@@ -62,7 +60,8 @@ afterAll(async () => {
 describe('S1.marker-owned-by-roles-admin', () => {
   test('positive: Roles Admin sets then clears the marker; a cleared account can no longer be granted Spaces Reader', async () => {
     const unmarked = await spacesReaderGrant(fresh);
-    expect(rejectionOf(unmarked).message).toBe(RULE_3);
+    expect(unmarked.kind, describeOutcome(unmarked)).toBe('denied');
+    expectGenericRefusal(unmarked);
 
     const set = await setServiceProfile(rolesAdmin, fresh.id, true);
     expect(set.kind, describeOutcome(set)).toBe('ok');
@@ -73,10 +72,7 @@ describe('S1.marker-owned-by-roles-admin', () => {
     expect(cleared.kind, describeOutcome(cleared)).toBe('ok');
     const afterClear = await spacesReaderGrant(fresh);
     expect(afterClear.kind, describeOutcome(afterClear)).toBe('denied');
-    expect(rejectionOf(afterClear)).toMatchObject({
-      ruleId: 'spaces-reader-service-account',
-      message: RULE_3,
-    });
+    expectGenericRefusal(afterClear);
   });
 
   mcpTest(

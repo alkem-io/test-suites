@@ -39,6 +39,21 @@ import {
   RoleName,
   RoleSetInvitationResultType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
+
+/** The caller is refused with the generic code and sentence. */
+const expectRefused = (res: {
+  error?: { errors: Array<Record<string, unknown>> };
+}) => {
+  expect(res.error?.errors?.[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+  expect(
+    res.error?.errors?.[0]?.message === NEUTRAL_ERROR_MESSAGE,
+    'refusal carries the generic sentence'
+  ).toBe(true);
+};
 
 let invitationId = '';
 let invitationData: any;
@@ -232,17 +247,13 @@ describe('Invitations', () => {
   // Skipped until implemented
   test.skip('should throw error for quering not existing invitation', async () => {
     // Act
-    const invId = '8bf7752d-59bf-404a-97c8-e906d8377c37';
     const getInv = await getRoleSetInvitationsApplications(
       baseScenario.space.community.roleSetId
     );
 
     // Assert
     expect(getInv.status).toBe(200);
-    expect(getInv?.error?.errors?.[0]?.message).toBeDefined();
-    expect(getInv?.error?.errors?.[0]?.message).toContain(
-      `Invitation with ID ${invId} can not be found!`
-    );
+    expect(getInv?.error?.errors?.[0]?.code).toBe(NEUTRAL_ERROR_CODE);
   });
 
   test('should throw error for creating the same invitation twice', async () => {
@@ -560,27 +571,24 @@ describe('Invitations-flows', () => {
     expect(invitationsCount > 0).toBeTruthy();
     expect(roleData?.communityApplications).toHaveLength(applicationsCountOrig);
     expect(res.error?.errors?.[0]?.message).toBeDefined();
-    expect(res.error?.errors?.[0]?.message).toContain(
-      `Application not possible: An open invitation already exists for actor ${TestUserManager.users.nonSpaceMember.id} on RoleSet: ${baseScenario.space.community.roleSetId}.`
-    );
+    expect(
+      String(res.error?.errors?.[0]?.message).includes(
+        'Application not possible: An open invitation already exists for actor'
+      ),
+      'the application is refused because an invitation is open'
+    ).toBe(true);
   });
 });
 
 describe('Invitations - Authorization', () => {
   const invited = 'invited';
-  const authErrorUpdateInvitationMessage =
-    "Authorization: unable to grant 'update' privilege: event on invitation";
   // ACCEPT and REJECT are scoped tighter than the generic UPDATE privilege:
   // `eventOnInvitation` checks UPDATE first and then, for those two events
   // only, ROLESET_ENTRY_ROLE_INVITE_ACCEPT — the invited actor's own consent
-  // privilege. So which message a persona sees depends on which check it fails
-  // FIRST: someone with no rights over the invitation at all still fails on
-  // 'update', while a platform or Space admin (who does hold UPDATE) now gets
-  // past that and fails on the consent privilege instead.
-  const authErrorAcceptInvitationMessage =
-    "Authorization: unable to grant 'roleset-entry-role-invite-accept' privilege";
-  const authErrorCreateInvitationMessage =
-    "Authorization: unable to grant 'roleset-entry-role-invite' privilege";
+  // privilege. Someone with no rights over the invitation at all fails on
+  // UPDATE, while a platform or Space admin (who does hold UPDATE) gets past
+  // that and fails on the consent privilege instead. Both reach the caller as
+  // the same generic refusal.
   const accepted = 'accepted';
   afterEach(async () => {
     await removeRoleFromUser(
@@ -634,15 +642,15 @@ describe('Invitations - Authorization', () => {
     );
 
     test.each`
-      user                             | text
-      ${TestUser.SPACE_MEMBER}         | ${authErrorUpdateInvitationMessage}
-      ${TestUser.QA_USER}              | ${authErrorAcceptInvitationMessage}
-      ${TestUser.GLOBAL_ADMIN}         | ${authErrorAcceptInvitationMessage}
-      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${authErrorAcceptInvitationMessage}
-      ${TestUser.SPACE_ADMIN}          | ${authErrorAcceptInvitationMessage}
+      user
+      ${TestUser.SPACE_MEMBER}
+      ${TestUser.QA_USER}
+      ${TestUser.GLOBAL_ADMIN}
+      ${TestUser.GLOBAL_SUPPORT_ADMIN}
+      ${TestUser.SPACE_ADMIN}
     `(
-      'User: "$user", should get Error: "$text" to update invitation of another user',
-      async ({ user, text }) => {
+      'User: "$user", is refused when updating the invitation of another user',
+      async ({ user }) => {
         invitationData = await inviteForEntryRoleOnRoleSet(
           baseScenario.space.community.roleSetId,
           [TestUserManager.users.nonSpaceMember.id],
@@ -664,9 +672,8 @@ describe('Invitations - Authorization', () => {
         );
 
         // Assert
-        const errorMessage = result?.error?.errors?.[0]?.message;
-        if (errorMessage) {
-          expect(errorMessage).toContain(text);
+        if (result?.error) {
+          expectRefused(result);
         } else {
           // API behavior changed: action may succeed or be silently handled
           // Verify invitation was not accepted by the unauthorized user
@@ -713,14 +720,14 @@ describe('Invitations - Authorization', () => {
     // Arrange
     //
     test.each`
-      user                             | text
-      ${TestUser.GLOBAL_LICENSE_ADMIN} | ${authErrorCreateInvitationMessage}
-      ${TestUser.SPACE_MEMBER}         | ${authErrorCreateInvitationMessage}
-      ${TestUser.QA_USER}              | ${authErrorCreateInvitationMessage}
-      ${TestUser.NON_SPACE_MEMBER}     | ${authErrorCreateInvitationMessage}
+      user
+      ${TestUser.GLOBAL_LICENSE_ADMIN}
+      ${TestUser.SPACE_MEMBER}
+      ${TestUser.QA_USER}
+      ${TestUser.NON_SPACE_MEMBER}
     `(
-      'User: "$user", should get: "$text" to create invitation to another user',
-      async ({ user, text }) => {
+      'User: "$user", is refused when creating an invitation to another user',
+      async ({ user }) => {
         invitationData = await inviteForEntryRoleOnRoleSet(
           baseScenario.space.community.roleSetId,
           [TestUserManager.users.nonSpaceMember.id],
@@ -731,9 +738,8 @@ describe('Invitations - Authorization', () => {
         );
 
         // Assert
-        const errorMessage = invitationData?.error?.errors?.[0]?.message;
-        if (errorMessage) {
-          expect(errorMessage).toContain(text);
+        if (invitationData?.error) {
+          expectRefused(invitationData);
         } else {
           // API behavior changed: user can now create invitations
           // Verify invitation was created successfully

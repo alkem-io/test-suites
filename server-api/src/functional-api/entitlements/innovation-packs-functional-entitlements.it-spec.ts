@@ -143,9 +143,12 @@ describe('Functional tests - Innovation Pack', () => {
       expect(
         response?.data?.me.user?.account?.license?.availableEntitlements?.sort()
       ).toEqual(withoutPack);
-      expect(createPack?.error?.errors?.[0].message).toEqual(
-        `Unable to create account-innovation-pack on account: ${TestUserManager.users.nonSpaceMember.accountId}. Entitlement limit of 3 of type account-innovation-pack reached`
-      );
+      expect(
+        String(createPack?.error?.errors?.[0]?.message).includes(
+          'Entitlement limit of 3 of type account-innovation-pack reached'
+        ),
+        'the create is refused for the innovation pack entitlement limit'
+      ).toBe(true);
     });
   });
 });

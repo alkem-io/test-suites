@@ -31,7 +31,7 @@ import {
   type GraphqlActor,
 } from '@alkemio/tests-lib';
 import { loginViaCrd } from '../helpers/login.helper';
-import { sessionActor } from '../helpers/lib-actor.helper';
+import { sessionActor, userStillPresent } from '../helpers/lib-actor.helper';
 
 export const baseUrl = (
   process.env.ALKEMIO_BASE_URL || 'http://localhost:3000'
@@ -223,9 +223,10 @@ export const deleteUserAsGlobalAdmin = async (
 
 /**
  * Teardown: delete the user (with its sign-in identity) unless a walk already
- * did. "Already gone" (`ENTITY_NOT_FOUND`) is the expected outcome after a
- * green walk; anything else fails the hook, because a leaked user is a leaked
- * fixture on a shared environment.
+ * did. "Already gone" (`FORBIDDEN_POLICY` while the platform admin can no
+ * longer read the user) is the expected outcome after a green walk; anything
+ * else fails the hook, a refused delete included, because a leaked user is a
+ * leaked fixture on a shared environment.
  */
 export const deleteUserIfPresent = async (userId?: string): Promise<void> => {
   if (!userId) return;
@@ -235,7 +236,13 @@ export const deleteUserIfPresent = async (userId?: string): Promise<void> => {
   const errors: { extensions?: { code?: string } }[] =
     deletion.body?.errors ?? [];
   if (errors.length === 0 && deletion.status === 200) return;
-  if (errors.every(e => e.extensions?.code === 'ENTITY_NOT_FOUND')) return;
+  // The generic answer is "already gone" only if the platform admin can no
+  // longer read the user; a refused delete answers the same way.
+  if (
+    errors.every(e => e.extensions?.code === 'FORBIDDEN_POLICY') &&
+    !(await userStillPresent(userId))
+  )
+    return;
   throw new Error(
     `teardown: deleting user ${userId} failed (HTTP ${deletion.status}): ${deletion.text}`
   );

@@ -18,6 +18,7 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { TestUserManager } from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
+import { NOT_AVAILABLE_MESSAGE } from '../helpers/lib-actor.helper';
 import {
   DENIED_TOAST,
   DENIED_TOOLTIP,
@@ -162,9 +163,14 @@ test('6.1 denied: a server refusal after an allowed control shows the toast and 
       json: {
         errors: [
           {
-            message: 'Authorization: unable to grant \'grant\' privilege: assign role to User',
+            message: NOT_AVAILABLE_MESSAGE,
             path: ['assignRoleToUser'],
-            extensions: { code: 'FORBIDDEN', numericCode: 11102 },
+            extensions: {
+              code: 'FORBIDDEN_POLICY',
+              numericCode: 11104,
+              userMessage: 'userMessages.authorization.forbiddenPolicy',
+              errorId: '00000000-0000-4000-8000-000000000000',
+            },
           },
         ],
         data: null,

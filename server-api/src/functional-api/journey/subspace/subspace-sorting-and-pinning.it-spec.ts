@@ -18,6 +18,10 @@ import {
   getSpaceData,
   updateSpaceSettings,
 } from '../space/space.request.params';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 // Note: After running `pnpm --filter @alkemio/tests-lib run codegen` against a
 // server with the sorting/pinning schema, the `as any` casts below can be
@@ -194,7 +198,7 @@ describe('Subspace sorting and pinning', () => {
 
       // Assert
       expect(response.data?.updateSubspacePinned).toBeUndefined();
-      expect(response.error?.errors?.[0]?.code).toEqual('ENTITY_NOT_FOUND');
+      expect(response.error?.errors?.[0]?.code).toEqual(NEUTRAL_ERROR_CODE);
     });
 
     test('should return error when pinning with invalid subspaceID', async () => {
@@ -207,10 +211,11 @@ describe('Subspace sorting and pinning', () => {
 
       // Assert
       expect(response.data?.updateSubspacePinned).toBeUndefined();
-      expect(response.error?.errors?.[0]?.code).toEqual('ENTITY_NOT_FOUND');
-      expect(response.error?.errors?.[0]?.message).toContain(
-        'Subspace not found within parent Space'
-      );
+      expect(response.error?.errors?.[0]?.code).toEqual(NEUTRAL_ERROR_CODE);
+      expect(
+        response.error?.errors?.[0]?.message === NEUTRAL_ERROR_MESSAGE,
+        'the missing subspace is answered with the generic sentence'
+      ).toBe(true);
     });
   });
 

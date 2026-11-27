@@ -16,6 +16,10 @@ import {
 } from '../communication.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
+import {
   RoleName,
   SpacePrivacyMode,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -125,9 +129,11 @@ describe('Communities', () => {
       // expect the non space member to not have access to the community
       const error = nonSpaceDataReader.error?.errors[0];
       expect((error?.path as string[]).join('.')).toEqual('lookup.space.community');
-      expect(error?.message).toContain(
-        "Authorization: unable to grant 'read' privilege: authorize data loader result user"
-      );
+      expect(error?.code).toBe(NEUTRAL_ERROR_CODE);
+      expect(
+        error?.message === NEUTRAL_ERROR_MESSAGE,
+        'refusal carries the generic sentence'
+      ).toBe(true);
       expect(nonSpaceDataReader.data).toBeUndefined();
     });
 

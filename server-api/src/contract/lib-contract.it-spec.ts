@@ -45,6 +45,7 @@ import { deflateRawSync } from 'node:zlib';
 import nodePath from 'node:path';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { libBarrelExportNames, scanClientWebLibUsage } from './client-web-lib-usage';
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 
 const ROUND_TRIP_BUDGET_MS = 60_000;
 
@@ -751,7 +752,7 @@ describe('@contract content editing readers (W2 journey 5): whiteboard, memo, Co
     const unknown = await lib.readMemoContent('00000000-0000-4000-8000-000000000000');
     expect(unknown.data?.lookup.memo ?? null).toBeNull();
     // the lookup's own refusal, not a transport failure (which also leaves no data)
-    expect(unknown.error?.errors.map(e => e.code)).toEqual(['ENTITY_NOT_FOUND']);
+    expect(unknown.error?.errors.map(e => e.code)).toEqual([NEUTRAL_ERROR_CODE]);
   });
 
   test('LA-5/LA-6/LA-7 Collabora: entitle, create, read back the document and its stored text', async () => {

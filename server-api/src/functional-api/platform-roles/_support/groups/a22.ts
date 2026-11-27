@@ -15,6 +15,7 @@ import {
   organizationAdminOf,
   removeOwnedOrganization,
 } from './organization-content';
+import { deleteResidue } from '../still-present';
 
 /**
  * A22 — direct add without consent (027 Session 2026-10-08, operator ruling on
@@ -221,7 +222,7 @@ export const A22_GROUP: GroupModule<A22> = {
   },
 };
 
-/** Content Full Access deletes it; already gone is fine, anything else is residue. */
+/** Content Full Access deletes it; gone is fine, a refusal or any other error is residue. */
 const removeVirtualContributor = async (
   ctx: Parameters<GroupModule<A22>['teardown']>[0],
   id: string
@@ -231,8 +232,8 @@ const removeVirtualContributor = async (
     DELETE_VC,
     { id }
   );
-  const real = errors.filter(e => e.extensions?.code !== 'ENTITY_NOT_FOUND');
-  if (real.length > 0) {
-    throw new Error(`A22 VC ${id}: ${real[0].message}`);
+  const residue = await deleteResidue('vc', id, errors);
+  if (residue) {
+    throw new Error(`A22 VC ${id}: ${residue}`);
   }
 };

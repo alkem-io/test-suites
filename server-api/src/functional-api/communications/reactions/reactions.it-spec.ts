@@ -14,6 +14,10 @@ import {
   sendMessageToRoom,
 } from '../communication.params';
 import { addReaction, removeReaction } from './reactions.request.params';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
 let platformDiscussionId = '';
@@ -217,9 +221,11 @@ describe('Reaction - Discussion messages', () => {
       await getPlatformDiscussionsDataById(discussionId);
 
     // Assert
-    expect(resRemove.error?.errors[0].message).toContain(
-      `Authorization: unable to grant 'delete' privilege: room remove reaction`
-    );
+    expect(resRemove.error?.errors[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+    expect(
+      resRemove.error?.errors[0]?.message === NEUTRAL_ERROR_MESSAGE,
+      'refusal carries the generic sentence'
+    ).toBe(true);
     expect(
       discussionMessageData?.data?.platform?.forum?.discussion?.comments
         .messages[0].reactions

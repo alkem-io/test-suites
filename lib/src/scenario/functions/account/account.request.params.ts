@@ -26,7 +26,7 @@ export const readInnovationPackVisibility = (
 
 /**
  * One innovation pack as the server holds it: name, description, tags, store
- * listing, search visibility and provider. Answers ENTITY_NOT_FOUND once the
+ * listing, search visibility and provider. Answers FORBIDDEN_POLICY once the
  * pack is deleted.
  */
 export const readInnovationPack = (

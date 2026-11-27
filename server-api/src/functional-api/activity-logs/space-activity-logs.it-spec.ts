@@ -27,6 +27,10 @@ import {
   CalloutContributionType,
   RoleName,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -352,11 +356,11 @@ describe('Access to Activity logs - Space', () => {
     );
 
     test.each`
-      userRole                     | message
-      ${TestUser.NON_SPACE_MEMBER} | ${'Authorization'}
+      userRole
+      ${TestUser.NON_SPACE_MEMBER}
     `(
-      'User: "$userRole" get Error message: "$message", when intend to access Private space activity logs',
-      async ({ userRole, message }) => {
+      'User: "$userRole" is refused with the generic code, when intend to access Private space activity logs',
+      async ({ userRole }) => {
         // Act
         const resActivity = await getActivityLogOnCollaboration(
           baseScenario.space.collaboration.id,
@@ -365,7 +369,11 @@ describe('Access to Activity logs - Space', () => {
         );
 
         // Assert
-        expect(resActivity.error?.errors[0]?.message).toContain(message);
+        expect(resActivity.error?.errors[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+        expect(
+          resActivity.error?.errors[0]?.message === NEUTRAL_ERROR_MESSAGE,
+          'refusal carries the generic sentence'
+        ).toBe(true);
       }
     );
   });

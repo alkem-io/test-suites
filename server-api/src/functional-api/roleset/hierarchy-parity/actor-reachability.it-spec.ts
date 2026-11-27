@@ -30,8 +30,8 @@ import { eventOnRoleSetApplication } from '@functional-api/roleset/roleset-event
 import {
   buildHierarchyScenarioConfig,
   cleanupScenarioSafely,
-  COMBINED_FLOW_REJECTION,
   HIERARCHY_TEST_TIMEOUT_MS,
+  isCombinedFlowRejection,
   isUserMemberOfRoleSet,
 } from './hierarchy-parity.fixture';
 
@@ -121,9 +121,10 @@ describe('Actor-relative reachability — combined flow (workspace#017 / ADR 000
           scenario.subsubspace.community.roleSetId,
           APPLICANT
         );
-        expect(applicationResult?.error?.errors?.[0]?.message).toMatch(
-          COMBINED_FLOW_REJECTION
-        );
+        expect(
+          isCombinedFlowRejection(applicationResult?.error?.errors?.[0]),
+          'the application is rejected by the combined flow'
+        ).toBe(true);
         expect(
           applicationResult?.data?.applyForEntryRoleOnRoleSet?.id
         ).toBeFalsy();

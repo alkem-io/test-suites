@@ -28,6 +28,10 @@ import {
   inviteForEntryRoleOnRoleSet,
 } from '../../roleset/invitations/invitation.request.params';
 import { getRoleSetInvitationsApplications } from '../../roleset/application/application.request.params';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 import { deleteUser } from '../user/user.request.params';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import { getAccountMainEntities } from '@functional-api/account/account.params.request';
@@ -154,10 +158,10 @@ describe('Virtual Contributor', () => {
   test('should not delete user who hosts an account', async () => {
     const response = await deleteUser(TestUserManager.users.betaTester.id);
 
-    // Assert
-    expect(response.error?.errors[0].message).toContain(
-      'Unable to delete User: account contains one or more resources'
-    );
+    // Assert: refused with the generic answer, which no longer names the
+    // reason (the account still holds resources).
+    expect(response.error?.errors[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+    expect(response.error?.errors[0]?.message).toBe(NEUTRAL_ERROR_MESSAGE);
     await createUser({
       firstName: 'beta',
       lastName: 'tester',

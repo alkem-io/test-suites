@@ -1,5 +1,7 @@
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 import { rawRequest } from '../raw-request';
 import { registerUser } from '../users';
+import { deleteResidue } from '../still-present';
 
 /**
  * A user registered for ONE run and one purpose: a target that a positive may
@@ -20,7 +22,11 @@ export const registerDisposableUser = async (
 
 const USER_EXISTS = 'query($id: UUID!) { lookup { user(ID: $id) { id } } }';
 
-/** `false` only on the server's own not-found; any other error is thrown. */
+/**
+ * `false` on the generic FORBIDDEN_POLICY answer; any other error is thrown.
+ * That answer is the same for a missing user and a refused read, so `false`
+ * means "gone" only for a token that read the same user successfully before.
+ */
 export const userExists = async (
   token: string,
   id: string
@@ -29,7 +35,7 @@ export const userExists = async (
     lookup: { user: { id: string } | null };
   }>(token, USER_EXISTS, { id });
   if (errors.length === 0) return data?.lookup?.user?.id === id;
-  if (errors.every(e => e.extensions?.code === 'ENTITY_NOT_FOUND'))
+  if (errors.every(e => e.extensions?.code === NEUTRAL_ERROR_CODE))
     return false;
   throw new Error(`could not read user ${id}: ${errors[0].message}`);
 };
@@ -44,13 +50,18 @@ export const deleteDisposableUsers = async (
 ): Promise<void> => {
   const failures: string[] = [];
   for (const user of users) {
-    if (!(await userExists(usersAdminToken, user.id))) continue;
     const { errors } = await rawRequest(usersAdminToken, DELETE_USER, {
       id: user.id,
     });
-    if (errors.length > 0) {
-      failures.push(`${user.email}: ${errors[0].message}`);
-    }
+    // A generic answer is "already gone" only if the global admin can no
+    // longer read the user; otherwise the delete was refused.
+    // A failed presence read is recorded too, and the loop goes on, so one
+    // user never stops the others being removed.
+    const residue = await deleteResidue('user', user.id, errors).catch(
+      (error: unknown) =>
+        `presence check failed: ${error instanceof Error ? error.message : String(error)}`
+    );
+    if (residue) failures.push(`${user.email}: ${residue}`);
   }
   if (failures.length > 0) {
     throw new Error(

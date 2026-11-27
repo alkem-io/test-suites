@@ -535,6 +535,11 @@ describe('A-07 — revoke a pending user invitation (P1, use case)', () => {
     expect(await myOrganizationInvitationIds(invitee.token)).toContain(
       invitation.id
     );
+    // The organisation admin reads it before the revoke, so the generic answer
+    // the same read gets afterwards means the invitation is gone, not refused.
+    expect(await invitationState(orgAdmin().token, invitation.id)).toEqual(
+      'invited'
+    );
 
     await audit.rows(
       invitee.id,
@@ -852,8 +857,12 @@ describe('A-11 — organisation-admin actions write no Support row (P1, decision
       ]);
     });
 
-    // OA revokes a pending invitation.
+    // OA revokes a pending invitation. OA reads it first, so the generic
+    // answer the same read gets afterwards means it is gone, not refused.
     await audit.noRow(revoked.id, async () => {
+      expect(await invitationState(oa, revokedInvitation.id)).toEqual(
+        'invited'
+      );
       expectOk(
         await deleteUserInvitation(oa, revokedInvitation.id),
         'OA revokes'

@@ -39,6 +39,21 @@ import {
 } from '@functional-api/contributor-management/organization/organization.request.params';
 import { updateSpaceSettings } from '@functional-api/journey/space/space.request.params';
 import { SpacePrivacyMode } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
+
+/** The read is refused with the generic code and sentence. */
+const expectRefused = (
+  res: { error?: { errors: Array<Record<string, unknown>> } } | undefined
+) => {
+  expect(res?.error?.errors?.[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+  expect(
+    res?.error?.errors?.[0]?.message === NEUTRAL_ERROR_MESSAGE,
+    'refusal carries the generic sentence'
+  ).toBe(true);
+};
 
 let orgScenario: OrganizationWithSpaceModel;
 let spaceScenario: OrganizationWithSpaceModel;
@@ -185,7 +200,7 @@ describe('Pending-list confidentiality — organizations (US7-AS2, contract §6)
       orgScenario.organization.roleSetId,
       TestUser.QA_USER
     );
-    expect(asPlainUser?.error?.errors?.[0]?.message).toMatch(/Authorization: unable to grant/);
+    expectRefused(asPlainUser);
     expect(asPlainUser?.data).toBeUndefined();
 
     const asAdmin = await getOrganizationRoleSetPending(
@@ -210,7 +225,7 @@ describe('Pending-list confidentiality — organizations (US7-AS2, contract §6)
       orgScenario.organization.roleSetId,
       TestUser.QA_USER
     );
-    expect(asApplicant?.error?.errors?.[0]?.message).toMatch(/Authorization: unable to grant/);
+    expectRefused(asApplicant);
     expect(asApplicant?.data).toBeUndefined();
   });
 
@@ -257,7 +272,7 @@ describe('Pending-list confidentiality — a PUBLIC Space (US7-AS3, deliberate R
       roleSetId,
       TestUser.SPACE_MEMBER
     );
-    expect(asPlainMember?.error?.errors?.[0]?.message).toMatch(/Authorization: unable to grant/);
+    expectRefused(asPlainMember);
     expect(asPlainMember?.data).toBeUndefined();
 
     const asSpaceAdmin = await getOrganizationRoleSetPending(
@@ -282,7 +297,7 @@ describe('Pending-list confidentiality — a PUBLIC Space (US7-AS3, deliberate R
       getRoleSetPendingPlatformInvitations(roleSetId, TestUser.SPACE_MEMBER),
     ]);
     for (const read of reads) {
-      expect(read?.error?.errors?.[0]?.message).toMatch(/Authorization: unable to grant/);
+      expectRefused(read);
       expect(read?.data).toBeUndefined();
     }
   });
@@ -344,7 +359,7 @@ describe('Pending-list confidentiality — a PUBLIC Space (US7-AS3, deliberate R
       roleSetId,
       TestUser.SUBSPACE_ADMIN
     );
-    expect(applications?.error?.errors?.[0]?.message).toMatch(/Authorization: unable to grant/);
+    expectRefused(applications);
     expect(applications?.data).toBeUndefined();
   });
 
@@ -362,7 +377,7 @@ describe('Pending-list confidentiality — a PUBLIC Space (US7-AS3, deliberate R
       spaceScenario.space.community.roleSetId,
       TestUser.ORGANIZATION_ADMIN
     );
-    expect(asAccountAdmin?.error?.errors?.[0]?.message).toMatch(/Authorization: unable to grant/);
+    expectRefused(asAccountAdmin);
     expect(asAccountAdmin?.data).toBeUndefined();
   });
 });

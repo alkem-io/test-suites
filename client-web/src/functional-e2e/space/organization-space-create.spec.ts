@@ -186,7 +186,10 @@ test.describe('CREATE Space Operations (Organization Account)', () => {
     createdSpaceNameId = undefined;
 
     // 12. The delete took: gone on the server, and its About route no longer resolves.
-    await expectSpaceGone(page, spaceUrl);
+    await expectSpaceGone(page, spaceUrl, {
+      spaceId,
+      accountId: orgAccountId,
+    });
   });
 
   test('1.5 Create Space from Organization - Validation: Missing Required Fields (Title)', async ({
@@ -431,7 +434,7 @@ test.describe('CREATE Space Operations (Organization Account)', () => {
 
     // The server stored exactly what was typed (name AND tagline), as an L0
     // on the organization's account.
-    await expectCreatedSpaceRecord(spaceUrl, {
+    const spaceId = await expectCreatedSpaceRecord(spaceUrl, {
       displayName: spaceName,
       accountId: orgAccountId,
       tagline: 'E2E test space for automated testing',
@@ -452,6 +455,9 @@ test.describe('CREATE Space Operations (Organization Account)', () => {
     createdSpaceNameId = undefined;
 
     // The delete took: gone on the server, and its About route no longer resolves.
-    await expectSpaceGone(page, spaceUrl);
+    await expectSpaceGone(page, spaceUrl, {
+      spaceId,
+      accountId: orgAccountId,
+    });
   });
 });

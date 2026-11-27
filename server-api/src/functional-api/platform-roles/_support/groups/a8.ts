@@ -2,6 +2,7 @@ import { expect } from 'vitest';
 import { allowedRoles, CAPABILITIES } from '../../capabilities.data';
 import { rawRead, rawRequest } from '../raw-request';
 import type { GroupModule, Headers, PerRole } from '../types';
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 import {
   createCallout,
   createHubAsLicenseManager,
@@ -54,18 +55,28 @@ const READ = {
   hub: 'query($id: UUID!) { platform { innovationHub(id: $id) { id } } }',
 } as const;
 
-/** The reader MAY read it, so the only acceptable answer is "not found". */
+/**
+ * After the delete, the reader's read returns no entity and the generic code.
+ * `build` made the same read with the same token (Platform Content Full
+ * Access, the `reader` every spec passes) and it returned the entity with no
+ * error, so this token may read it: the generic answer now means the entity is
+ * gone rather than refused.
+ */
 const expectGone = async (
   reader: Headers,
   kind: keyof typeof READ,
   id: string
 ): Promise<void> => {
-  const { errors } = await rawRequest(
+  const { data, errors } = await rawRequest(
     reader.authorization.replace(/^Bearer /, ''),
     READ[kind],
     { id }
   );
-  expect(errors.map(e => e.extensions?.code)).toEqual(['ENTITY_NOT_FOUND']);
+  expect(
+    !JSON.stringify(data ?? null).includes(id),
+    'no entity is returned after the delete'
+  ).toBe(true);
+  expect(errors.map(e => e.extensions?.code)).toEqual([NEUTRAL_ERROR_CODE]);
 };
 
 const pairOf = async (
@@ -113,7 +124,7 @@ export const A8_GROUP: GroupModule<A8> = {
         name(`republished${i}`)
       );
 
-    return {
+    const fx: A8 = {
       organizationId,
       callout,
       contribution,
@@ -130,6 +141,17 @@ export const A8_GROUP: GroupModule<A8> = {
       republishedCalloutIds,
       publisherId: ctx.userIds[OWNER],
     };
+    // The read `expectGone` repeats after each delete, made now with the same
+    // token: the build fails unless it returns the entity with no error.
+    const reader = ctx.tokens.PLATFORM_CONTENT_FULL_ACCESS;
+    for (const kind of Object.keys(READ) as (keyof typeof READ)[]) {
+      const id = fx[kind].doomed;
+      const read = await rawRead(reader, READ[kind], { id });
+      if (!JSON.stringify(read).includes(id)) {
+        throw new Error(`A8 build: the reader cannot read the doomed ${kind}`);
+      }
+    }
+    return fx;
   },
 
   teardown: async (ctx, _sdk, fx) =>

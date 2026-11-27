@@ -23,7 +23,22 @@ import {
   removePlatformRole,
 } from '@functional-api/platform/authorization-platform-mutation';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 const uniqueId = UniqueIDGenerator.getID();
+
+/** The transfer is refused with the generic code and sentence. */
+const expectRefused = (res: {
+  error?: { errors: Array<Record<string, unknown>> };
+}) => {
+  expect(res.error?.errors[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+  expect(
+    res.error?.errors[0]?.message === NEUTRAL_ERROR_MESSAGE,
+    'refusal carries the generic sentence'
+  ).toBe(true);
+};
 
 const organizationName = 'Organization packs' + uniqueId;
 const orgNameId = 'org-packs' + uniqueId;
@@ -107,9 +122,7 @@ describe('Transfer innovation pack to Account', () => {
       TestUser.GLOBAL_BETA_TESTER
     );
     // Assert
-    expect(String(transferData.error?.errors?.[0]?.message)).toMatch(
-      /Authorization: unable to grant/
-    );
+    expectRefused(transferData);
     expect(transferData.data?.transferInnovationPackToAccount).toBeUndefined();
     expect(sourceAccountData.data?.lookup.account?.innovationPacks).toEqual(
       expect.arrayContaining([
@@ -142,9 +155,7 @@ describe('Transfer innovation pack to Account', () => {
     );
 
     // Assert
-    expect(transferData.error?.errors[0].message).toContain(
-      "unable to grant 'transfer-resource-accept' privilege: transfer Innovation Pack to target Account"
-    );
+    expectRefused(transferData);
     expect(targetAccountData.data?.lookup.account?.innovationPacks).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -187,9 +198,7 @@ describe('Transfer innovation pack to Account', () => {
     );
 
     // Assert
-    expect(transferData.error?.errors[0].message).toContain(
-      "unable to grant 'transfer-resource-accept' privilege: transfer Innovation Pack to target Account"
-    );
+    expectRefused(transferData);
     expect(targetAccountData.data?.lookup.account?.innovationPacks).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -232,9 +241,7 @@ describe('Transfer innovation pack to Account', () => {
     );
 
     // Assert
-    expect(transferData.error?.errors[0].message).toContain(
-      "unable to grant 'transfer-resource-offer' privilege: transfer Innovation Pack to another Account"
-    );
+    expectRefused(transferData);
     expect(targetAccountData.data?.lookup.account?.innovationPacks).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({

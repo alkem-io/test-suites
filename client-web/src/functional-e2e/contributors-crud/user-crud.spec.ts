@@ -249,6 +249,13 @@ test.describe('Contributors CRUD — User', () => {
         myOrganisations().getByRole('link', { name, exact: true })
       ).toBeVisible();
 
+      // Gone, by three reads: the platform admin reads the organisation now,
+      // its Organisations list drops the row (`deleteOrganizationInAdmin`),
+      // and the same read then finds nothing.
+      expect(
+        (await organizationIdByNameId(nameId)) === created.id,
+        'the organisation reads back before the delete'
+      ).toBe(true);
       const admin = await openPersonaPage(
         browser,
         TestUserManager.users.globalAdmin.email

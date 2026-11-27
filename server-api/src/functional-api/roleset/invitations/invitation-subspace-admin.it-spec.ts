@@ -20,6 +20,10 @@ import { getRoleSetInvitationsApplications } from '../application/application.re
 import { getSingleInvitationResult } from '../roleset.request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
 const message = 'Hello, feel free to join our community!';
@@ -200,10 +204,13 @@ describe('Subspace admin invitations - allowSubspaceAdminsToInviteMembers', () =
       );
 
       // Assert
-      expect(invitationData?.error?.errors?.[0]?.message).toBeDefined();
-      expect(invitationData?.error?.errors?.[0]?.message).toContain(
-        'roleset-entry-role-invite'
+      expect(invitationData?.error?.errors?.[0]?.code).toBe(
+        NEUTRAL_ERROR_CODE
       );
+      expect(
+        invitationData?.error?.errors?.[0]?.message === NEUTRAL_ERROR_MESSAGE,
+        'refusal carries the generic sentence'
+      ).toBe(true);
       expect(
         getInvAfter?.data?.lookup?.roleSet?.platformInvitations
       ).toHaveLength(0);
@@ -232,10 +239,13 @@ describe('Subspace admin invitations - allowSubspaceAdminsToInviteMembers', () =
         getInv?.data?.lookup?.space?.community?.roleSet.invitations;
 
       // Assert
-      expect(invitationData?.error?.errors?.[0]?.message).toBeDefined();
-      expect(invitationData?.error?.errors?.[0]?.message).toContain(
-        'roleset-entry-role-invite'
+      expect(invitationData?.error?.errors?.[0]?.code).toBe(
+        NEUTRAL_ERROR_CODE
       );
+      expect(
+        invitationData?.error?.errors?.[0]?.message === NEUTRAL_ERROR_MESSAGE,
+        'refusal carries the generic sentence'
+      ).toBe(true);
       expect(invitations).toHaveLength(0);
     });
   });

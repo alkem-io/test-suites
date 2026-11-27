@@ -89,16 +89,23 @@ const assignRoleToUserDirect = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-const ENTRY_ASSIGN_GAP = [
-  "roleset-entry-role-assign",
-  "not a member of parent roleSet",
-];
-// Slice B: the harness admin holds no GRANT on an organisation it is not an
-// admin of, so ADMIN / OWNER assignments there are refused on 'grant'.
-const ORGANISATION_GRANT_GAP =
-  /unable to grant 'grant' privilege: assign role to User: .* on roleSet of type: organization/;
-const ORGANISATION_REMOVE_GAP =
-  /unable to grant 'grant' privilege: remove role from User: .* on roleSet of type organization/;
+// The harness admin's refusals that the fallbacks below route around: the
+// entry-role assign gate, and (Slice B) GRANT on an organisation it is not an
+// admin of. Both reach the caller as the generic FORBIDDEN_POLICY, whose
+// message names no privilege. A member missing from the parent role set keeps
+// its own message.
+const REFUSED_CODE = "FORBIDDEN_POLICY";
+const NOT_PARENT_MEMBER = "not a member of parent roleSet";
+
+const isRefusal = (result: {
+  error?: { errors: Array<Record<string, unknown>> };
+}): boolean => {
+  const first = result?.error?.errors?.[0];
+  return (
+    first?.code === REFUSED_CODE ||
+    String(first?.message ?? "").includes(NOT_PARENT_MEMBER)
+  );
+};
 
 /**
  * Assign a role on a role set. workspace#027 Slice B: no actor can put a user
@@ -116,8 +123,11 @@ export const assignRoleToUser = async (
   userRole: GraphqlActor = TestUser.GLOBAL_ADMIN,
 ) => {
   const result = await assignRoleToUserDirect(userID, roleSetID, role, userRole);
-  const message = String(result?.error?.errors?.[0]?.message ?? "");
-  if (userRole !== TestUser.GLOBAL_ADMIN || !result?.error) {
+  if (
+    userRole !== TestUser.GLOBAL_ADMIN ||
+    !result?.error ||
+    !isRefusal(result)
+  ) {
     return result;
   }
   // Organisation role sets: ASSOCIATE / OWNER exist only there, and an
@@ -129,13 +139,6 @@ export const assignRoleToUser = async (
     role === RoleName.Associate ||
     role === RoleName.Owner ||
     (role === RoleName.Admin && !(await resolveSpaceOfRoleSet(roleSetID)));
-  const organisationGap =
-    organisationRole &&
-    (ENTRY_ASSIGN_GAP.some((gap) => message.includes(gap)) ||
-      ORGANISATION_GRANT_GAP.test(message));
-  if (!organisationGap && !ENTRY_ASSIGN_GAP.some((gap) => message.includes(gap))) {
-    return result;
-  }
   if (organisationRole) {
     const retried = await assignUserRoleAsOrganizationAdmin(
       roleSetID,
@@ -244,14 +247,12 @@ export const removeRoleFromUser = async (
       { authorization: `Bearer ${authToken}` },
     );
   const result = await graphqlErrorWrapper(callback, userRole);
-  const message = String(result?.error?.errors?.[0]?.message ?? "");
   // Slice B: same organisation gap as assignRoleToUser — the harness admin
   // holds no GRANT on an organisation it is not an admin of, so a cleanup
   // removal there is retried as one of the organisation's admins.
   if (
     userRole !== TestUser.GLOBAL_ADMIN ||
-    !result?.error ||
-    !ORGANISATION_REMOVE_GAP.test(message)
+    result?.error?.errors?.[0]?.code !== REFUSED_CODE
   ) {
     return result;
   }
@@ -294,10 +295,12 @@ export const assignRoleToOrganization = async (
     );
     return result;
   } catch (e) {
+    // The thrown text carries the serialized GraphQL errors; the entry-role
+    // gate's refusal is the generic code.
     const message = e instanceof Error ? e.message : String(e);
     if (
       userRole !== TestUser.GLOBAL_ADMIN ||
-      !message.includes("roleset-entry-role-assign-organization")
+      !message.includes(`"code":"${REFUSED_CODE}"`)
     ) {
       throw e;
     }

@@ -35,8 +35,9 @@ export async function deleteSpaceByNameId(nameID: string): Promise<void> {
       )
       .toBe(false);
   }
-  // Never created (the walk failed before the server saw the create).
-  if (JSON.stringify(lookup.error ?? '').includes('ENTITY_NOT_FOUND')) return;
+  // Never created (the walk failed before the server saw the create): the
+  // server answers a missing Space with FORBIDDEN_POLICY.
+  if (JSON.stringify(lookup.error ?? '').includes('FORBIDDEN_POLICY')) return;
   if (lookup.error) {
     throw new Error(`could not look up Space '${nameID}': ${JSON.stringify(lookup.error)}`);
   }
@@ -61,8 +62,9 @@ export async function deleteSpaceTree(spaceId: string): Promise<void> {
   const tree = await readSpaceSubspaceTree(spaceId);
   const root = tree.data?.lookup?.space;
   if (!root) {
-    // Gone already (not-found), or unreadable — only the latter is a problem.
-    const notFound = JSON.stringify(tree.error ?? '').includes('ENTITY_NOT_FOUND');
+    // Gone already (FORBIDDEN_POLICY, the server's answer for a missing
+    // Space), or unreadable — only the latter is a problem.
+    const notFound = JSON.stringify(tree.error ?? '').includes('FORBIDDEN_POLICY');
     if (tree.error && !notFound) {
       throw new Error(`could not read the subspace tree of ${spaceId}: ${JSON.stringify(tree.error)}`);
     }

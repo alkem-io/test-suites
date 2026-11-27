@@ -11,7 +11,7 @@ import {
   UniqueIDGenerator,
   type GraphqlActor,
 } from '@alkemio/tests-lib';
-import { must } from '../helpers/lib-actor.helper';
+import { must, userStillPresent } from '../helpers/lib-actor.helper';
 import { deleteSpaceTree } from '../helpers/space-cleanup.helper';
 import {
   deleteVcIfPresent,
@@ -154,8 +154,15 @@ export class FormFixtureLedger {
           async () => {
             const result = await deleteUser(id, TestUser.GLOBAL_ADMIN, true);
             const code = result.error?.errors?.[0]?.code;
-            if (result.error && code !== 'ENTITY_NOT_FOUND') {
+            if (result.error && code !== 'FORBIDDEN_POLICY') {
               throw new Error(JSON.stringify(result.error.errors));
+            }
+            // FORBIDDEN_POLICY is "already gone" only if the platform admin
+            // can no longer read the user; otherwise the delete was refused.
+            if (result.error && (await userStillPresent(id))) {
+              throw new Error(
+                `user ${email} is still there: the delete was refused`
+              );
             }
           },
         ]

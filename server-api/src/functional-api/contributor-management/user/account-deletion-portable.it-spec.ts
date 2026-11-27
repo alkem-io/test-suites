@@ -27,6 +27,10 @@
  * harness limitation, it is the fail-closed condition reached naturally.
  */
 import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
+import {
   createDisposableVerifiedUser,
   deleteUserTolerant,
   deleteUserWithOptions,
@@ -257,8 +261,9 @@ describe('account deletion — portable delta (054)', () => {
       expect(spaceCreation.body.data?.createSpace.id).toBeTruthy();
       spaceID = spaceCreation.body.data?.createSpace.id;
 
-      // Admin-branch deletion — pre-existing ForbiddenException, unchanged by
-      // this feature. Never ACCOUNT_DELETION_BLOCKED: that code is self-only.
+      // Admin-branch deletion — a ForbiddenException, which the server now
+      // answers with the generic refusal (workspace#110). Never
+      // ACCOUNT_DELETION_BLOCKED: that code is self-only.
       const deletion = await deleteUserWithOptions(subject.userId, {
         deleteIdentity: true,
       });
@@ -266,12 +271,10 @@ describe('account deletion — portable delta (054)', () => {
       expect(deletion.error).toBeDefined();
       const deletionError = deletion.error?.errors[0];
       expect(deletionError?.extensions).toBeDefined();
-      expect((deletionError?.extensions as { code?: string })?.code).not.toEqual(
-        'ACCOUNT_DELETION_BLOCKED'
+      expect((deletionError?.extensions as { code?: string })?.code).toEqual(
+        NEUTRAL_ERROR_CODE
       );
-      expect(String(deletionError?.message)).toContain(
-        'account contains one or more resources'
-      );
+      expect(deletionError?.message).toBe(NEUTRAL_ERROR_MESSAGE);
 
       // The subject still exists afterwards.
       const meProbe = await postGraphqlRaw<MeUserData>(

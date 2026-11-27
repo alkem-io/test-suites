@@ -83,7 +83,8 @@ const createSpaceOn = async (
 const deleteSpaceIfPresent = async (id: string): Promise<void> => {
   const result = await deleteSpace(id, { bearerToken: await getAdminToken() });
   if (!result.error) return;
-  if (result.error.errors.every(e => e.code === 'ENTITY_NOT_FOUND')) return;
+  // FORBIDDEN_POLICY: the Space is already gone.
+  if (result.error.errors.every(e => e.code === 'FORBIDDEN_POLICY')) return;
   throw new Error(`deleteSpace(${id}): ${JSON.stringify(result.error.errors)}`);
 };
 

@@ -42,6 +42,7 @@ import {
 } from './callout-reactions.request.params';
 import { getGraphqlClient } from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 
 // ---------------------------------------------------------------------------
 // Shared allow-list — must match the server constant (reaction.constants.ts).
@@ -558,6 +559,10 @@ describe('US4 — Lifecycle + authorization edges', () => {
       deletionTestCalloutId,
       TestUser.GLOBAL_ADMIN
     );
+    expect(
+      beforeSummary?.error === undefined,
+      'the callout is readable before the delete'
+    ).toBe(true);
     expect(beforeSummary?.data?.lookup?.callout?.reactionsSummary?.total).toBe(1);
 
     // Delete the callout — preserve its REAL id so we can prove its reactions are gone
@@ -566,16 +571,25 @@ describe('US4 — Lifecycle + authorization edges', () => {
     expect(deleted?.data?.deleteCallout?.id).toEqual(deletedCalloutId);
     deletionTestCalloutId = ''; // mark as already deleted for afterAll guard
 
-    // Querying the deleted callout by its real id fails with ENTITY_NOT_FOUND —
-    // lookup.callout resolves via getCalloutOrFail (the platform-wide lookup
-    // contract), so a deleted entity is unreachable rather than null. The
-    // harness wrapper surfaces that as an error with no data, which confirms
-    // no orphan reaction rows are observable through the summary.
+    // The same global-admin read that returned the callout and its reaction
+    // before the delete now returns no callout, and any error it carries has
+    // the generic code. A missing entity and a refused one answer alike, so
+    // the code alone proves nothing; the earlier successful read with the same
+    // token shows this caller may read the callout, so the generic answer
+    // afterwards means it is gone and no orphan reaction is observable
+    // through the summary.
     const afterSummary = await getCalloutReactionsSummary(
       deletedCalloutId,
       TestUser.GLOBAL_ADMIN
     );
-    expect(afterSummary?.data).toBeUndefined();
-    expect(afterSummary?.error?.errors?.[0]?.code).toEqual('ENTITY_NOT_FOUND');
+    expect(
+      afterSummary?.data?.lookup?.callout == null,
+      'no callout is returned after the delete'
+    ).toBe(true);
+    expect(
+      (afterSummary?.error?.errors ?? [])
+        .map(e => e.code)
+        .filter(code => code !== NEUTRAL_ERROR_CODE)
+    ).toEqual([]);
   });
 });

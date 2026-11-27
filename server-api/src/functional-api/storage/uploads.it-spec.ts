@@ -28,6 +28,7 @@ import {
   TestUser,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
 const isCI = !!process.env.CI;
@@ -99,7 +100,7 @@ describe('Upload document', () => {
   afterAll(async () => {
     // 'file is available after releted reference is deleted' removes the shared
     // reference as part of its scenario and clears refId; skip the re-delete so
-    // the run log stays free of expected ENTITY_NOT_FOUND noise.
+    // the run log stays free of an expected error for a missing reference.
     if (refId) {
       await deleteReferenceOnProfile(refId);
     }
@@ -181,12 +182,26 @@ describe('Upload document', () => {
     documentEndPoint = res.data?.uploadFileOnReference?.uri || 'not found';
     documentId = getLastPartOfUrl(documentEndPoint);
 
-    await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
+    // The first delete, as the global admin, returns the document with no
+    // error, so this token may act on it. The same delete with the same token
+    // then returns no document and only the generic code: a missing document
+    // and a refused one answer alike, so it is the earlier success that makes
+    // this answer mean "already gone".
+    const firstDelete = await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
+    expect(
+      firstDelete.error === undefined &&
+        firstDelete.data?.deleteDocument?.id === documentId,
+      'the document is deleted by the first call'
+    ).toBe(true);
     const resDelete = await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
 
-    expect(resDelete.error?.errors[0].message).toContain(
-      'Not able to locate document with the specified ID'
-    );
+    expect(
+      resDelete.data?.deleteDocument == null,
+      'no document is returned by the second delete'
+    ).toBe(true);
+    expect(resDelete.error?.errors.map(e => e.code)).toEqual([
+      NEUTRAL_ERROR_CODE,
+    ]);
   });
 
   if (!isCI) {
@@ -388,19 +403,19 @@ describe('Upload visual tests', () => {
       visualId
     );
 
+    // The server no longer returns the size rule in `details`; the refusal
+    // is its code, and the visual keeps the image it had.
     expect(res?.errors).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           message: 'Upload on visual failed!',
           extensions: expect.objectContaining({
-            details: expect.objectContaining({
-              message:
-                "Upload image has a width resolution of '1299' which is not in the allowed range of 190 - 410 pixels!",
-            }),
+            code: 'STORAGE_UPLOAD_FAILED',
           }),
         }),
       ])
     );
+    expect(await getVisualUri(baseScenario.organization.id)).toEqual(visualUri);
   });
   if (!isCI) {
     test('read uploaded visual', async () => {

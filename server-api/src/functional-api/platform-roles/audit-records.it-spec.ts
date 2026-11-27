@@ -6,6 +6,10 @@ import {
   deleteDisposableUser,
 } from './_support/disposable-user';
 import { rawRead, rawRequest } from './_support/raw-request';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 /**
  * What the platform WRITES to its audit trail, read back without a database:
@@ -80,9 +84,13 @@ describe('AR2.self-affecting-predicate', () => {
         platformRole('assign', 'PLATFORM_SUPPORT'),
         { id: operator.id }
       );
-      expect(selfGrant.errors[0]?.message).toMatch(
-        /Rejected: self-assignment of role .* is blocked/
-      );
+      // The refusal is the generic one; which rule refused is read from the
+      // audit record below.
+      expect(selfGrant.errors[0]?.extensions?.code).toBe(NEUTRAL_ERROR_CODE);
+      expect(
+        selfGrant.errors[0]?.message === NEUTRAL_ERROR_MESSAGE,
+        'refusal carries the generic sentence'
+      ).toBe(true);
       await body(operator);
     } finally {
       for (const role of roles) {

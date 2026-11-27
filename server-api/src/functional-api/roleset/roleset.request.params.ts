@@ -15,6 +15,7 @@ import {
   graphqlErrorWrapper,
   GraphqlReturnWithError,
 } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 
 export const getUserCommunityPrivilege = async (
   roleSetId: string,
@@ -211,10 +212,11 @@ export const lookupPlatformInvitationCreatedBy = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-/** True when the platform invitation no longer resolves: the lookup answers
- * entity-not-found, or it resolves to null. Any other error (an authorization
- * refusal on a row that survived without its policy, a transient failure) is
- * NOT proof the row is gone. */
+/** True when the platform invitation no longer resolves: the lookup returns no
+ * invitation, and every error it carries is the generic FORBIDDEN_POLICY. Any
+ * other error (a transient failure) is NOT proof the row is gone. A missing row
+ * and a refused read give the same answer, so this proves deletion only where
+ * the same lookup with the same token returned the invitation beforehand. */
 export const isPlatformInvitationGone = (
   res:
     | {
@@ -222,15 +224,9 @@ export const isPlatformInvitationGone = (
         error?: { errors: Array<Record<string, unknown>> };
       }
     | undefined
-): boolean => {
-  if (res?.error) {
-    const first = res.error.errors?.[0] as
-      | { extensions?: { code?: string } }
-      | undefined;
-    return first?.extensions?.code === 'ENTITY_NOT_FOUND';
-  }
-  return !res?.data?.lookup?.platformInvitation;
-};
+): boolean =>
+  !res?.data?.lookup?.platformInvitation &&
+  (res?.error?.errors ?? []).every(e => e.code === NEUTRAL_ERROR_CODE);
 
 /** Whether a platform_invitation row with this id exists in the harness
  * database; undefined when the harness cannot reach Postgres (remote runs). */

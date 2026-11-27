@@ -146,7 +146,7 @@ Spec: A5 · SC-002 · workspace#038
 
 | Capability | Allowed | Positive — must observe | Positive | Negative |
 |---|---|---|---|---|
-| `deleteUser` | users admin | **effect** — re-reading the disposable user returns not-found | ✅ automated | ✅ automated |
+| `deleteUser` | users admin | **effect** — re-reading the disposable user returns no entity and the generic code (the same read returned it before the delete) | ✅ automated | ✅ automated |
 | `adminIdentityDeleteKratosIdentity` | users admin | **effect** — returns true for a disposable identity registered for this call; its login then fails | ✅ automated — targets a disposable identity registered for this one call | ✅ automated |
 | `adminUserAccountDelete` | users admin | **effect** — returns the target id; the user can no longer sign in; the platform profile STILL exists (the resolver removes the sign-in account only) | ✅ automated | ✅ automated |
 | `mcpApiKeys` | users admin | **returns-data** — the list contains the known fixture key of the target user | ✅ automated | ✅ automated |
@@ -183,11 +183,11 @@ Spec: A8 · FR-004
 
 | Capability | Allowed | Positive — must observe | Positive | Negative |
 |---|---|---|---|---|
-| `deleteCallout` | content full access | **effect** — re-reading the deleted entity returns not-found | ✅ automated | ✅ automated |
-| `deleteContribution` | content full access | **effect** — re-reading the deleted entity returns not-found | ✅ automated | ✅ automated |
-| `deleteSpace` | content full access | **effect** — re-reading the deleted entity returns not-found | ✅ automated | ✅ automated |
-| `deleteInnovationPack` | content full access | **effect** — re-reading the deleted entity returns not-found | ✅ automated | ✅ automated |
-| `deleteInnovationHub` | content full access | **effect** — re-reading the deleted entity returns not-found | ✅ automated | ✅ automated |
+| `deleteCallout` | content full access | **effect** — re-reading the deleted entity returns no entity and the generic code (the same read returned it before the delete) | ✅ automated | ✅ automated |
+| `deleteContribution` | content full access | **effect** — re-reading the deleted entity returns no entity and the generic code (the same read returned it before the delete) | ✅ automated | ✅ automated |
+| `deleteSpace` | content full access | **effect** — re-reading the deleted entity returns no entity and the generic code (the same read returned it before the delete) | ✅ automated | ✅ automated |
+| `deleteInnovationPack` | content full access | **effect** — re-reading the deleted entity returns no entity and the generic code (the same read returned it before the delete) | ✅ automated | ✅ automated |
+| `deleteInnovationHub` | content full access | **effect** — re-reading the deleted entity returns no entity and the generic code (the same read returned it before the delete) | ✅ automated | ✅ automated |
 | `updateCalloutPublishInfo` | content full access, resource admin | **effect** — publisher / published date changed on re-read | ✅ automated | ✅ automated |
 
 ### A9 — Move resources between accounts / space levels
@@ -375,8 +375,8 @@ Spec: 090 · FR-005 · FR-009 · FR-011
 | `removeRoleFromUser` (ASSOCIATE of an organisation (removes the member)) | support | **effect** — the target is in no organisation role any more, read back | ✅ automated | ✅ automated |
 | `eventOnApplication` (APPROVE an application to an organisation) | support | **effect** — the application is approved and the applicant is an ASSOCIATE of the organisation, read back | ✅ automated | ✅ automated |
 | `eventOnApplication` (REJECT an application to an organisation) | support, *content full access* | **effect** — the application state is rejected, read back | ✅ automated | ✅ automated |
-| `deleteInvitation` (a pending user invitation of an organisation) | support, *content full access* | **effect** — the invitation no longer resolves (entity not found) | ✅ automated | ✅ automated |
-| `deletePlatformInvitation` (an email invitation of an organisation) | support, *content full access* | **effect** — the email invitation no longer resolves (entity not found) | ✅ automated | ✅ automated |
+| `deleteInvitation` (a pending user invitation of an organisation) | support, *content full access* | **effect** — the invitation no longer resolves (the role read it before the delete; after it, no invitation and the generic code) | ✅ automated | ✅ automated |
+| `deletePlatformInvitation` (an email invitation of an organisation) | support, *content full access* | **effect** — the email invitation no longer resolves (the role read it before the delete; after it, no invitation and the generic code) | ✅ automated | ✅ automated |
 | `applications` (RoleSet.applications of an organisation) | support | **returns-data** — the list contains the known pending application | ✅ automated | ✅ automated |
 
 ## Per role — what it can do, and what it is refused
@@ -458,16 +458,16 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A7.updateTemplateFromSpace` | *accepted exception* | **effect** — a marker callout added to the source space AFTER the template was cut appears in the template content space |
 | `A7.deleteTemplate` | *accepted exception* | **effect** — the template is no longer listed |
 | `A7.updateCallout` | *accepted exception* | **effect** — the framing display name of a CALLOUT TEMPLATE inside the organization pack changed on re-read (the isTemplate branch) |
-| `A8.deleteCallout` | owner | **effect** — re-reading the deleted entity returns not-found |
-| `A8.deleteContribution` | owner | **effect** — re-reading the deleted entity returns not-found |
-| `A8.deleteSpace` | owner | **effect** — re-reading the deleted entity returns not-found |
-| `A8.deleteInnovationPack` | owner | **effect** — re-reading the deleted entity returns not-found |
-| `A8.deleteInnovationHub` | owner | **effect** — re-reading the deleted entity returns not-found |
+| `A8.deleteCallout` | owner | **effect** — re-reading the deleted entity returns no entity and the generic code (the same read returned it before the delete) |
+| `A8.deleteContribution` | owner | **effect** — re-reading the deleted entity returns no entity and the generic code (the same read returned it before the delete) |
+| `A8.deleteSpace` | owner | **effect** — re-reading the deleted entity returns no entity and the generic code (the same read returned it before the delete) |
+| `A8.deleteInnovationPack` | owner | **effect** — re-reading the deleted entity returns no entity and the generic code (the same read returned it before the delete) |
+| `A8.deleteInnovationHub` | owner | **effect** — re-reading the deleted entity returns no entity and the generic code (the same read returned it before the delete) |
 | `A8.updateCalloutPublishInfo` | owner | **effect** — publisher / published date changed on re-read |
 | `A16.createPlatformRolesAccess` | *accepted exception* | **returns-data** — reads the callouts of a PRIVATE space it is not a member of (the same set the host sees) |
 | `A23.eventOnApplication#reject` (REJECT an application to an organisation) | *accepted exception* | **effect** — the application state is rejected, read back |
-| `A23.deleteInvitation` (a pending user invitation of an organisation) | *accepted exception* | **effect** — the invitation no longer resolves (entity not found) |
-| `A23.deletePlatformInvitation` (an email invitation of an organisation) | *accepted exception* | **effect** — the email invitation no longer resolves (entity not found) |
+| `A23.deleteInvitation` (a pending user invitation of an organisation) | *accepted exception* | **effect** — the invitation no longer resolves (the role read it before the delete; after it, no invitation and the generic code) |
+| `A23.deletePlatformInvitation` (an email invitation of an organisation) | *accepted exception* | **effect** — the email invitation no longer resolves (the role read it before the delete; after it, no invitation and the generic code) |
 
 **Cannot (107)** — by group:
 
@@ -669,7 +669,7 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A2.removePlatformRoleFromOrganization` | owner | **effect** — holder list no longer shows the target after remove |
 | `A4.adminUserEmailChange` | owner | **effect** — the user record reports the NEW email on re-read |
 | `A4.adminUserEmailChangeDriftResolve` | owner | **reached-resolver** — no drift exists to resolve, so the oracle is the resolver-level "no drift" answer - never an authorization error |
-| `A5.deleteUser` | owner | **effect** — re-reading the disposable user returns not-found |
+| `A5.deleteUser` | owner | **effect** — re-reading the disposable user returns no entity and the generic code (the same read returned it before the delete) |
 | `A5.adminIdentityDeleteKratosIdentity` | owner | **effect** — returns true for a disposable identity registered for this call; its login then fails |
 | `A5.adminUserAccountDelete` | owner | **effect** — returns the target id; the user can no longer sign in; the platform profile STILL exists (the resolver removes the sign-in account only) |
 | `A5.mcpApiKeys` | owner | **returns-data** — the list contains the known fixture key of the target user |
@@ -736,8 +736,8 @@ One section per role, in the order of `roles/*.it-spec.ts`. **Can** lists every 
 | `A23.removeRoleFromUser` (ASSOCIATE of an organisation (removes the member)) | owner | **effect** — the target is in no organisation role any more, read back |
 | `A23.eventOnApplication` (APPROVE an application to an organisation) | owner | **effect** — the application is approved and the applicant is an ASSOCIATE of the organisation, read back |
 | `A23.eventOnApplication#reject` (REJECT an application to an organisation) | owner | **effect** — the application state is rejected, read back |
-| `A23.deleteInvitation` (a pending user invitation of an organisation) | owner | **effect** — the invitation no longer resolves (entity not found) |
-| `A23.deletePlatformInvitation` (an email invitation of an organisation) | owner | **effect** — the email invitation no longer resolves (entity not found) |
+| `A23.deleteInvitation` (a pending user invitation of an organisation) | owner | **effect** — the invitation no longer resolves (the role read it before the delete; after it, no invitation and the generic code) |
+| `A23.deletePlatformInvitation` (an email invitation of an organisation) | owner | **effect** — the email invitation no longer resolves (the role read it before the delete; after it, no invitation and the generic code) |
 | `A23.applications` (RoleSet.applications of an organisation) | owner | **returns-data** — the list contains the known pending application |
 
 **Cannot (103)** — by group:

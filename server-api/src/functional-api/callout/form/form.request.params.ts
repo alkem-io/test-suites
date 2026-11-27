@@ -83,7 +83,6 @@ export const errorClass = (
 };
 
 const DENIED_CLASSES = new Set([
-  'FORBIDDEN',
   'FORBIDDEN_POLICY',
   'UNAUTHENTICATED',
   'UNAUTHORIZED',

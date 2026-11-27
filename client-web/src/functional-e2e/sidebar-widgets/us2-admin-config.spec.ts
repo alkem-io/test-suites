@@ -29,6 +29,7 @@ import {
   type SidebarFixture,
 } from './sidebar-widgets.helpers';
 import { keyboardDrag } from './subspace-sidebar.helpers';
+import { NOT_AVAILABLE_MESSAGE } from '../helpers/lib-actor.helper';
 
 // Admin sessions must never reach the public trace/video archive (see us2-expanded-card-switch).
 test.use({ trace: 'off', video: 'off' });
@@ -262,12 +263,11 @@ test.describe('@forge-acceptance US2 — admin sidebar configuration (Space Sett
       innovationFlowStateID: home.id,
       settings: { sidebar: [SidebarWidget.Intent] },
     });
-    expect(res.error?.errors[0]).toEqual(
-      expect.objectContaining({
-        code: 'FORBIDDEN_POLICY',
-        message: expect.stringContaining("unable to grant 'update' privilege"),
-      })
-    );
+    expect(res.error?.errors[0]?.code).toBe('FORBIDDEN_POLICY');
+    expect(
+      res.error?.errors[0]?.message === NOT_AVAILABLE_MESSAGE,
+      'the refusal carries the generic sentence'
+    ).toBe(true);
     const [homeAfter] = await readStates(f.scenario.space.id);
     expect(homeAfter.settings.sidebar).toEqual(home.settings.sidebar);
   });

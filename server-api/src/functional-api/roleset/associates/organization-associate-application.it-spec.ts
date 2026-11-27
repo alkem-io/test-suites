@@ -32,6 +32,10 @@ import {
 import { inviteForEntryRoleOnRoleSet } from '../invitations/invitation.request.params';
 import { getSingleInvitationResult } from '../roleset.request.params';
 import { RoleSetInvitationResultType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const note = 'note';
 
@@ -260,9 +264,11 @@ describe('Organization associate applications (US3)', () => {
         'APPROVE',
         TestUser.GLOBAL_BETA_TESTER
       );
-      expect(res?.error?.errors?.[0]?.message).toMatch(
-        /Authorization: unable to grant/
-      );
+      expect(res?.error?.errors?.[0]?.code).toBe(NEUTRAL_ERROR_CODE);
+      expect(
+        res?.error?.errors?.[0]?.message === NEUTRAL_ERROR_MESSAGE,
+        'refusal carries the generic sentence'
+      ).toBe(true);
     } finally {
       await deleteApplication(applicationId!).catch(() => undefined);
     }

@@ -9,6 +9,10 @@ import {
 import { describeOutcome } from './_support/outcome';
 import { rawOutcome } from './_support/raw-outcome';
 import { rawRead, rawRequest } from './_support/raw-request';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 /**
  * Who may read WHO HOLDS a role. Two families, four fields:
@@ -171,11 +175,12 @@ describe('H2.mixed-request-fails-closed', () => {
         QUERY[field](`${FEATURE_LIST_ROLE}, ${PLATFORM_LIST_ROLE}`)
       );
       expect(mixed.errors.map(e => [e.extensions?.code, e.path])).toEqual([
-        ['FORBIDDEN', ['platform', 'roleSet', field]],
+        [NEUTRAL_ERROR_CODE, ['platform', 'roleSet', field]],
       ]);
-      expect(mixed.errors[0].message).toMatch(
-        /platform-role-holders-read required to read holders of platform-support/
-      );
+      expect(
+        mixed.errors[0].message === NEUTRAL_ERROR_MESSAGE,
+        'refusal carries the generic sentence'
+      ).toBe(true);
       expect(idsIn(mixed.data, field)).toEqual([]);
     });
   }

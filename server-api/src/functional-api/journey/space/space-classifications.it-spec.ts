@@ -31,6 +31,10 @@ import {
   updateClassificationEntrySelection,
   updateClassificationTemplateValues,
 } from './space-classifications.request.params';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
 let baseScenario: OrganizationWithSpaceModel | undefined;
@@ -174,10 +178,11 @@ describe('Space classifications — authorization (FR-014a)', () => {
         expect(
           res.errors.map(e => e.extensions?.code),
           operation
-        ).toEqual(['FORBIDDEN_POLICY']);
-        expect(res.errors[0].message, operation).toContain(
-          "unable to grant 'update' privilege"
-        );
+        ).toEqual([NEUTRAL_ERROR_CODE]);
+        expect(
+          res.errors[0].message === NEUTRAL_ERROR_MESSAGE,
+          `${operation} is refused with the generic sentence`
+        ).toBe(true);
       }
       expect(await spaceClassificationsOf(spaceId)).toEqual(before);
     }
@@ -314,7 +319,7 @@ describe('Space classifications — write rules (FR-002a, FR-011c, FR-012c)', ()
     ).toEqual([original.displayLabel]);
   });
 
-  test('narrowing multi→single with two values selected is rejected atomically and names the selection', async () => {
+  test('narrowing multi→single with two values selected is rejected atomically', async () => {
     const entry = await mustCreate('narrow', ['Red', 'Blue']);
     const both = entry.values.map(v => v.id);
     expect(
@@ -325,9 +330,6 @@ describe('Space classifications — write rules (FR-002a, FR-011c, FR-012c)', ()
     });
     expect(res.data).toBeNull();
     expect(res.errors.map(e => e.extensions?.code)).toEqual(['BAD_USER_INPUT']);
-    expect(res.errors[0].extensions?.details).toEqual({
-      selectedValueIDs: both,
-    });
     const stored = (await spaceClassificationsOf(spaceId)).find(
       e => e.id === entry.id
     );
@@ -382,7 +384,6 @@ describe('Space classifications — value ids (FR-002c, FR-010c, SC-007)', () =>
     );
     expect(res.data).toBeNull();
     expect(res.errors.map(e => e.extensions?.code)).toEqual(['BAD_USER_INPUT']);
-    expect(res.errors[0].extensions?.details).toEqual({ id: 'same' });
   });
 
   test('two Spaces that add the same template hold the template’s value ids verbatim and in order', async () => {

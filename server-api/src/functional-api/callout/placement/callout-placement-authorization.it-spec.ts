@@ -51,6 +51,10 @@ import {
   updateContributionsSortOrder,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import {
+  NEUTRAL_ERROR_CODE,
+  NEUTRAL_ERROR_MESSAGE,
+} from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
 let baseScenario: OrganizationWithSpaceModel | undefined;
@@ -172,30 +176,38 @@ const responseOrder = async (calloutId: string): Promise<string[]> => {
     .map(c => c.id);
 };
 
+/**
+ * The member reads the target before it is refused, so the generic refusal
+ * below means "may not change it", not "may not see it".
+ */
+const expectMemberReads = (res: {
+  error?: unknown;
+  data?: unknown;
+}) => {
+  expect(res.error, JSON.stringify(res.error)).toBeUndefined();
+  expect(res.data).toBeTruthy();
+};
+
 const errorCodes = (res: {
   error?: { errors: Array<Record<string, unknown>> };
 }) => (res.error?.errors ?? []).map(e => e.code);
 
-/** The server's lowercase privilege names, as they appear in a denial message. */
-const UPDATE = 'update';
-const MOVE_CONTRIBUTION = 'move-contribution';
-
 /**
- * The refusal names the privilege the gate checks. Every grantAccessOrFail
- * denial carries FORBIDDEN_POLICY, including a READ refusal of a member persona
- * whose cached credentials are stale (harness.md, callouts serial note), so the
- * code alone cannot tell "not allowed to change" from "not a member". The
- * message is `Authorization: unable to grant '<privilege>' privilege: ...`
- * (server authorization.service.ts; precedent: roleset/associates
- * support-org-community.helpers.ts › expectForbidden).
+ * The refusal is the generic one: FORBIDDEN_POLICY with the generic sentence,
+ * which names no privilege. So the refusal alone cannot tell "not allowed to
+ * change" from "not a member" (a member persona whose cached credentials are
+ * stale is refused READ the same way — harness.md, callouts serial note); the
+ * positive control beside each negative, where the Space admin makes the same
+ * call and it succeeds, is what shows the call itself is sound.
  */
-const expectRefusedOn = (
-  res: { error?: { errors: Array<Record<string, unknown>> } },
-  privilege: string
-) => {
-  expect(String(res.error?.errors[0]?.message)).toMatch(
-    new RegExp(`Authorization: unable to grant '${privilege}' privilege`)
-  );
+const expectRefused = (res: {
+  error?: { errors: Array<Record<string, unknown>> };
+}) => {
+  expect(errorCodes(res)).toEqual([NEUTRAL_ERROR_CODE]);
+  expect(
+    res.error?.errors[0]?.message === NEUTRAL_ERROR_MESSAGE,
+    'refusal carries the generic sentence'
+  ).toBe(true);
 };
 
 beforeAll(async () => {
@@ -229,6 +241,9 @@ describe('Post order: updateCalloutsSortOrder', () => {
   test('PO-1 a plain member is refused with FORBIDDEN_POLICY, and no post moves', async () => {
     const before = await placement();
     const reversed = orderOf(before, posts).reverse();
+    expectMemberReads(
+      await readCalloutsPlacement(calloutsSetId, TestUser.SPACE_MEMBER)
+    );
 
     const res = await updateCalloutsSortOrder(
       calloutsSetId,
@@ -236,8 +251,7 @@ describe('Post order: updateCalloutsSortOrder', () => {
       TestUser.SPACE_MEMBER
     );
 
-    expect(errorCodes(res)).toEqual(['FORBIDDEN_POLICY']);
-    expectRefusedOn(res, UPDATE);
+    expectRefused(res);
     expect(res.data?.updateCalloutsSortOrder).toBeUndefined();
     const after = await placement();
     for (const id of posts) {
@@ -283,6 +297,9 @@ describe("A post's phase: updateCallout with a FLOW_STATE classification", () =>
   test('PH-1 a plain member is refused with FORBIDDEN_POLICY, and the post stays in its phase', async () => {
     const before = placementOf(await placement(), memberTarget);
     expect(before.phase).toBe(firstPhase);
+    expectMemberReads(
+      await readCalloutsPlacement(calloutsSetId, TestUser.SPACE_MEMBER)
+    );
 
     const res = await movePhase(
       memberTarget,
@@ -290,8 +307,7 @@ describe("A post's phase: updateCallout with a FLOW_STATE classification", () =>
       TestUser.SPACE_MEMBER
     );
 
-    expect(errorCodes(res)).toEqual(['FORBIDDEN_POLICY']);
-    expectRefusedOn(res, UPDATE);
+    expectRefused(res);
     const after = placementOf(await placement(), memberTarget);
     expect(after.phase).toBe(firstPhase);
     expect(after.sortOrder).toBe(before.sortOrder);
@@ -328,14 +344,19 @@ describe('Moving a response: moveContributionToCallout', () => {
   });
 
   test("MV-1 a plain member, the response's author, is refused with FORBIDDEN_POLICY, and the response stays in its post", async () => {
+    expectMemberReads(
+      await readCalloutContributions(source, TestUser.SPACE_MEMBER)
+    );
+    expectMemberReads(
+      await readCalloutContributions(target, TestUser.SPACE_MEMBER)
+    );
     const res = await moveContributionToCallout(
       memberResponse,
       target,
       TestUser.SPACE_MEMBER
     );
 
-    expect(errorCodes(res)).toEqual(['FORBIDDEN_POLICY']);
-    expectRefusedOn(res, MOVE_CONTRIBUTION);
+    expectRefused(res);
     expect(await responsesOf(source)).toContain(memberResponse);
     expect(await responsesOf(target)).not.toContain(memberResponse);
   });
@@ -388,6 +409,9 @@ describe('Response order inside a post: updateContributionsSortOrder', () => {
 
   test("CS-2 a plain member, the responses' author, is refused with FORBIDDEN_POLICY, and the order is unchanged", async () => {
     const before = await responseOrder(post);
+    expectMemberReads(
+      await readCalloutContributionsOrder(post, TestUser.SPACE_MEMBER)
+    );
 
     const res = await updateContributionsSortOrder(
       post,
@@ -395,12 +419,11 @@ describe('Response order inside a post: updateContributionsSortOrder', () => {
       TestUser.SPACE_MEMBER
     );
 
-    expect(errorCodes(res)).toEqual(['FORBIDDEN_POLICY']);
-    expectRefusedOn(res, UPDATE);
+    expectRefused(res);
     expect(await responseOrder(post)).toEqual(before);
   });
 
-  test("CS-3 a response id from another post is refused with ENTITY_NOT_FOUND, and neither post's order changes", async () => {
+  test("CS-3 a response id from another post is refused, and neither post's order changes", async () => {
     const before = await responseOrder(post);
     const otherBefore = await responseOrder(otherPost);
 
@@ -412,7 +435,7 @@ describe('Response order inside a post: updateContributionsSortOrder', () => {
       TestUser.SPACE_ADMIN
     );
 
-    expect(errorCodes(res)).toEqual(['ENTITY_NOT_FOUND']);
+    expect(errorCodes(res)).toEqual([NEUTRAL_ERROR_CODE]);
     expect(await responseOrder(post)).toEqual(before);
     expect(await responseOrder(otherPost)).toEqual(otherBefore);
   });

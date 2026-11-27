@@ -1,14 +1,13 @@
 import { afterAll, beforeAll, describe, expect, inject, test } from 'vitest';
 import { PLATFORM_ROLES } from '../capabilities.data';
-import type { PlatformRole } from '../capabilities.data';
 import { describeOutcome } from '../_support/outcome';
 import { rawRead, rawRequest } from '../_support/raw-request';
 import {
   accessOf,
   assignRole,
+  expectGenericRefusal,
   holdersOf,
   orThrow,
-  rejectionOf,
   removeRole,
   revokeAllRoles,
   setServiceProfile,
@@ -38,10 +37,6 @@ const PLATFORM_FAMILY = PLATFORM_ROLES.filter(r => r.startsWith('PLATFORM_'));
 const EXCLUDED_BY_AUDIT_READER = PLATFORM_FAMILY.filter(
   r => r !== 'PLATFORM_AUDIT_READER'
 );
-
-/** The server's spelling of a role inside its error texts. */
-const spelled = (role: PlatformRole): string =>
-  role.toLowerCase().replace(/_/g, '-');
 
 let ctx: RunContext;
 let rolesAdmin: string;
@@ -185,11 +180,7 @@ describe('R1.assigner-capability', () => {
     const refused = await assignRole(usersAdmin, role, human.id);
 
     expect(refused.kind, describeOutcome(refused)).toBe('denied');
-    const { message, ruleId } = rejectionOf(refused);
-    expect(ruleId).toBe('assigner-capability');
-    expect(message).toMatch(
-      new RegExp(`^Forbidden: \\S+ required to assign role ${spelled(role)}$`)
-    );
+    expectGenericRefusal(refused);
     expect(await accessOf(human.token)).toEqual(before);
     expect(await holdersOf(rolesAdmin, role)).not.toContain(human.id);
   });
@@ -239,11 +230,7 @@ describe('R2.holder-kind', () => {
       );
 
       expect(refused.kind, describeOutcome(refused)).toBe('denied');
-      const { message, ruleId } = rejectionOf(refused);
-      expect(ruleId).toBe('holder-kind');
-      expect(message).toBe(
-        `Rejected: role ${spelled(role)} may not be assigned or removed through the organization surface`
-      );
+      expectGenericRefusal(refused);
       // One frame deeper the role-set policy would refuse the same call for
       // the wrong reason (its organization limit is zero).
       expect(JSON.stringify(refused)).not.toMatch(/RoleSetPolicyRoleLimits/i);
@@ -288,11 +275,7 @@ describe('R3.spaces-reader-service-account', () => {
     const refused = await assignRole(rolesAdmin, role, human.id);
 
     expect(refused.kind, describeOutcome(refused)).toBe('denied');
-    expect(rejectionOf(refused)).toMatchObject({
-      ruleId: 'spaces-reader-service-account',
-      message:
-        'Rejected: platform-spaces-reader may only be granted to a service account',
-    });
+    expectGenericRefusal(refused);
     expect(await accessOf(human.token)).toEqual(before);
     expect(await holdersOf(rolesAdmin, role)).not.toContain(human.id);
   });
@@ -344,10 +327,7 @@ describe('R4.audit-reader-exclusion', () => {
         );
 
         expect(refused.kind, describeOutcome(refused)).toBe('denied');
-        expect(rejectionOf(refused)).toMatchObject({
-          ruleId: 'audit-reader-exclusion',
-          message: `Rejected: platform-audit-reader is mutually exclusive with ${spelled(held)}`,
-        });
+        expectGenericRefusal(refused);
         expect(await accessOf(holder.token)).toEqual(before);
         expect(
           await holdersOf(rolesAdmin, 'PLATFORM_AUDIT_READER')
@@ -371,10 +351,7 @@ describe('R4.audit-reader-exclusion', () => {
         const refused = await assignRole(rolesAdmin, wanted, service.id);
 
         expect(refused.kind, describeOutcome(refused)).toBe('denied');
-        expect(rejectionOf(refused)).toMatchObject({
-          ruleId: 'audit-reader-exclusion',
-          message: `Rejected: platform-audit-reader is mutually exclusive with ${spelled(wanted)}`,
-        });
+        expectGenericRefusal(refused);
         expect(await accessOf(service.token)).toEqual(before);
         expect(await holdersOf(rolesAdmin, wanted)).not.toContain(service.id);
       } finally {
@@ -457,38 +434,29 @@ describe('R6.self-assignment', () => {
     }
   });
 
-  const refusedOnSelf = async (
-    act: () => ReturnType<typeof assignRole>,
-    role: PlatformRole
-  ) => {
+  const refusedOnSelf = async (act: () => ReturnType<typeof assignRole>) => {
     const before = await accessOf(adminOne.token);
 
     const refused = await act();
 
     expect(refused.kind, describeOutcome(refused)).toBe('denied');
-    expect(rejectionOf(refused)).toMatchObject({
-      ruleId: 'self-assignment',
-      message: `Rejected: self-assignment of role ${spelled(role)} is blocked`,
-    });
+    expectGenericRefusal(refused);
     expect(await accessOf(adminOne.token)).toEqual(before);
   };
 
   test('negative: a Roles Admin grants itself a Platform role — refused, myRoles unchanged', () =>
     refusedOnSelf(
-      () => assignRole(adminOne.token, 'PLATFORM_SUPPORT', adminOne.id),
-      'PLATFORM_SUPPORT'
+      () => assignRole(adminOne.token, 'PLATFORM_SUPPORT', adminOne.id)
     ));
 
   test('negative: a Roles Admin grants itself a Feature role — refused, myRoles unchanged', () =>
     refusedOnSelf(
-      () => assignRole(adminOne.token, 'FEATURE_BETA_TESTER', adminOne.id),
-      'FEATURE_BETA_TESTER'
+      () => assignRole(adminOne.token, 'FEATURE_BETA_TESTER', adminOne.id)
     ));
 
   test('negative: a Roles Admin revokes its own role — refused, myRoles unchanged', () =>
     refusedOnSelf(
-      () => removeRole(adminOne.token, 'PLATFORM_ROLES_ADMIN', adminOne.id),
-      'PLATFORM_ROLES_ADMIN'
+      () => removeRole(adminOne.token, 'PLATFORM_ROLES_ADMIN', adminOne.id)
     ));
 
   test('positive: the two-person path — a second Roles Admin grants the first the same role', async () => {

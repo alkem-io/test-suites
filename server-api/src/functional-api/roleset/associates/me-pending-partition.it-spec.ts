@@ -33,6 +33,7 @@ import {
   getSingleInvitationResult,
 } from '../roleset.request.params';
 import { removeRoleFromUser } from '../roles-request.params';
+import { NEUTRAL_ERROR_CODE } from '@functional-api/error-response/error-response.constants';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -75,13 +76,18 @@ afterAll(async () => {
   // orgToDelete is normally deleted by the US7-AS5 test itself, but that test
   // can be skipped, focused out or fail before it gets there — so the suite
   // owns the cleanup too. `deleteOrganization` resolves GraphQL failures as
-  // `{ error }`; "not found" is the expected outcome after a green run and
-  // anything else fails the hook.
+  // `{ error }`; the generic FORBIDDEN_POLICY ("already gone" to the global
+  // admin) is the expected outcome after a green run and anything else fails
+  // the hook.
   if (orgToDelete?.organization?.id) {
     const res = await deleteOrganization(orgToDelete.organization.id);
-    const message = JSON.stringify(res?.error ?? '');
-    if (res?.error && !/not.?found|unable to find|ENTITY_NOT_FOUND/i.test(message)) {
-      throw new Error(`orgToDelete was not torn down: ${message}`);
+    if (
+      res?.error &&
+      !res.error.errors.every(e => e.code === NEUTRAL_ERROR_CODE)
+    ) {
+      throw new Error(
+        `orgToDelete was not torn down: ${JSON.stringify(res.error)}`
+      );
     }
   }
 });
@@ -205,10 +211,11 @@ describe('me query partition (US7-AS1, contract §5)', () => {
 
       // Deleting the user above already removed its pending rows (asserted
       // for the organization ones just above), so the Space invitation is
-      // normally gone too: tolerate ENTITY_NOT_FOUND explicitly, and surface
-      // any OTHER failure — the wrapper resolves errors, it never rejects.
+      // normally gone too: tolerate the generic FORBIDDEN_POLICY explicitly,
+      // and surface any OTHER failure — the wrapper resolves errors, it never
+      // rejects.
       const deletion = await deleteInvitation(spaceInvitationId);
-      if (deletion?.error && getErrorCode(deletion) !== 'ENTITY_NOT_FOUND') {
+      if (deletion?.error && getErrorCode(deletion) !== NEUTRAL_ERROR_CODE) {
         throw new Error(
           `deleteInvitation(${spaceInvitationId}) failed: ${JSON.stringify(
             deletion.error.errors
