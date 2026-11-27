@@ -559,6 +559,8 @@ server	v0.2.0	2020-10-15	true
 server	v0.1.8	2020-10-06	true
 server	v0.1.7	2020-10-02	true
 server	v0.1.6	2020-10-01	true
+client-web	v0.175.1	2026-11-26	false
+client-web	v0.175.0	2026-11-26	false
 client-web	v0.174.0	2026-11-20	false
 client-web	v0.173.0	2026-11-12	false
 client-web	v0.172.0	2026-11-06	false
@@ -1250,6 +1252,7 @@ oidc-service	v0.7.0	2025-12-07	false
 oidc-service	v0.6.5	2025-11-21	false
 oidc-service	v0.6.0	2025-11-05	false
 oidc-service	v0.5.0	2025-10-31	false
+matrix-adapter	v0.8.30	2026-11-26	false
 matrix-adapter	v0.8.29	2026-11-17	false
 matrix-adapter	v0.8.28	2026-11-12	false
 matrix-adapter	v0.8.27	2026-11-05	false
